@@ -285,7 +285,7 @@ export default function AddClassForm({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0">
-                    <Command>
+                    <Command disablePointerEventsOnSelect={false}>
                       <CommandInput placeholder="Search students..." />
                       <CommandList>
                         <CommandEmpty>No students found.</CommandEmpty>
