@@ -121,14 +121,17 @@ export default function EditFeeForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Student (Optional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+               <Select
+                onValueChange={(value) => field.onChange(value === "default" ? null : value)}
+                defaultValue={field.value || "default"}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Default fee for all students" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Default fee for all students</SelectItem>
+                  <SelectItem value="default">Default fee for all students</SelectItem>
                   {students.map(student => (
                     <SelectItem key={student.id} value={student.id}>
                       {student.name}
