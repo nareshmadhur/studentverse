@@ -31,7 +31,7 @@ import { useState, useEffect } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "../ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 
 const classSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -68,6 +68,8 @@ export default function EditClassForm({
     },
   });
 
+  const sessionType = form.watch("sessionType");
+
   const onSubmit = async (data: ClassFormValues) => {
     try {
       const classDocRef = doc(db, "classes", classItem.id);
@@ -103,6 +105,11 @@ export default function EditClassForm({
     form.setValue('students', selectedStudents)
   }, [selectedStudents, form]);
 
+  const handleSessionTypeChange = (value: "1-1" | "group") => {
+    form.setValue("sessionType", value);
+    setSelectedStudents([]);
+    form.setValue("students", []);
+  };
 
   return (
     <Form {...form}>
@@ -156,7 +163,7 @@ export default function EditClassForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Session Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={handleSessionTypeChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a session type" />
@@ -216,7 +223,9 @@ export default function EditClassForm({
                       mode="single"
                       selected={field.value}
                        onSelect={(date) => {
-                        field.onChange(date)
+                        if(date) {
+                          field.onChange(date)
+                        }
                         setIsDatePickerOpen(false)
                       }}
                       initialFocus
@@ -268,6 +277,7 @@ export default function EditClassForm({
                       variant="outline"
                       role="combobox"
                       className="w-full justify-between"
+                      disabled={sessionType === '1-1' && selectedStudents.length > 0}
                     >
                       {selectedStudents.length > 0
                         ? `${selectedStudents.length} student(s) selected`
@@ -281,9 +291,16 @@ export default function EditClassForm({
                       <CommandEmpty>No students found.</CommandEmpty>
                       <CommandGroup>
                         {allStudents.map((student) => (
-                          <CommandItem
+                           <CommandItem
                             key={student.id}
-                            onSelect={() => toggleStudent(student.id)}
+                            onSelect={() => {
+                              if (sessionType === '1-1' && selectedStudents.length >= 1 && !selectedStudents.includes(student.id)) {
+                                return;
+                              }
+                              toggleStudent(student.id)}
+                            }
+                            disabled={sessionType === '1-1' && selectedStudents.length >= 1 && !selectedStudents.includes(student.id)}
+                            className="cursor-pointer"
                           >
                             <Check
                               className={cn(
