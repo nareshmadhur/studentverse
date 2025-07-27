@@ -296,8 +296,6 @@ export default function AddClassForm({
                               <CommandItem
                                 key={student.id}
                                 value={student.id}
-                                style={{ pointerEvents: 'auto' }}
-                                className="cursor-pointer"
                                 onSelect={() => {
                                   if (sessionType === '1-1') {
                                     setSelectedStudents(prev => (prev.includes(student.id) ? [] : [student.id]));
