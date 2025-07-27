@@ -93,26 +93,6 @@ export default function EditClassForm({
     }
   };
 
-  const handleStudentSelect = (studentId: string) => {
-    const isSelected = selectedStudents.includes(studentId);
-
-    if (sessionType === '1-1') {
-      if (isSelected) {
-        setSelectedStudents([]);
-        form.setValue('students', []);
-      } else {
-        setSelectedStudents([studentId]);
-        form.setValue('students', [studentId]);
-      }
-    } else {
-      const newSelection = isSelected
-        ? selectedStudents.filter(id => id !== studentId)
-        : [...selectedStudents, studentId];
-      setSelectedStudents(newSelection);
-      form.setValue('students', newSelection);
-    }
-  };
-  
   useEffect(() => {
     form.setValue('students', selectedStudents)
   }, [selectedStudents, form]);
@@ -297,18 +277,32 @@ export default function EditClassForm({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0">
-                    <Command onValueChange={handleStudentSelect}>
+                    <Command>
                       <CommandInput placeholder="Search students..." />
                       <CommandList>
                         <CommandEmpty>No students found.</CommandEmpty>
                         <CommandGroup>
                           {allStudents.map((student) => {
                             const isSelected = selectedStudents.includes(student.id);
+                            const isDisabled = sessionType === '1-1' && selectedStudents.length > 0 && !isSelected;
                             return (
                              <CommandItem
                                 key={student.id}
                                 value={student.id}
                                 className="cursor-pointer"
+                                disabled={isDisabled}
+                                onSelect={() => {
+                                  if (isDisabled) return;
+                                  if (sessionType === '1-1') {
+                                    setSelectedStudents(prev => (prev.includes(student.id) ? [] : [student.id]));
+                                  } else {
+                                    setSelectedStudents(prev => 
+                                      prev.includes(student.id)
+                                        ? prev.filter(id => id !== student.id)
+                                        : [...prev, student.id]
+                                    );
+                                  }
+                                }}
                               >
                                 <Check
                                   className={cn(
@@ -341,5 +335,3 @@ export default function EditClassForm({
     </Form>
   );
 }
-
-    
