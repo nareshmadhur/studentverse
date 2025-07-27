@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -228,8 +229,9 @@ export default function EditFeeForm({
                     mode="single"
                     selected={field.value}
                     onSelect={(date) => {
+                      console.log("Selected date:", date);
                       if (date) {
-                        field.onChange(date);
+                        form.setValue("effective_date", date);
                       }
                       setIsDatePickerOpen(false);
                     }}

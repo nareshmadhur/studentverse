@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -137,8 +138,9 @@ export default function AddClassForm({
                     mode="single"
                     selected={field.value}
                     onSelect={(date) => {
+                      console.log("Selected date:", date);
                       if (date) {
-                        field.onChange(date);
+                        form.setValue("date", date);
                       }
                       setIsDatePickerOpen(false);
                     }}
