@@ -277,7 +277,6 @@ export default function EditClassForm({
                       variant="outline"
                       role="combobox"
                       className="w-full justify-between"
-                      disabled={sessionType === '1-1' && selectedStudents.length > 0 && !selectedStudents.includes(classItem.students[0])}
                     >
                       {selectedStudents.length > 0
                         ? `${selectedStudents.length} student(s) selected`

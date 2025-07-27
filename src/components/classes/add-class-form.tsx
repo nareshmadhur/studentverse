@@ -279,7 +279,7 @@ export default function AddClassForm({
                       variant="outline"
                       role="combobox"
                       className="w-full justify-between"
-                      disabled={sessionType === '1-1' && selectedStudents.length > 0}
+                      disabled={sessionType === '1-1' && selectedStudents.length > 0 && !allStudents.find(s => s.id === selectedStudents[0])}
                     >
                       {selectedStudents.length > 0
                         ? `${selectedStudents.length} student(s) selected`
