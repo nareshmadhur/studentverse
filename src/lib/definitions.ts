@@ -47,10 +47,12 @@ export type Class = {
 
 export type Fee = {
   id: string;
-  enrollmentId: string;
+  studentId: string | null;
+  lessonId: string;
+  feeType: 'hourly' | 'subscription';
   amount: number;
-  dueDate: string;
-  status: 'pending' | 'paid' | 'overdue';
+  currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';
+  effectiveDate: string;
   createdAt: string;
   updatedAt: string;
   deleted: boolean;

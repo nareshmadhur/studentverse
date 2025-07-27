@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Fee, Enrollment, Student, Lesson } from "@/lib/definitions";
+import type { Fee, Student, Lesson } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -40,12 +40,10 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function FeesTable({ 
   fees, 
-  enrollments,
   students,
   lessons,
 }: { 
   fees: Fee[], 
-  enrollments: Enrollment[],
   students: Student[],
   lessons: Lesson[],
 }) {
@@ -79,16 +77,15 @@ export default function FeesTable({
     }
   };
   
-  const getEnrollmentInfo = (enrollmentId: string) => {
-    const enrollment = enrollments.find(e => e.id === enrollmentId);
-    if (!enrollment) return { studentName: "Unknown", lessonName: "Unknown" };
-    const student = students.find(s => s.id === enrollment.studentId);
-    const lesson = lessons.find(l => l.id === enrollment.lessonId);
-    return {
-      studentName: student?.name || "Unknown Student",
-      lessonName: lesson?.title || "Unknown Lesson"
-    }
+  const getStudentName = (studentId: string | null) => {
+    if (!studentId) return <Badge variant="secondary">Default</Badge>;
+    return students.find(s => s.id === studentId)?.name || "Unknown Student";
   }
+  
+  const getLessonName = (lessonId: string) => {
+    return lessons.find(l => l.id === lessonId)?.title || "Unknown Lesson";
+  }
+
 
   return (
     <>
@@ -96,62 +93,57 @@ export default function FeesTable({
         <CardHeader>
           <CardTitle>All Fees</CardTitle>
           <CardDescription>
-            A list of all outstanding and paid fees.
+            A list of all default and student-specific fees.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
                 <TableHead>Lesson</TableHead>
+                <TableHead>Student</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Effective Date</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {fees.map((fee) => {
-                const { studentName, lessonName } = getEnrollmentInfo(fee.enrollmentId);
-                return (
-                  <TableRow key={fee.id}>
-                    <TableCell className="font-medium">{studentName}</TableCell>
-                    <TableCell>{lessonName}</TableCell>
-                    <TableCell>${fee.amount.toFixed(2)}</TableCell>
-                    <TableCell>{format(new Date(fee.dueDate), "PPP")}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={fee.status === "paid" ? "default" : fee.status === 'pending' ? 'secondary' : 'destructive'}
-                      >
-                        {fee.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditClick(fee)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteClick(fee.id)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
+              {fees.map((fee) => (
+                <TableRow key={fee.id}>
+                  <TableCell className="font-medium">{getLessonName(fee.lessonId)}</TableCell>
+                  <TableCell>{getStudentName(fee.studentId)}</TableCell>
+                  <TableCell>{fee.amount.toFixed(2)} <Badge variant="outline">{fee.currencyCode}</Badge></TableCell>
+                   <TableCell>
+                    <Badge variant={fee.feeType === 'hourly' ? 'default' : 'secondary'}>
+                      {fee.feeType}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{format(new Date(fee.effectiveDate), "PPP")}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditClick(fee)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteClick(fee.id)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>
@@ -165,7 +157,6 @@ export default function FeesTable({
             <EditFeeForm
               setOpen={setIsEditDialogOpen}
               fee={selectedFee}
-              enrollments={enrollments}
               students={students}
               lessons={lessons}
             />

@@ -12,7 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Payment, Fee, Enrollment, Student, Lesson } from "@/lib/definitions";
+import { Payment, Fee, Student, Lesson } from "@/lib/definitions";
 import PaymentsTable from "@/components/payments/payments-table";
 import AddPaymentForm from "@/components/payments/add-payment-form";
 
@@ -20,7 +20,6 @@ export default function PaymentsPage() {
   const [open, setOpen] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
 
@@ -46,22 +45,17 @@ export default function PaymentsPage() {
 
     const fetchRelatedData = async () => {
       const feeQuery = query(collection(db, "fees"), where("deleted", "==", false));
-      const enrollmentQuery = query(collection(db, "enrollments"), where("deleted", "==", false));
       const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
       const lessonQuery = query(collection(db, "lessons"), where("deleted", "==", false));
 
-      const [feeSnapshot, enrollmentSnapshot, studentSnapshot, lessonSnapshot] = await Promise.all([
+      const [feeSnapshot, studentSnapshot, lessonSnapshot] = await Promise.all([
         getDocs(feeQuery),
-        getDocs(enrollmentQuery),
         getDocs(studentQuery),
         getDocs(lessonQuery)
       ]);
       
       const feeData: Fee[] = feeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
       setFees(feeData);
-
-      const enrollmentData: Enrollment[] = enrollmentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Enrollment));
-      setEnrollments(enrollmentData);
 
       const studentData: Student[] = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentData);
@@ -92,7 +86,6 @@ export default function PaymentsPage() {
         <PaymentsTable 
           payments={payments} 
           fees={fees} 
-          enrollments={enrollments} 
           students={students} 
           lessons={lessons} 
         />
@@ -101,7 +94,7 @@ export default function PaymentsPage() {
         <DialogHeader>
           <DialogTitle>Add a new payment</DialogTitle>
         </DialogHeader>
-        <AddPaymentForm setOpen={setOpen} fees={fees} enrollments={enrollments} students={students} lessons={lessons} />
+        <AddPaymentForm setOpen={setOpen} fees={fees} students={students} lessons={lessons} />
       </DialogContent>
     </Dialog>
   );

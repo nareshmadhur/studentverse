@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Payment, Fee, Enrollment, Student, Lesson } from "@/lib/definitions";
+import type { Payment, Fee, Student, Lesson } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -41,13 +41,11 @@ import { useToast } from "@/hooks/use-toast";
 export default function PaymentsTable({ 
   payments,
   fees, 
-  enrollments,
   students,
   lessons,
 }: { 
   payments: Payment[],
   fees: Fee[], 
-  enrollments: Enrollment[],
   students: Student[],
   lessons: Lesson[],
 }) {
@@ -83,15 +81,12 @@ export default function PaymentsTable({
 
   const getFeeInfo = (feeId: string) => {
     const fee = fees.find(f => f.id === feeId);
-    if (!fee) return { studentName: "Unknown", lessonName: "Unknown", feeAmount: 0 };
-    const enrollment = enrollments.find(e => e.id === fee.enrollmentId);
-    if (!enrollment) return { studentName: "Unknown", lessonName: "Unknown", feeAmount: fee.amount };
-    const student = students.find(s => s.id === enrollment.studentId);
-    const lesson = lessons.find(l => l.id === enrollment.lessonId);
+    if (!fee) return { studentName: "Unknown", lessonName: "Unknown" };
+    const student = students.find(s => s.id === fee.studentId);
+    const lesson = lessons.find(l => l.id === fee.lessonId);
     return {
-      studentName: student?.name || "Unknown Student",
+      studentName: student?.name || "Default",
       lessonName: lesson?.title || "Unknown Lesson",
-      feeAmount: fee.amount
     }
   }
 
@@ -128,7 +123,7 @@ export default function PaymentsTable({
                     <TableCell>${payment.amount.toFixed(2)}</TableCell>
                     <TableCell>{format(new Date(payment.paymentDate), "PPP")}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{payment.paymentMethod}</Badge>
+                      <Badge variant="secondary">{payment.paymentMethod.replace(/_/g, ' ')}</Badge>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -167,7 +162,6 @@ export default function PaymentsTable({
               setOpen={setIsEditDialogOpen}
               payment={selectedPayment}
               fees={fees}
-              enrollments={enrollments}
               students={students}
               lessons={lessons}
             />

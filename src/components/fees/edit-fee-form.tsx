@@ -22,7 +22,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Fee, Enrollment, Student, Lesson } from "@/lib/definitions";
+import { Fee, Student, Lesson } from "@/lib/definitions";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
@@ -31,10 +31,12 @@ import { useState } from "react";
 import { Input } from "../ui/input";
 
 const feeSchema = z.object({
-  enrollmentId: z.string().min(1, "Enrollment is required"),
+  lessonId: z.string().min(1, "Lesson is required"),
+  studentId: z.string().nullable(),
+  feeType: z.enum(["hourly", "subscription"]),
   amount: z.coerce.number().positive("Amount must be positive."),
-  dueDate: z.date({ required_error: "A due date is required." }),
-  status: z.enum(["pending", "paid", "overdue"]),
+  currencyCode: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
+  effectiveDate: z.date({ required_error: "An effective date is required." }),
 });
 
 type FeeFormValues = z.infer<typeof feeSchema>;
@@ -42,13 +44,11 @@ type FeeFormValues = z.infer<typeof feeSchema>;
 export default function EditFeeForm({
   setOpen,
   fee,
-  enrollments,
   students,
   lessons,
 }: {
   setOpen: (open: boolean) => void;
   fee: Fee;
-  enrollments: Enrollment[];
   students: Student[];
   lessons: Lesson[];
 }) {
@@ -57,10 +57,12 @@ export default function EditFeeForm({
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
-      enrollmentId: fee.enrollmentId,
+      lessonId: fee.lessonId,
+      studentId: fee.studentId,
+      feeType: fee.feeType,
       amount: fee.amount,
-      dueDate: new Date(fee.dueDate),
-      status: fee.status,
+      currencyCode: fee.currencyCode,
+      effectiveDate: new Date(fee.effectiveDate),
     },
   });
 
@@ -91,26 +93,47 @@ export default function EditFeeForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="enrollmentId"
+          name="lessonId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Enrollment</FormLabel>
+              <FormLabel>Lesson</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select an enrollment" />
+                    <SelectValue placeholder="Select a lesson" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {enrollments.map(enrollment => {
-                    const student = students.find(s => s.id === enrollment.studentId);
-                    const lesson = lessons.find(l => l.id === enrollment.lessonId);
-                    return (
-                      <SelectItem key={enrollment.id} value={enrollment.id}>
-                        {student?.name} - {lesson?.title}
-                      </SelectItem>
-                    )
-                  })}
+                  {lessons.map(lesson => (
+                    <SelectItem key={lesson.id} value={lesson.id}>
+                      {lesson.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="studentId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Student (Optional)</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Default fee for all students" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="">Default fee for all students</SelectItem>
+                  {students.map(student => (
+                    <SelectItem key={student.id} value={student.id}>
+                      {student.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -132,10 +155,55 @@ export default function EditFeeForm({
         />
         <FormField
           control={form.control}
-          name="dueDate"
+          name="currencyCode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Currency</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a currency" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="INR">INR</SelectItem>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="GBP">GBP</SelectItem>
+                  <SelectItem value="AUD">AUD</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="feeType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Fee Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a fee type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="hourly">Hourly</SelectItem>
+                  <SelectItem value="subscription">Subscription</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="effectiveDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Due Date</FormLabel>
+              <FormLabel>Effective Date</FormLabel>
               <Button
                 type="button"
                 variant={"outline"}
@@ -143,7 +211,7 @@ export default function EditFeeForm({
                   "w-full justify-start text-left font-normal",
                   !field.value && "text-muted-foreground"
                 )}
-                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                onClick={() => setIsDatePickerOpen(prev => !prev)}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {field.value ? (
@@ -157,7 +225,7 @@ export default function EditFeeForm({
                   mode="single"
                   selected={field.value}
                   onSelect={(date) => {
-                    if(date){
+                    if (date) {
                       field.onChange(date);
                       setIsDatePickerOpen(false);
                     }
@@ -165,28 +233,6 @@ export default function EditFeeForm({
                   initialFocus
                 />
               )}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
-                </SelectContent>
-              </Select>
               <FormMessage />
             </FormItem>
           )}

@@ -22,7 +22,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Payment, Fee, Enrollment, Student, Lesson } from "@/lib/definitions";
+import { Payment, Fee, Student, Lesson } from "@/lib/definitions";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
@@ -43,14 +43,12 @@ export default function EditPaymentForm({
   setOpen,
   payment,
   fees,
-  enrollments,
   students,
   lessons,
 }: {
   setOpen: (open: boolean) => void;
   payment: Payment;
   fees: Fee[];
-  enrollments: Enrollment[];
   students: Student[];
   lessons: Lesson[];
 }) {
@@ -91,12 +89,10 @@ export default function EditPaymentForm({
   const getFeeInfo = (feeId: string) => {
     const fee = fees.find(f => f.id === feeId);
     if (!fee) return { studentName: "Unknown", lessonName: "Unknown", feeAmount: 0 };
-    const enrollment = enrollments.find(e => e.id === fee.enrollmentId);
-    if (!enrollment) return { studentName: "Unknown", lessonName: "Unknown", feeAmount: fee.amount };
-    const student = students.find(s => s.id === enrollment.studentId);
-    const lesson = lessons.find(l => l.id === enrollment.lessonId);
+    const student = students.find(s => s.id === fee.studentId);
+    const lesson = lessons.find(l => l.id === fee.lessonId);
     return {
-      studentName: student?.name || "Unknown Student",
+      studentName: student?.name || "Default",
       lessonName: lesson?.title || "Unknown Lesson",
       feeAmount: fee.amount
     }
@@ -158,7 +154,7 @@ export default function EditPaymentForm({
                   "w-full justify-start text-left font-normal",
                   !field.value && "text-muted-foreground"
                 )}
-                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                onClick={() => setIsDatePickerOpen(prev => !prev)}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {field.value ? (
