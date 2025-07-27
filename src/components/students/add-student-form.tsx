@@ -59,6 +59,7 @@ export default function AddStudentForm({
         ...data,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        deleted: false,
       });
       toast({
         title: "Student Added",

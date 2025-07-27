@@ -58,6 +58,7 @@ export default function AddLessonForm({
         ...data,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        deleted: false,
       });
       toast({
         title: "Lesson Added",

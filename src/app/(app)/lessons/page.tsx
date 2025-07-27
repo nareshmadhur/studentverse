@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import AddLessonForm from "@/components/lessons/add-lesson-form";
-import { collection, onSnapshot, Timestamp } from "firebase/firestore";
+import { collection, onSnapshot, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Lesson } from "@/lib/definitions";
 
@@ -21,7 +21,8 @@ export default function LessonsPage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "lessons"), (snapshot) => {
+    const q = query(collection(db, "lessons"), where("deleted", "==", false));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const lessonData: Lesson[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
@@ -34,6 +35,7 @@ export default function LessonsPage() {
           description: data.description,
           createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+          deleted: data.deleted,
         });
       });
       setLessons(lessonData);

@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,14 +33,39 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import EditLessonForm from "./edit-lesson-form";
+import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LessonsTable({ lessons }: { lessons: Lesson[] }) {
+  const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   const handleEditClick = (lesson: Lesson) => {
     setSelectedLesson(lesson);
     setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = async (lessonId: string) => {
+    try {
+      const lessonDocRef = doc(db, "lessons", lessonId);
+      await updateDoc(lessonDocRef, {
+        deleted: true,
+        updatedAt: serverTimestamp(),
+      });
+      toast({
+        title: "Lesson Deleted",
+        description: "The lesson has been marked as deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting document: ", error);
+      toast({
+        title: "Error",
+        description: "There was an error deleting the lesson. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -92,6 +117,10 @@ export default function LessonsTable({ lessons }: { lessons: Lesson[] }) {
                         <DropdownMenuItem onClick={() => handleEditClick(lesson)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteClick(lesson.id)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpenCheck, GraduationCap, Users, UserCheck } from "lucide-react";
+import { BookOpenCheck, GraduationCap, Users, UserCheck, CalendarDays, DollarSign, CreditCard } from "lucide-react";
 
 import {
   Sidebar,
@@ -16,16 +16,9 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "../ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isMobile = useIsMobile();
-  const [isClient, setIsClient] = React.useState(false);
-
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -77,6 +70,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link href="/enrollments">
                   <UserCheck />
                   <span>Enrollments</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/classes")}
+                tooltip="Classes"
+              >
+                <Link href="/classes">
+                  <CalendarDays />
+                  <span>Classes</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/fees")}
+                tooltip="Fees"
+              >
+                <Link href="/fees">
+                  <DollarSign />
+                  <span>Fees</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/payments")}
+                tooltip="Payments"
+              >
+                <Link href="/payments">
+                  <CreditCard />
+                  <span>Payments</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

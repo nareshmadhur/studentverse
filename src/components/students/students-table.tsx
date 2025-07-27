@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Pencil } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,14 +33,39 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import EditStudentForm from "./edit-student-form";
+import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 export default function StudentsTable({ students }: { students: Student[] }) {
+  const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const handleEditClick = (student: Student) => {
     setSelectedStudent(student);
     setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = async (studentId: string) => {
+    try {
+      const studentDocRef = doc(db, "students", studentId);
+      await updateDoc(studentDocRef, {
+        deleted: true,
+        updatedAt: serverTimestamp(),
+      });
+      toast({
+        title: "Student Deleted",
+        description: "The student has been marked as deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting document: ", error);
+      toast({
+        title: "Error",
+        description: "There was an error deleting the student. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -98,6 +123,10 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                         <DropdownMenuItem onClick={() => handleEditClick(student)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteClick(student.id)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Enrollment, Student, Lesson } from "@/lib/definitions";
+import type { Class, Lesson } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -32,54 +32,48 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import EditEnrollmentForm from "./edit-enrollment-form";
+import EditClassForm from "./edit-class-form";
 import { format } from "date-fns";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
-export default function EnrollmentsTable({ 
-  enrollments, 
-  students, 
+export default function ClassesTable({ 
+  classes, 
   lessons 
 }: { 
-  enrollments: Enrollment[], 
-  students: Student[], 
+  classes: Class[], 
   lessons: Lesson[] 
 }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
+  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
 
-  const handleEditClick = (enrollment: Enrollment) => {
-    setSelectedEnrollment(enrollment);
+  const handleEditClick = (classItem: Class) => {
+    setSelectedClass(classItem);
     setIsEditDialogOpen(true);
   };
-
-  const handleDeleteClick = async (enrollmentId: string) => {
+  
+  const handleDeleteClick = async (classId: string) => {
     try {
-      const enrollmentDocRef = doc(db, "enrollments", enrollmentId);
-      await updateDoc(enrollmentDocRef, {
+      const classDocRef = doc(db, "classes", classId);
+      await updateDoc(classDocRef, {
         deleted: true,
         updatedAt: serverTimestamp(),
       });
       toast({
-        title: "Enrollment Deleted",
-        description: "The enrollment has been marked as deleted.",
+        title: "Class Deleted",
+        description: "The class has been marked as deleted.",
       });
     } catch (error) {
       console.error("Error deleting document: ", error);
       toast({
         title: "Error",
-        description: "There was an error deleting the enrollment. Please try again.",
+        description: "There was an error deleting the class. Please try again.",
         variant: "destructive",
       });
     }
   };
-
-  const getStudentName = (studentId: string) => {
-    return students.find(student => student.id === studentId)?.name || "Unknown Student";
-  }
 
   const getLessonName = (lessonId: string) => {
     return lessons.find(lesson => lesson.id === lessonId)?.title || "Unknown Lesson";
@@ -89,18 +83,18 @@ export default function EnrollmentsTable({
     <>
       <Card>
         <CardHeader>
-          <CardTitle>All Enrollments</CardTitle>
+          <CardTitle>All Classes</CardTitle>
           <CardDescription>
-            A list of all student enrollments in your system.
+            A list of all scheduled classes.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
                 <TableHead>Lesson</TableHead>
-                <TableHead>Enrollment Date</TableHead>
+                <TableHead>Date & Time</TableHead>
+                <TableHead>Duration (mins)</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -108,18 +102,18 @@ export default function EnrollmentsTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {enrollments.map((enrollment) => (
-                <TableRow key={enrollment.id}>
+              {classes.map((classItem) => (
+                <TableRow key={classItem.id}>
                   <TableCell className="font-medium">
-                    {getStudentName(enrollment.studentId)}
+                    {getLessonName(classItem.lessonId)}
                   </TableCell>
-                  <TableCell>{getLessonName(enrollment.lessonId)}</TableCell>
-                  <TableCell>{format(new Date(enrollment.enrollmentDate), "PPP")}</TableCell>
+                  <TableCell>{format(new Date(classItem.classDateTime), "PPP p")}</TableCell>
+                  <TableCell>{classItem.duration}</TableCell>
                   <TableCell>
                     <Badge
-                      variant={enrollment.status === "active" ? "default" : "secondary"}
+                      variant={classItem.status === "scheduled" ? "default" : classItem.status === 'completed' ? 'secondary' : 'destructive'}
                     >
-                      {enrollment.status}
+                      {classItem.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -131,11 +125,11 @@ export default function EnrollmentsTable({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditClick(enrollment)}>
+                        <DropdownMenuItem onClick={() => handleEditClick(classItem)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => handleDeleteClick(enrollment.id)}>
+                         <DropdownMenuItem onClick={() => handleDeleteClick(classItem.id)}>
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
@@ -151,13 +145,12 @@ export default function EnrollmentsTable({
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Enrollment</DialogTitle>
+            <DialogTitle>Edit Class</DialogTitle>
           </DialogHeader>
-          {selectedEnrollment && (
-            <EditEnrollmentForm
+          {selectedClass && (
+            <EditClassForm
               setOpen={setIsEditDialogOpen}
-              enrollment={selectedEnrollment}
-              students={students}
+              classItem={selectedClass}
               lessons={lessons}
             />
           )}

@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, Timestamp } from "firebase/firestore";
+import { collection, onSnapshot, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Student } from "@/lib/definitions";
 
@@ -21,7 +21,8 @@ export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "students"), (snapshot) => {
+    const q = query(collection(db, "students"), where("deleted", "==", false));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const studentData: Student[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
@@ -35,6 +36,7 @@ export default function StudentsPage() {
           status: data.status,
           createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+          deleted: data.deleted,
         });
       });
       setStudents(studentData);

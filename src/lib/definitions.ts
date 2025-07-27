@@ -8,6 +8,7 @@ export type Student = {
   status: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;
+  deleted: boolean;
 };
 
 export type Lesson = {
@@ -19,6 +20,7 @@ export type Lesson = {
   description?: string;
   createdAt: string;
   updatedAt: string;
+  deleted: boolean;
 };
 
 export type Enrollment = {
@@ -29,4 +31,38 @@ export type Enrollment = {
   status: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;
+  deleted: boolean;
+};
+
+export type Class = {
+  id: string;
+  lessonId: string;
+  classDateTime: string;
+  duration: number; // in minutes
+  status: 'scheduled' | 'completed' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+  deleted: boolean;
+};
+
+export type Fee = {
+  id: string;
+  enrollmentId: string;
+  amount: number;
+  dueDate: string;
+  status: 'pending' | 'paid' | 'overdue';
+  createdAt: string;
+  updatedAt: string;
+  deleted: boolean;
+};
+
+export type Payment = {
+  id: string;
+  feeId: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod: 'card' | 'cash' | 'bank_transfer';
+  createdAt: string;
+  updatedAt: string;
+  deleted: boolean;
 };
