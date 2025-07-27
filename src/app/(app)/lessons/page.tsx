@@ -30,8 +30,8 @@ export default function LessonsPage() {
           lesson_name: data.lesson_name,
           lesson_type: data.lesson_type,
           description: data.description,
-          created_at: data.created_at.toDate().toISOString(),
-          updated_at: data.updated_at.toDate().toISOString(),
+          created_at: data.created_at ? data.created_at.toDate().toISOString() : new Date().toISOString(),
+          updated_at: data.updated_at ? data.updated_at.toDate().toISOString() : new Date().toISOString(),
         });
       });
       setLessons(lessonData);

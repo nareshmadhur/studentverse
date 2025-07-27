@@ -32,8 +32,8 @@ export default function StudentsPage() {
           phone: data.phone,
           location: data.location,
           currency_code: data.currency_code,
-          created_at: data.created_at.toDate().toISOString(),
-          updated_at: data.updated_at.toDate().toISOString(),
+          created_at: data.created_at ? data.created_at.toDate().toISOString() : new Date().toISOString(),
+          updated_at: data.updated_at ? data.updated_at.toDate().toISOString() : new Date().toISOString(),
         });
       });
       setStudents(studentData);
