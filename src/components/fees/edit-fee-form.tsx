@@ -229,10 +229,7 @@ export default function EditFeeForm({
                     mode="single"
                     selected={field.value}
                     onSelect={(date) => {
-                      console.log("Selected date:", date);
-                      if (date) {
-                        form.setValue("effective_date", date);
-                      }
+                      field.onChange(date);
                       setIsDatePickerOpen(false);
                     }}
                     initialFocus

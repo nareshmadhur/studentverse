@@ -140,10 +140,7 @@ export default function EditClassForm({
                     mode="single"
                     selected={field.value}
                     onSelect={(date) => {
-                      console.log("Selected date:", date);
-                      if (date) {
-                        form.setValue("date", date);
-                      }
+                      field.onChange(date);
                       setIsDatePickerOpen(false);
                     }}
                     initialFocus
