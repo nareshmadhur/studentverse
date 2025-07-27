@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpenCheck, GraduationCap, Users } from "lucide-react";
+import { BookOpenCheck, GraduationCap, Users, Calendar, UserCheck, ClipboardCheck, CreditCard, Banknote } from "lucide-react";
 
 import {
   Sidebar,
@@ -59,6 +59,66 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link href="/lessons">
                   <BookOpenCheck />
                   <span>Lessons</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/classes")}
+                tooltip="Classes"
+              >
+                <Link href="/classes">
+                  <Calendar />
+                  <span>Classes</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/enrollments")}
+                tooltip="Enrollments"
+              >
+                <Link href="/enrollments">
+                  <UserCheck />
+                  <span>Enrollments</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/attendance")}
+                tooltip="Attendance"
+              >
+                <Link href="/attendance">
+                  <ClipboardCheck />
+                  <span>Attendance</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/fees")}
+                tooltip="Fees"
+              >
+                <Link href="/fees">
+                  <CreditCard />
+                  <span>Fees</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/payments")}
+                tooltip="Payments"
+              >
+                <Link href="/payments">
+                  <Banknote />
+                  <span>Payments</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
