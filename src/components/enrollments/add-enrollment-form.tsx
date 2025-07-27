@@ -1,4 +1,3 @@
-
 "use client";
 
 import { z } from "zod";
@@ -31,9 +30,9 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 const enrollmentSchema = z.object({
-  student_id: z.string().min(1, "Student is required"),
-  lesson_id: z.string().min(1, "Lesson is required"),
-  enrollment_date: z.date({ required_error: "An enrollment date is required." }),
+  studentId: z.string().min(1, "Student is required"),
+  lessonId: z.string().min(1, "Lesson is required"),
+  enrollmentDate: z.date({ required_error: "An enrollment date is required." }),
   status: z.enum(["active", "inactive"]),
 });
 
@@ -54,9 +53,9 @@ export default function AddEnrollmentForm({
     resolver: zodResolver(enrollmentSchema),
     defaultValues: {
       status: "active",
-      student_id: "",
-      lesson_id: "",
-      enrollment_date: new Date(),
+      studentId: "",
+      lessonId: "",
+      enrollmentDate: new Date(),
     },
   });
 
@@ -64,9 +63,9 @@ export default function AddEnrollmentForm({
     try {
       await addDoc(collection(db, "enrollments"), {
         ...data,
-        enrollment_date: data.enrollment_date.toISOString(),
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
+        enrollmentDate: data.enrollmentDate,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
       toast({
         title: "Enrollment Added",
@@ -88,7 +87,7 @@ export default function AddEnrollmentForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="student_id"
+          name="studentId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Student</FormLabel>
@@ -100,7 +99,7 @@ export default function AddEnrollmentForm({
                 </FormControl>
                 <SelectContent>
                   {students.map(student => (
-                    <SelectItem key={student.student_id} value={student.student_id}>{student.name}</SelectItem>
+                    <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -110,7 +109,7 @@ export default function AddEnrollmentForm({
         />
         <FormField
           control={form.control}
-          name="lesson_id"
+          name="lessonId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Lesson</FormLabel>
@@ -122,7 +121,7 @@ export default function AddEnrollmentForm({
                 </FormControl>
                 <SelectContent>
                   {lessons.map(lesson => (
-                    <SelectItem key={lesson.lesson_id} value={lesson.lesson_id}>{lesson.lesson_name}</SelectItem>
+                    <SelectItem key={lesson.id} value={lesson.id}>{lesson.title}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -132,7 +131,7 @@ export default function AddEnrollmentForm({
         />
         <FormField
           control={form.control}
-          name="enrollment_date"
+          name="enrollmentDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Enrollment Date</FormLabel>

@@ -58,8 +58,8 @@ export default function StudentsTable({ students }: { students: Student[] }) {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead className="hidden md:table-cell">Phone</TableHead>
-                <TableHead className="hidden sm:table-cell">Location</TableHead>
+                <TableHead>Country</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Currency</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -68,17 +68,19 @@ export default function StudentsTable({ students }: { students: Student[] }) {
             </TableHeader>
             <TableBody>
               {students.map((student) => (
-                <TableRow key={student.student_id}>
+                <TableRow key={student.id}>
                   <TableCell className="font-medium">{student.name}</TableCell>
                   <TableCell>{student.email}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {student.phone}
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    {student.location}
+                  <TableCell>{student.country}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={student.status === "active" ? "default" : "secondary"}
+                    >
+                      {student.status}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Badge variant="outline">{student.currency_code}</Badge>
+                    <Badge variant="outline">{student.currencyCode}</Badge>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

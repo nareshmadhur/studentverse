@@ -53,11 +53,11 @@ export default function EnrollmentsTable({
   };
 
   const getStudentName = (studentId: string) => {
-    return students.find(student => student.student_id === studentId)?.name || "Unknown Student";
+    return students.find(student => student.id === studentId)?.name || "Unknown Student";
   }
 
   const getLessonName = (lessonId: string) => {
-    return lessons.find(lesson => lesson.lesson_id === lessonId)?.lesson_name || "Unknown Lesson";
+    return lessons.find(lesson => lesson.id === lessonId)?.title || "Unknown Lesson";
   }
 
   return (
@@ -84,12 +84,12 @@ export default function EnrollmentsTable({
             </TableHeader>
             <TableBody>
               {enrollments.map((enrollment) => (
-                <TableRow key={enrollment.enrollment_id}>
+                <TableRow key={enrollment.id}>
                   <TableCell className="font-medium">
-                    {getStudentName(enrollment.student_id)}
+                    {getStudentName(enrollment.studentId)}
                   </TableCell>
-                  <TableCell>{getLessonName(enrollment.lesson_id)}</TableCell>
-                  <TableCell>{format(new Date(enrollment.enrollment_date), "PPP")}</TableCell>
+                  <TableCell>{getLessonName(enrollment.lessonId)}</TableCell>
+                  <TableCell>{format(new Date(enrollment.enrollmentDate), "PPP")}</TableCell>
                   <TableCell>
                     <Badge
                       variant={enrollment.status === "active" ? "default" : "secondary"}

@@ -56,9 +56,10 @@ export default function LessonsTable({ lessons }: { lessons: Lesson[] }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Lesson Name</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Discipline</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Description</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -66,18 +67,19 @@ export default function LessonsTable({ lessons }: { lessons: Lesson[] }) {
             </TableHeader>
             <TableBody>
               {lessons.map((lesson) => (
-                <TableRow key={lesson.lesson_id}>
+                <TableRow key={lesson.id}>
                   <TableCell className="font-medium">
-                    {lesson.lesson_name}
+                    {lesson.title}
                   </TableCell>
+                  <TableCell>{lesson.category}</TableCell>
+                  <TableCell>{lesson.discipline}</TableCell>
                   <TableCell>
                     <Badge
-                      variant={lesson.lesson_type === "1-1" ? "secondary" : "default"}
+                      variant={lesson.lessonType === "1-1" ? "secondary" : "default"}
                     >
-                      {lesson.lesson_type}
+                      {lesson.lessonType}
                     </Badge>
                   </TableCell>
-                  <TableCell>{lesson.description}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

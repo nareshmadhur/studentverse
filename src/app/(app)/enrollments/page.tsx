@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Enrollment, Student, Lesson } from "@/lib/definitions";
 import EnrollmentsTable from "@/components/enrollments/enrollments-table";
@@ -28,13 +28,13 @@ export default function EnrollmentsPage() {
       snapshot.forEach((doc) => {
         const data = doc.data();
         enrollmentData.push({
-          enrollment_id: doc.id,
-          student_id: data.student_id,
-          lesson_id: data.lesson_id,
-          enrollment_date: data.enrollment_date,
+          id: doc.id,
+          studentId: data.studentId,
+          lessonId: data.lessonId,
+          enrollmentDate: (data.enrollmentDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           status: data.status,
-          created_at: data.created_at?.toDate().toISOString() || new Date().toISOString(),
-          updated_at: data.updated_at?.toDate().toISOString() || new Date().toISOString(),
+          createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+          updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
         });
       });
       setEnrollments(enrollmentData);
@@ -47,13 +47,13 @@ export default function EnrollmentsPage() {
       ]);
       
       const studentData: Student[] = studentSnapshot.docs.map(doc => ({
-        student_id: doc.id,
+        id: doc.id,
         ...doc.data()
       } as Student));
       setStudents(studentData);
 
       const lessonData: Lesson[] = lessonSnapshot.docs.map(doc => ({
-        lesson_id: doc.id,
+        id: doc.id,
         ...doc.data()
       } as Lesson));
       setLessons(lessonData);

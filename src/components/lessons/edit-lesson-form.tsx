@@ -27,9 +27,11 @@ import { Lesson } from "@/lib/definitions";
 import { Textarea } from "@/components/ui/textarea";
 
 const lessonSchema = z.object({
-  lesson_name: z.string().min(1, "Lesson name is required"),
-  lesson_type: z.enum(["1-1", "group"]),
-  description: z.string().min(1, "Description is required"),
+  title: z.string().min(1, "Title is required"),
+  category: z.string().min(1, "Category is required"),
+  discipline: z.string().min(1, "Discipline is required"),
+  lessonType: z.enum(["1-1", "group"]),
+  description: z.string().optional(),
 });
 
 type LessonFormValues = z.infer<typeof lessonSchema>;
@@ -45,22 +47,24 @@ export default function EditLessonForm({
   const form = useForm<LessonFormValues>({
     resolver: zodResolver(lessonSchema),
     defaultValues: {
-      lesson_name: lesson.lesson_name,
-      lesson_type: lesson.lesson_type,
+      title: lesson.title,
+      category: lesson.category,
+      discipline: lesson.discipline,
+      lessonType: lesson.lessonType,
       description: lesson.description,
     },
   });
 
   const onSubmit = async (data: LessonFormValues) => {
     try {
-      const lessonDocRef = doc(db, "lessons", lesson.lesson_id);
+      const lessonDocRef = doc(db, "lessons", lesson.id);
       await updateDoc(lessonDocRef, {
         ...data,
-        updated_at: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
       toast({
         title: "Lesson Updated",
-        description: `${data.lesson_name} has been successfully updated.`,
+        description: `${data.title} has been successfully updated.`,
       });
       setOpen(false);
     } catch (error) {
@@ -78,12 +82,12 @@ export default function EditLessonForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="lesson_name"
+          name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Lesson Name</FormLabel>
+              <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input placeholder="Enter lesson name" {...field} />
+                <Input placeholder="e.g. Intro to Vocals" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -91,7 +95,33 @@ export default function EditLessonForm({
         />
         <FormField
           control={form.control}
-          name="lesson_type"
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. music, art" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="discipline"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Discipline</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. guitar, vocals" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="lessonType"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Lesson Type</FormLabel>
@@ -115,7 +145,7 @@ export default function EditLessonForm({
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Description (Optional)</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Enter lesson description"

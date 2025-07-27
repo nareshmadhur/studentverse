@@ -1,4 +1,3 @@
-
 "use client";
 
 import { z } from "zod";
@@ -31,9 +30,9 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 const enrollmentSchema = z.object({
-  student_id: z.string().min(1, "Student is required"),
-  lesson_id: z.string().min(1, "Lesson is required"),
-  enrollment_date: z.date({ required_error: "An enrollment date is required." }),
+  studentId: z.string().min(1, "Student is required"),
+  lessonId: z.string().min(1, "Lesson is required"),
+  enrollmentDate: z.date({ required_error: "An enrollment date is required." }),
   status: z.enum(["active", "inactive"]),
 });
 
@@ -55,20 +54,20 @@ export default function EditEnrollmentForm({
   const form = useForm<EnrollmentFormValues>({
     resolver: zodResolver(enrollmentSchema),
     defaultValues: {
-      student_id: enrollment.student_id,
-      lesson_id: enrollment.lesson_id,
-      enrollment_date: new Date(enrollment.enrollment_date),
+      studentId: enrollment.studentId,
+      lessonId: enrollment.lessonId,
+      enrollmentDate: new Date(enrollment.enrollmentDate),
       status: enrollment.status,
     },
   });
 
   const onSubmit = async (data: EnrollmentFormValues) => {
     try {
-      const enrollmentDocRef = doc(db, "enrollments", enrollment.enrollment_id);
+      const enrollmentDocRef = doc(db, "enrollments", enrollment.id);
       await updateDoc(enrollmentDocRef, {
         ...data,
-        enrollment_date: data.enrollment_date.toISOString(),
-        updated_at: serverTimestamp(),
+        enrollmentDate: data.enrollmentDate,
+        updatedAt: serverTimestamp(),
       });
       toast({
         title: "Enrollment Updated",
@@ -90,7 +89,7 @@ export default function EditEnrollmentForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="student_id"
+          name="studentId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Student</FormLabel>
@@ -102,7 +101,7 @@ export default function EditEnrollmentForm({
                 </FormControl>
                 <SelectContent>
                   {students.map(student => (
-                    <SelectItem key={student.student_id} value={student.student_id}>{student.name}</SelectItem>
+                    <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -112,7 +111,7 @@ export default function EditEnrollmentForm({
         />
         <FormField
           control={form.control}
-          name="lesson_id"
+          name="lessonId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Lesson</FormLabel>
@@ -124,7 +123,7 @@ export default function EditEnrollmentForm({
                 </FormControl>
                 <SelectContent>
                   {lessons.map(lesson => (
-                    <SelectItem key={lesson.lesson_id} value={lesson.lesson_id}>{lesson.lesson_name}</SelectItem>
+                    <SelectItem key={lesson.id} value={lesson.id}>{lesson.title}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -134,7 +133,7 @@ export default function EditEnrollmentForm({
         />
         <FormField
           control={form.control}
-          name="enrollment_date"
+          name="enrollmentDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Enrollment Date</FormLabel>

@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Student } from "@/lib/definitions";
 
@@ -26,14 +26,15 @@ export default function StudentsPage() {
       snapshot.forEach((doc) => {
         const data = doc.data();
         studentData.push({
-          student_id: doc.id,
+          id: doc.id,
           name: data.name,
           email: data.email,
           phone: data.phone,
-          location: data.location,
-          currency_code: data.currency_code,
-          created_at: data.created_at ? data.created_at.toDate().toISOString() : new Date().toISOString(),
-          updated_at: data.updated_at ? data.updated_at.toDate().toISOString() : new Date().toISOString(),
+          country: data.country,
+          currencyCode: data.currencyCode,
+          status: data.status,
+          createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+          updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
         });
       });
       setStudents(studentData);

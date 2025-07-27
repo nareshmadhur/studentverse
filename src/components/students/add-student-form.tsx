@@ -27,9 +27,10 @@ import { db } from "@/lib/firebase";
 const studentSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
-  phone: z.string().min(1, "Phone is required"),
-  location: z.string().min(1, "Location is required"),
-  currency_code: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
+  phone: z.string().optional(),
+  country: z.string().min(1, "Country is required"),
+  currencyCode: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
+  status: z.enum(["active", "inactive"]),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -46,8 +47,9 @@ export default function AddStudentForm({
       name: "",
       email: "",
       phone: "",
-      location: "",
-      currency_code: "USD",
+      country: "",
+      currencyCode: "USD",
+      status: "active",
     },
   });
 
@@ -55,8 +57,8 @@ export default function AddStudentForm({
     try {
       await addDoc(collection(db, "students"), {
         ...data,
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
       toast({
         title: "Student Added",
@@ -107,7 +109,7 @@ export default function AddStudentForm({
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone</FormLabel>
+              <FormLabel>Phone (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="Enter student's phone" {...field} />
               </FormControl>
@@ -117,12 +119,12 @@ export default function AddStudentForm({
         />
         <FormField
           control={form.control}
-          name="location"
+          name="country"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Location</FormLabel>
+              <FormLabel>Country</FormLabel>
               <FormControl>
-                <Input placeholder="Enter student's location" {...field} />
+                <Input placeholder="Enter student's country" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -130,7 +132,7 @@ export default function AddStudentForm({
         />
         <FormField
           control={form.control}
-          name="currency_code"
+          name="currencyCode"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Currency</FormLabel>
@@ -146,6 +148,27 @@ export default function AddStudentForm({
                   <SelectItem value="EUR">EUR</SelectItem>
                   <SelectItem value="GBP">GBP</SelectItem>
                   <SelectItem value="AUD">AUD</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

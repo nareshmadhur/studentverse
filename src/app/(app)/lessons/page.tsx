@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import AddLessonForm from "@/components/lessons/add-lesson-form";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Lesson } from "@/lib/definitions";
 
@@ -26,12 +26,14 @@ export default function LessonsPage() {
       snapshot.forEach((doc) => {
         const data = doc.data();
         lessonData.push({
-          lesson_id: doc.id,
-          lesson_name: data.lesson_name,
-          lesson_type: data.lesson_type,
+          id: doc.id,
+          title: data.title,
+          lessonType: data.lessonType,
+          category: data.category,
+          discipline: data.discipline,
           description: data.description,
-          created_at: data.created_at ? data.created_at.toDate().toISOString() : new Date().toISOString(),
-          updated_at: data.updated_at ? data.updated_at.toDate().toISOString() : new Date().toISOString(),
+          createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+          updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
         });
       });
       setLessons(lessonData);

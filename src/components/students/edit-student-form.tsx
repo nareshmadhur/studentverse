@@ -28,9 +28,10 @@ import { Student } from "@/lib/definitions";
 const studentSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
-  phone: z.string().min(1, "Phone is required"),
-  location: z.string().min(1, "Location is required"),
-  currency_code: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
+  phone: z.string().optional(),
+  country: z.string().min(1, "Country is required"),
+  currencyCode: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
+  status: z.enum(["active", "inactive"]),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -49,17 +50,18 @@ export default function EditStudentForm({
       name: student.name,
       email: student.email,
       phone: student.phone,
-      location: student.location,
-      currency_code: student.currency_code,
+      country: student.country,
+      currencyCode: student.currencyCode,
+      status: student.status,
     },
   });
 
   const onSubmit = async (data: StudentFormValues) => {
     try {
-      const studentDocRef = doc(db, "students", student.student_id);
+      const studentDocRef = doc(db, "students", student.id);
       await updateDoc(studentDocRef, {
         ...data,
-        updated_at: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
       toast({
         title: "Student Updated",
@@ -110,7 +112,7 @@ export default function EditStudentForm({
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone</FormLabel>
+              <FormLabel>Phone (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="Enter student's phone" {...field} />
               </FormControl>
@@ -120,12 +122,12 @@ export default function EditStudentForm({
         />
         <FormField
           control={form.control}
-          name="location"
+          name="country"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Location</FormLabel>
+              <FormLabel>Country</FormLabel>
               <FormControl>
-                <Input placeholder="Enter student's location" {...field} />
+                <Input placeholder="Enter student's country" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -133,7 +135,7 @@ export default function EditStudentForm({
         />
         <FormField
           control={form.control}
-          name="currency_code"
+          name="currencyCode"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Currency</FormLabel>
@@ -149,6 +151,27 @@ export default function EditStudentForm({
                   <SelectItem value="EUR">EUR</SelectItem>
                   <SelectItem value="GBP">GBP</SelectItem>
                   <SelectItem value="AUD">AUD</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
