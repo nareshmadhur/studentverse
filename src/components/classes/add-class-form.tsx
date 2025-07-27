@@ -297,7 +297,6 @@ export default function AddClassForm({
                                 key={student.id}
                                 value={student.id}
                                 className="cursor-pointer"
-                                disabled={sessionType === '1-1' && selectedStudents.length > 0 && !isSelected}
                                 onSelect={() => {
                                   if (sessionType === '1-1') {
                                     setSelectedStudents(prev => (prev.includes(student.id) ? [] : [student.id]));
