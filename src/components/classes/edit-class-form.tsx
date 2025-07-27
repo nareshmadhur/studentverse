@@ -289,7 +289,6 @@ export default function EditClassForm({
                              <CommandItem
                                 key={student.id}
                                 value={student.id}
-                                style={{ pointerEvents: 'auto', opacity: 1 }}
                                 onSelect={() => {
                                   if (sessionType === '1-1') {
                                     setSelectedStudents(prev => (prev.includes(student.id) ? [] : [student.id]));
@@ -333,4 +332,3 @@ export default function EditClassForm({
     </Form>
   );
 }
-
