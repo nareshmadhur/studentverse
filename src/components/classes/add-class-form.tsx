@@ -279,7 +279,6 @@ export default function AddClassForm({
                       variant="outline"
                       role="combobox"
                       className="w-full justify-between"
-                      disabled={sessionType === '1-1' && selectedStudents.length > 0 && !allStudents.find(s => s.id === selectedStudents[0])}
                     >
                       {selectedStudents.length > 0
                         ? `${selectedStudents.length} student(s) selected`
@@ -298,9 +297,11 @@ export default function AddClassForm({
                             <CommandItem
                               key={student.id}
                               onSelect={() => {
+                                if (sessionType === '1-1' && selectedStudents.length > 0 && !isSelected) {
+                                  return;
+                                }
                                 toggleStudent(student.id);
                               }}
-                              disabled={sessionType === '1-1' && selectedStudents.length > 0 && !isSelected}
                               className="cursor-pointer"
                             >
                               <Check

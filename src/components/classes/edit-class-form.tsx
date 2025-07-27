@@ -295,9 +295,11 @@ export default function EditClassForm({
                            <CommandItem
                               key={student.id}
                               onSelect={() => {
+                                if (sessionType === '1-1' && selectedStudents.length > 0 && !isSelected) {
+                                  return;
+                                }
                                 toggleStudent(student.id);
                               }}
-                              disabled={sessionType === '1-1' && selectedStudents.length > 0 && !isSelected}
                               className="cursor-pointer"
                             >
                               <Check
