@@ -31,7 +31,7 @@ import { useState } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 const classSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -99,12 +99,24 @@ export default function AddClassForm({
     }
   };
   
-  const toggleStudent = (studentId: string) => {
-    const newSelection = selectedStudents.includes(studentId)
-      ? selectedStudents.filter(id => id !== studentId)
-      : [...selectedStudents, studentId];
-    setSelectedStudents(newSelection);
-    form.setValue('students', newSelection);
+  const handleStudentSelect = (studentId: string) => {
+    const isSelected = selectedStudents.includes(studentId);
+
+    if (sessionType === '1-1') {
+      if (isSelected) {
+        setSelectedStudents([]);
+        form.setValue('students', []);
+      } else {
+        setSelectedStudents([studentId]);
+        form.setValue('students', [studentId]);
+      }
+    } else {
+      const newSelection = isSelected
+        ? selectedStudents.filter(id => id !== studentId)
+        : [...selectedStudents, studentId];
+      setSelectedStudents(newSelection);
+      form.setValue('students', newSelection);
+    }
   };
 
   const handleSessionTypeChange = (value: "1-1" | "group") => {
@@ -287,34 +299,31 @@ export default function AddClassForm({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0">
-                    <Command>
+                    <Command onValueChange={handleStudentSelect}>
                       <CommandInput placeholder="Search students..." />
-                      <CommandEmpty>No students found.</CommandEmpty>
-                      <CommandGroup>
-                        {allStudents.map((student) => {
-                          const isSelected = selectedStudents.includes(student.id);
-                          return (
-                            <CommandItem
-                              key={student.id}
-                              onSelect={() => {
-                                if (sessionType === '1-1' && selectedStudents.length > 0 && !isSelected) {
-                                  return;
-                                }
-                                toggleStudent(student.id);
-                              }}
-                              className="cursor-pointer"
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  isSelected ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {student.name}
-                            </CommandItem>
-                          )
-                        })}
-                      </CommandGroup>
+                      <CommandList>
+                        <CommandEmpty>No students found.</CommandEmpty>
+                        <CommandGroup>
+                          {allStudents.map((student) => {
+                            const isSelected = selectedStudents.includes(student.id);
+                            return (
+                              <CommandItem
+                                key={student.id}
+                                value={student.id}
+                                className="cursor-pointer"
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    isSelected ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {student.name}
+                              </CommandItem>
+                            )
+                          })}
+                        </CommandGroup>
+                      </CommandList>
                     </Command>
                   </PopoverContent>
                 </Popover>
@@ -334,3 +343,5 @@ export default function AddClassForm({
     </Form>
   );
 }
+
+    
