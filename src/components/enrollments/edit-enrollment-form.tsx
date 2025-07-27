@@ -28,6 +28,7 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const enrollmentSchema = z.object({
   student_id: z.string().min(1, "Student is required"),
@@ -50,6 +51,7 @@ export default function EditEnrollmentForm({
   lessons: Lesson[];
 }) {
   const { toast } = useToast();
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const form = useForm<EnrollmentFormValues>({
     resolver: zodResolver(enrollmentSchema),
     defaultValues: {
@@ -136,7 +138,7 @@ export default function EditEnrollmentForm({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Enrollment Date</FormLabel>
-              <Popover>
+              <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -159,7 +161,10 @@ export default function EditEnrollmentForm({
                   <Calendar
                     mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
+                    onSelect={(date) => {
+                      field.onChange(date);
+                      setIsDatePickerOpen(false);
+                    }}
                     initialFocus
                   />
                 </PopoverContent>

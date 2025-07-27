@@ -29,6 +29,7 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const feeSchema = z.object({
   lesson_id: z.string().min(1, "Lesson is required"),
@@ -53,6 +54,7 @@ export default function EditFeeForm({
   lessons: Lesson[];
 }) {
   const { toast } = useToast();
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
@@ -202,7 +204,7 @@ export default function EditFeeForm({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Effective Date</FormLabel>
-              <Popover>
+              <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -225,7 +227,10 @@ export default function EditFeeForm({
                   <Calendar
                     mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
+                    onSelect={(date) => {
+                      field.onChange(date);
+                      setIsDatePickerOpen(false);
+                    }}
                     initialFocus
                   />
                 </PopoverContent>
