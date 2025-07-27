@@ -24,7 +24,6 @@ import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Student, Lesson } from "@/lib/definitions";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
@@ -137,39 +136,35 @@ export default function AddEnrollmentForm({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Enrollment Date</FormLabel>
-              <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={(date) => {
-                      if (date) {
-                        field.onChange(date);
-                        setIsDatePickerOpen(false);
-                      }
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Button
+                type="button"
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !field.value && "text-muted-foreground"
+                )}
+                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {field.value ? (
+                  format(field.value, "PPP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+              {isDatePickerOpen && (
+                <Calendar
+                  mode="single"
+                  selected={field.value}
+                  onSelect={(date) => {
+                    if (date) {
+                      field.onChange(date);
+                      setIsDatePickerOpen(false);
+                    }
+                  }}
+                  initialFocus
+                />
+              )}
               <FormMessage />
             </FormItem>
           )}
