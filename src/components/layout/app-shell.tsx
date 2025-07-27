@@ -1,9 +1,10 @@
+
 "use client";
 
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, Users, CalendarDays, DollarSign, CreditCard } from "lucide-react";
+import { GraduationCap, Users, CalendarDays, DollarSign, CreditCard, Beaker } from "lucide-react";
 
 import {
   Sidebar,
@@ -82,6 +83,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link href="/payments">
                   <CreditCard />
                   <span>Payments</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/test-command")}
+                tooltip="Test"
+              >
+                <Link href="/test-command">
+                  <Beaker />
+                  <span>Test</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
