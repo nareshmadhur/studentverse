@@ -54,7 +54,10 @@ export default function AddFeeForm({
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
+      lesson_id: "",
+      student_id: "all-students",
       fee_type: "hourly",
+      amount: 0,
       currency_code: "USD",
     },
   });

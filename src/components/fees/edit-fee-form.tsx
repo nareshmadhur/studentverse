@@ -56,8 +56,11 @@ export default function EditFeeForm({
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
-      ...fee,
+      lesson_id: fee.lesson_id,
       student_id: !fee.student_id ? "all-students" : fee.student_id,
+      fee_type: fee.fee_type,
+      amount: fee.amount,
+      currency_code: fee.currency_code,
       effective_date: new Date(fee.effective_date),
     },
   });
