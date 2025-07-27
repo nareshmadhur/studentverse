@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import LessonsTable from "@/components/lessons/lessons-table";
-import { dummyLessons } from "@/lib/data";
 import {
   Dialog,
   DialogContent,
@@ -11,11 +10,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AddLessonForm from "@/components/lessons/add-lesson-form";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Lesson } from "@/lib/definitions";
 
 export default function LessonsPage() {
   const [open, setOpen] = useState(false);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "lessons"), (snapshot) => {
+      const lessonData: Lesson[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        lessonData.push({
+          lesson_id: doc.id,
+          lesson_name: data.lesson_name,
+          lesson_type: data.lesson_type,
+          description: data.description,
+          created_at: data.created_at.toDate().toISOString(),
+          updated_at: data.updated_at.toDate().toISOString(),
+        });
+      });
+      setLessons(lessonData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -31,7 +53,7 @@ export default function LessonsPage() {
             </Button>
           </DialogTrigger>
         </div>
-        <LessonsTable lessons={dummyLessons} />
+        <LessonsTable lessons={lessons} />
       </div>
       <DialogContent>
         <DialogHeader>

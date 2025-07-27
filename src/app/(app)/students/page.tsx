@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import StudentsTable from "@/components/students/students-table";
-import { dummyStudents } from "@/lib/data";
 import AddStudentForm from "@/components/students/add-student-form";
 import {
   Dialog,
@@ -12,10 +11,35 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Student } from "@/lib/definitions";
 
 export default function StudentsPage() {
   const [open, setOpen] = useState(false);
+  const [students, setStudents] = useState<Student[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "students"), (snapshot) => {
+      const studentData: Student[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        studentData.push({
+          student_id: doc.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          location: data.location,
+          currency_code: data.currency_code,
+          created_at: data.created_at.toDate().toISOString(),
+          updated_at: data.updated_at.toDate().toISOString(),
+        });
+      });
+      setStudents(studentData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -31,7 +55,7 @@ export default function StudentsPage() {
             </Button>
           </DialogTrigger>
         </div>
-        <StudentsTable students={dummyStudents} />
+        <StudentsTable students={students} />
       </div>
       <DialogContent>
         <DialogHeader>

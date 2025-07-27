@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const lessonSchema = z.object({
   lesson_name: z.string().min(1, "Lesson name is required"),
@@ -46,14 +48,26 @@ export default function AddLessonForm({
     },
   });
 
-  const onSubmit = (data: LessonFormValues) => {
-    // Here you would typically handle form submission, e.g., send data to your API
-    console.log(data);
-    toast({
-      title: "Lesson Added",
-      description: `${data.lesson_name} has been successfully added.`,
-    });
-    setOpen(false);
+  const onSubmit = async (data: LessonFormValues) => {
+    try {
+      await addDoc(collection(db, "lessons"), {
+        ...data,
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
+      });
+      toast({
+        title: "Lesson Added",
+        description: `${data.lesson_name} has been successfully added.`,
+      });
+      setOpen(false);
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      toast({
+        title: "Error",
+        description: "There was an error adding the lesson. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
