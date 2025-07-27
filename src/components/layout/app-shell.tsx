@@ -17,17 +17,9 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import { Button } from "../ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isMobile = useIsMobile();
-  const [isClient, setIsClient] = React.useState(false);
-
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
-
 
   const isActive = (path: string) => {
     return pathname === path;
@@ -133,16 +125,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
-      <main className="flex-1 p-4 sm:p-6">
-        <div className="flex flex-col h-full">
-          {isClient && isMobile && (
-            <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6 mb-4">
-              <SidebarTrigger className="md:hidden"/>
-            </header>
-          )}
-          <div className="flex-1">
-            {children}
-          </div>
+      <main className="flex-1">
+        <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6 md:hidden">
+          <SidebarTrigger />
+        </header>
+        <div className="p-4 sm:p-6">
+          {children}
         </div>
       </main>
     </SidebarProvider>
