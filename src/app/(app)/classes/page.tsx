@@ -12,14 +12,14 @@ import {
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Class, Lesson } from "@/lib/definitions";
+import { Class, Student } from "@/lib/definitions";
 import ClassesTable from "@/components/classes/classes-table";
 import AddClassForm from "@/components/classes/add-class-form";
 
 export default function ClassesPage() {
   const [open, setOpen] = useState(false);
   const [classes, setClasses] = useState<Class[]>([]);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, "classes"), where("deleted", "==", false));
@@ -29,10 +29,16 @@ export default function ClassesPage() {
         const data = doc.data();
         classData.push({
           id: doc.id,
-          lessonId: data.lessonId,
-          classDateTime: (data.classDateTime as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
-          duration: data.duration,
-          status: data.status,
+          discipline: data.discipline,
+          category: data.category,
+          sessionType: data.sessionType,
+          title: data.title,
+          description: data.description,
+          scheduledDate: (data.scheduledDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+          durationMinutes: data.durationMinutes,
+          location: data.location,
+          students: data.students || [],
+          feeOverrides: data.feeOverrides || [],
           createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           deleted: data.deleted,
@@ -41,17 +47,17 @@ export default function ClassesPage() {
       setClasses(classData);
     });
 
-    const fetchLessons = async () => {
-      const lessonQuery = query(collection(db, "lessons"), where("deleted", "==", false));
-      const lessonSnapshot = await getDocs(lessonQuery);
-      const lessonData: Lesson[] = lessonSnapshot.docs.map(doc => ({
+    const fetchStudents = async () => {
+      const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
+      const studentSnapshot = await getDocs(studentQuery);
+      const studentData: Student[] = studentSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      } as Lesson));
-      setLessons(lessonData);
+      } as Student));
+      setStudents(studentData);
     }
 
-    fetchLessons();
+    fetchStudents();
 
     return () => unsubscribe();
   }, []);
@@ -70,13 +76,13 @@ export default function ClassesPage() {
             </Button>
           </DialogTrigger>
         </div>
-        <ClassesTable classes={classes} lessons={lessons} />
+        <ClassesTable classes={classes} students={students} />
       </div>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
           <DialogTitle>Add a new class</DialogTitle>
         </DialogHeader>
-        <AddClassForm setOpen={setOpen} lessons={lessons} />
+        <AddClassForm setOpen={setOpen} allStudents={students} />
       </DialogContent>
     </Dialog>
   );

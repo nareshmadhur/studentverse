@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Fee, Student, Lesson } from "@/lib/definitions";
+import type { Fee, Student, Class } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -41,11 +41,11 @@ import { useToast } from "@/hooks/use-toast";
 export default function FeesTable({ 
   fees, 
   students,
-  lessons,
+  classes,
 }: { 
   fees: Fee[], 
   students: Student[],
-  lessons: Lesson[],
+  classes: Class[],
 }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -82,8 +82,8 @@ export default function FeesTable({
     return students.find(s => s.id === studentId)?.name || "Unknown Student";
   }
   
-  const getLessonName = (lessonId: string) => {
-    return lessons.find(l => l.id === lessonId)?.title || "Unknown Lesson";
+  const getClassName = (classId: string) => {
+    return classes.find(l => l.id === classId)?.title || "Unknown Class";
   }
 
 
@@ -100,7 +100,7 @@ export default function FeesTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Lesson</TableHead>
+                <TableHead>Class</TableHead>
                 <TableHead>Student</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Type</TableHead>
@@ -113,7 +113,7 @@ export default function FeesTable({
             <TableBody>
               {fees.map((fee) => (
                 <TableRow key={fee.id}>
-                  <TableCell className="font-medium">{getLessonName(fee.lessonId)}</TableCell>
+                  <TableCell className="font-medium">{getClassName(fee.classId)}</TableCell>
                   <TableCell>{getStudentName(fee.studentId)}</TableCell>
                   <TableCell>{fee.amount.toFixed(2)} <Badge variant="outline">{fee.currencyCode}</Badge></TableCell>
                    <TableCell>
@@ -158,7 +158,7 @@ export default function FeesTable({
               setOpen={setIsEditDialogOpen}
               fee={selectedFee}
               students={students}
-              lessons={lessons}
+              classes={classes}
             />
           )}
         </DialogContent>

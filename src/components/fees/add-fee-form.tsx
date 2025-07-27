@@ -22,16 +22,17 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Student, Lesson } from "@/lib/definitions";
+import { Student, Class } from "@/lib/definitions";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Input } from "../ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 const feeSchema = z.object({
-  lessonId: z.string().min(1, "Lesson is required"),
+  classId: z.string().min(1, "Class is required"),
   studentId: z.string().nullable(),
   feeType: z.enum(["hourly", "subscription"]),
   amount: z.coerce.number().positive("Amount must be positive."),
@@ -44,18 +45,18 @@ type FeeFormValues = z.infer<typeof feeSchema>;
 export default function AddFeeForm({
   setOpen,
   students,
-  lessons
+  classes
 }: {
   setOpen: (open: boolean) => void;
   students: Student[];
-  lessons: Lesson[];
+  classes: Class[];
 }) {
   const { toast } = useToast();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
-      lessonId: "",
+      classId: "",
       studentId: null,
       feeType: "hourly",
       amount: 0,
@@ -92,20 +93,20 @@ export default function AddFeeForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="lessonId"
+          name="classId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Lesson</FormLabel>
+              <FormLabel>Class</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a lesson" />
+                    <SelectValue placeholder="Select a class" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {lessons.map(lesson => (
-                    <SelectItem key={lesson.id} value={lesson.id}>
-                      {lesson.title}
+                  {classes.map(c => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -206,35 +207,38 @@ export default function AddFeeForm({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Effective Date</FormLabel>
-              <Button
-                type="button"
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !field.value && "text-muted-foreground"
-                )}
-                onClick={() => setIsDatePickerOpen(prev => !prev)}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {field.value ? (
-                  format(field.value, "PPP")
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-              {isDatePickerOpen && (
-                <Calendar
-                  mode="single"
-                  selected={field.value}
-                  onSelect={(date) => {
-                    if (date) {
-                      field.onChange(date);
-                      setIsDatePickerOpen(false);
-                    }
-                  }}
-                  initialFocus
-                />
-              )}
+              <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                    type="button"
+                    variant={"outline"}
+                    className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                    )}
+                    >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {field.value ? (
+                        format(field.value, "PPP")
+                    ) : (
+                        <span>Pick a date</span>
+                    )}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                    <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={(date) => {
+                        if (date) {
+                        field.onChange(date);
+                        setIsDatePickerOpen(false);
+                        }
+                    }}
+                    initialFocus
+                    />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}

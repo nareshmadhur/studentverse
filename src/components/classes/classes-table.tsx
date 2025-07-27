@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Class, Lesson } from "@/lib/definitions";
+import type { Class, Student } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -40,10 +40,10 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function ClassesTable({ 
   classes, 
-  lessons 
+  students 
 }: { 
   classes: Class[], 
-  lessons: Lesson[] 
+  students: Student[] 
 }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -75,10 +75,6 @@ export default function ClassesTable({
     }
   };
 
-  const getLessonName = (lessonId: string) => {
-    return lessons.find(lesson => lesson.id === lessonId)?.title || "Unknown Lesson";
-  }
-
   return (
     <>
       <Card>
@@ -92,10 +88,11 @@ export default function ClassesTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Lesson</TableHead>
-                <TableHead>Date & Time</TableHead>
-                <TableHead>Duration (mins)</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Discipline</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Students</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -105,17 +102,16 @@ export default function ClassesTable({
               {classes.map((classItem) => (
                 <TableRow key={classItem.id}>
                   <TableCell className="font-medium">
-                    {getLessonName(classItem.lessonId)}
+                    {classItem.title}
                   </TableCell>
-                  <TableCell>{format(new Date(classItem.classDateTime), "PPP p")}</TableCell>
-                  <TableCell>{classItem.duration}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={classItem.status === "scheduled" ? "default" : classItem.status === 'completed' ? 'secondary' : 'destructive'}
-                    >
-                      {classItem.status}
+                  <TableCell>{classItem.discipline}</TableCell>
+                   <TableCell>
+                    <Badge variant={classItem.sessionType === '1-1' ? 'secondary' : 'default'}>
+                      {classItem.sessionType}
                     </Badge>
                   </TableCell>
+                  <TableCell>{format(new Date(classItem.scheduledDate), "PPP p")}</TableCell>
+                  <TableCell>{classItem.students.length}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -143,7 +139,7 @@ export default function ClassesTable({
         </CardContent>
       </Card>
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[625px]">
           <DialogHeader>
             <DialogTitle>Edit Class</DialogTitle>
           </DialogHeader>
@@ -151,7 +147,7 @@ export default function ClassesTable({
             <EditClassForm
               setOpen={setIsEditDialogOpen}
               classItem={selectedClass}
-              lessons={lessons}
+              allStudents={students}
             />
           )}
         </DialogContent>

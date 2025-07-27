@@ -11,35 +11,26 @@ export type Student = {
   deleted: boolean;
 };
 
-export type Lesson = {
-  id: string;
-  category: string;
-  discipline: string;
-  lessonType: '1-1' | 'group';
-  title: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-  deleted: boolean;
-};
-
-export type Enrollment = {
-  id: string;
+export type FeeOverride = {
   studentId: string;
-  lessonId: string;
-  enrollmentDate: string;
-  status: 'active' | 'inactive';
-  createdAt: string;
-  updatedAt: string;
-  deleted: boolean;
-};
+  feeType: 'hourly' | 'subscription';
+  amount: number;
+  currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';
+  effectiveDate: string;
+}
 
 export type Class = {
   id: string;
-  lessonId: string;
-  classDateTime: string;
-  duration: number; // in minutes
-  status: 'scheduled' | 'completed' | 'cancelled';
+  discipline: string;
+  category?: string;
+  sessionType: '1-1' | 'group';
+  title: string;
+  description?: string;
+  scheduledDate: string;
+  durationMinutes: number;
+  location?: string;
+  students: string[];
+  feeOverrides?: FeeOverride[];
   createdAt: string;
   updatedAt: string;
   deleted: boolean;
@@ -48,7 +39,7 @@ export type Class = {
 export type Fee = {
   id: string;
   studentId: string | null;
-  lessonId: string;
+  classId: string;
   feeType: 'hourly' | 'subscription';
   amount: number;
   currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';

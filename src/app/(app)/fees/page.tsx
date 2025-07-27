@@ -12,7 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Fee, Student, Lesson } from "@/lib/definitions";
+import { Fee, Student, Class } from "@/lib/definitions";
 import FeesTable from "@/components/fees/fees-table";
 import AddFeeForm from "@/components/fees/add-fee-form";
 
@@ -20,7 +20,7 @@ export default function FeesPage() {
   const [open, setOpen] = useState(false);
   const [fees, setFees] = useState<Fee[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, "fees"), where("deleted", "==", false));
@@ -31,7 +31,7 @@ export default function FeesPage() {
         feeData.push({
           id: doc.id,
           studentId: data.studentId,
-          lessonId: data.lessonId,
+          classId: data.classId,
           feeType: data.feeType,
           amount: data.amount,
           currencyCode: data.currencyCode,
@@ -46,18 +46,18 @@ export default function FeesPage() {
 
     const fetchRelatedData = async () => {
       const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
-      const lessonQuery = query(collection(db, "lessons"), where("deleted", "==", false));
+      const classQuery = query(collection(db, "classes"), where("deleted", "==", false));
       
-      const [studentSnapshot, lessonSnapshot] = await Promise.all([
+      const [studentSnapshot, classSnapshot] = await Promise.all([
         getDocs(studentQuery),
-        getDocs(lessonQuery)
+        getDocs(classQuery)
       ]);
       
       const studentData: Student[] = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentData);
 
-      const lessonData: Lesson[] = lessonSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lesson));
-      setLessons(lessonData);
+      const classData: Class[] = classSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Class));
+      setClasses(classData);
     }
 
     fetchRelatedData();
@@ -79,13 +79,13 @@ export default function FeesPage() {
             </Button>
           </DialogTrigger>
         </div>
-        <FeesTable fees={fees} students={students} lessons={lessons} />
+        <FeesTable fees={fees} students={students} classes={classes} />
       </div>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a new fee</DialogTitle>
         </DialogHeader>
-        <AddFeeForm setOpen={setOpen} students={students} lessons={lessons} />
+        <AddFeeForm setOpen={setOpen} students={students} classes={classes} />
       </DialogContent>
     </Dialog>
   );

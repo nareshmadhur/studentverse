@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpenCheck, GraduationCap, Users, UserCheck, CalendarDays, DollarSign, CreditCard } from "lucide-react";
+import { GraduationCap, Users, CalendarDays, DollarSign, CreditCard } from "lucide-react";
 
 import {
   Sidebar,
@@ -46,30 +46,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link href="/students">
                   <Users />
                   <span>Students</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/lessons")}
-                tooltip="Lessons"
-              >
-                <Link href="/lessons">
-                  <BookOpenCheck />
-                  <span>Lessons</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive("/enrollments")}
-                tooltip="Enrollments"
-              >
-                <Link href="/enrollments">
-                  <UserCheck />
-                  <span>Enrollments</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

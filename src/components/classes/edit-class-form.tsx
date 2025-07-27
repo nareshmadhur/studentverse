@@ -22,19 +22,27 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Class, Lesson } from "@/lib/definitions";
-import { CalendarIcon } from "lucide-react";
+import { Class, Student } from "@/lib/definitions";
+import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "../ui/command";
 
 const classSchema = z.object({
-  lessonId: z.string().min(1, "Lesson is required"),
-  classDateTime: z.date({ required_error: "A class date and time is required." }),
-  duration: z.coerce.number().min(1, "Duration must be at least 1 minute."),
-  status: z.enum(["scheduled", "completed", "cancelled"]),
+  title: z.string().min(1, "Title is required"),
+  discipline: z.string().min(1, "Discipline is required"),
+  category: z.string().optional(),
+  sessionType: z.enum(["1-1", "group"]),
+  description: z.string().optional(),
+  scheduledDate: z.date({ required_error: "A class date and time is required." }),
+  durationMinutes: z.coerce.number().min(1, "Duration must be at least 1 minute."),
+  location: z.string().optional(),
+  students: z.array(z.string()).optional(),
 });
 
 type ClassFormValues = z.infer<typeof classSchema>;
@@ -42,21 +50,21 @@ type ClassFormValues = z.infer<typeof classSchema>;
 export default function EditClassForm({
   setOpen,
   classItem,
-  lessons,
+  allStudents,
 }: {
   setOpen: (open: boolean) => void;
   classItem: Class;
-  lessons: Lesson[];
+  allStudents: Student[];
 }) {
   const { toast } = useToast();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>(classItem.students || []);
+
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
     defaultValues: {
-      lessonId: classItem.lessonId,
-      classDateTime: new Date(classItem.classDateTime),
-      duration: classItem.duration,
-      status: classItem.status,
+      ...classItem,
+      scheduledDate: new Date(classItem.scheduledDate),
     },
   });
 
@@ -65,7 +73,7 @@ export default function EditClassForm({
       const classDocRef = doc(db, "classes", classItem.id);
       await updateDoc(classDocRef, {
         ...data,
-        classDateTime: data.classDateTime,
+        students: selectedStudents,
         updatedAt: serverTimestamp(),
       });
       toast({
@@ -83,106 +91,220 @@ export default function EditClassForm({
     }
   };
 
+  const toggleStudent = (studentId: string) => {
+    const newSelection = selectedStudents.includes(studentId)
+      ? selectedStudents.filter(id => id !== studentId)
+      : [...selectedStudents, studentId];
+    setSelectedStudents(newSelection);
+    form.setValue('students', newSelection);
+  };
+  
+  useEffect(() => {
+    form.setValue('students', selectedStudents)
+  }, [selectedStudents, form]);
+
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="lessonId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Lesson</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a lesson" />
-                  </SelectTrigger>
+                  <Input placeholder="e.g. Intro to Vocals" {...field} />
                 </FormControl>
-                <SelectContent>
-                  {lessons.map(lesson => (
-                    <SelectItem key={lesson.id} value={lesson.id}>{lesson.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="discipline"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Discipline</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. guitar, vocals" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. music, art" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="sessionType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Session Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a session type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="1-1">1-1</SelectItem>
+                    <SelectItem value="group">Group</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
         <FormField
           control={form.control}
-          name="classDateTime"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Class Date & Time</FormLabel>
-              <Button
-                type="button"
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !field.value && "text-muted-foreground"
-                )}
-                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {field.value ? (
-                  format(field.value, "PPP")
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-              {isDatePickerOpen && (
-                <Calendar
-                  mode="single"
-                  selected={field.value}
-                  onSelect={(date) => {
-                    if (date) {
-                      field.onChange(date);
-                      setIsDatePickerOpen(false);
-                    }
-                  }}
-                  initialFocus
-                />
-              )}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="duration"
+          name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Duration (in minutes)</FormLabel>
+              <FormLabel>Description (Optional)</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="e.g. 60" {...field} />
+                <Textarea placeholder="Enter class details" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="scheduledDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Class Date & Time</FormLabel>
+                <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                     <Calendar
+                      mode="single"
+                      selected={field.value}
+                       onSelect={(date) => {
+                        field.onChange(date)
+                        setIsDatePickerOpen(false)
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="durationMinutes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Duration (in minutes)</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
+                  <Input type="number" placeholder="e.g. 60" {...field} />
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value="scheduled">Scheduled</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end gap-2">
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+           <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. Room A1" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="students"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Students</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between"
+                    >
+                      {selectedStudents.length > 0
+                        ? `${selectedStudents.length} student(s) selected`
+                        : "Select students..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search students..." />
+                      <CommandEmpty>No students found.</CommandEmpty>
+                      <CommandGroup>
+                        {allStudents.map((student) => (
+                          <CommandItem
+                            key={student.id}
+                            onSelect={() => toggleStudent(student.id)}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedStudents.includes(student.id) ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {student.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>

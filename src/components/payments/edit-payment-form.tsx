@@ -22,13 +22,14 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Payment, Fee, Student, Lesson } from "@/lib/definitions";
+import { Payment, Fee, Student, Class } from "@/lib/definitions";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Input } from "../ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 const paymentSchema = z.object({
   feeId: z.string().min(1, "Fee is required"),
@@ -44,13 +45,13 @@ export default function EditPaymentForm({
   payment,
   fees,
   students,
-  lessons,
+  classes,
 }: {
   setOpen: (open: boolean) => void;
   payment: Payment;
   fees: Fee[];
   students: Student[];
-  lessons: Lesson[];
+  classes: Class[];
 }) {
   const { toast } = useToast();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -88,12 +89,12 @@ export default function EditPaymentForm({
   
   const getFeeInfo = (feeId: string) => {
     const fee = fees.find(f => f.id === feeId);
-    if (!fee) return { studentName: "Unknown", lessonName: "Unknown", feeAmount: 0 };
+    if (!fee) return { studentName: "Unknown", className: "Unknown", feeAmount: 0 };
     const student = students.find(s => s.id === fee.studentId);
-    const lesson = lessons.find(l => l.id === fee.lessonId);
+    const c = classes.find(l => l.id === fee.classId);
     return {
       studentName: student?.name || "Default",
-      lessonName: lesson?.title || "Unknown Lesson",
+      className: c?.title || "Unknown Class",
       feeAmount: fee.amount
     }
   }
@@ -115,10 +116,10 @@ export default function EditPaymentForm({
                 </FormControl>
                 <SelectContent>
                   {fees.map(fee => {
-                    const { studentName, lessonName, feeAmount } = getFeeInfo(fee.id);
+                    const { studentName, className, feeAmount } = getFeeInfo(fee.id);
                     return (
                       <SelectItem key={fee.id} value={fee.id}>
-                        {studentName} - {lessonName} (${feeAmount})
+                        {studentName} - {className} (${feeAmount})
                       </SelectItem>
                     )
                   })}
@@ -147,35 +148,38 @@ export default function EditPaymentForm({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Payment Date</FormLabel>
-               <Button
-                type="button"
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !field.value && "text-muted-foreground"
-                )}
-                onClick={() => setIsDatePickerOpen(prev => !prev)}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {field.value ? (
-                  format(field.value, "PPP")
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-              {isDatePickerOpen && (
-                <Calendar
-                  mode="single"
-                  selected={field.value}
-                  onSelect={(date) => {
-                    if (date) {
-                      field.onChange(date);
-                      setIsDatePickerOpen(false);
-                    }
-                  }}
-                  initialFocus
-                />
-              )}
+              <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                    type="button"
+                    variant={"outline"}
+                    className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                    )}
+                    >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {field.value ? (
+                        format(field.value, "PPP")
+                    ) : (
+                        <span>Pick a date</span>
+                    )}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                    <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={(date) => {
+                      if (date) {
+                        field.onChange(date);
+                        setIsDatePickerOpen(false);
+                      }
+                    }}
+                    initialFocus
+                    />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
