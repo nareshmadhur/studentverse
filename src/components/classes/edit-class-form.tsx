@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -284,15 +285,13 @@ export default function EditClassForm({
                         <CommandGroup>
                           {allStudents.map((student) => {
                             const isSelected = selectedStudents.includes(student.id);
-                            const isDisabled = sessionType === '1-1' && selectedStudents.length > 0 && !isSelected;
                             return (
                              <CommandItem
                                 key={student.id}
                                 value={student.id}
                                 className="cursor-pointer"
-                                disabled={isDisabled}
+                                disabled={sessionType === '1-1' && selectedStudents.length > 0 && !isSelected}
                                 onSelect={() => {
-                                  if (isDisabled) return;
                                   if (sessionType === '1-1') {
                                     setSelectedStudents(prev => (prev.includes(student.id) ? [] : [student.id]));
                                   } else {
