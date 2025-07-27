@@ -40,16 +40,14 @@ export default function TestCommandPage() {
       setSelectedStudents((current) =>
         current.includes(studentId) ? [] : [studentId]
       );
+       // Close the popover after selection in 1-1 mode.
+      setOpen(false);
     } else {
       setSelectedStudents((current) =>
         current.includes(studentId)
           ? current.filter((id) => id !== studentId)
           : [...current, studentId]
       );
-    }
-    // For 1-1, close the popover after selection
-    if (sessionType === "1-1" && selectedStudents.length === 0) {
-      setOpen(false);
     }
   };
 
@@ -113,14 +111,21 @@ export default function TestCommandPage() {
                         <CommandGroup>
                             {mockStudents.map((student) => {
                                 const isSelected = selectedStudents.includes(student.id);
-                                const isDisabled = sessionType === '1-1' && selectedStudents.length > 0 && !isSelected;
+                                // This is the business logic check. We no longer pass a `disabled` prop.
+                                const isEffectivelyDisabled = sessionType === '1-1' && selectedStudents.length > 0 && !isSelected;
 
                                 return (
                                 <CommandItem
                                     key={student.id}
-                                    value={student.name} // Value is used for search, not for selection logic
-                                    onSelect={() => handleSelect(student.id)}
-                                    disabled={isDisabled}
+                                    value={student.name}
+                                    onSelect={() => {
+                                        if (isEffectivelyDisabled) {
+                                            return;
+                                        }
+                                        handleSelect(student.id);
+                                    }}
+                                    // The styling is now based on our logic, not a disabled prop.
+                                    className={cn(isEffectivelyDisabled && "text-muted-foreground opacity-50 cursor-not-allowed")}
                                 >
                                     <Check
                                         className={cn(
