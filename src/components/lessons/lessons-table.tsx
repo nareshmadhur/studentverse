@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Lesson } from "@/lib/definitions";
 import {
   Card,
@@ -25,59 +26,93 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import EditLessonForm from "./edit-lesson-form";
 
 export default function LessonsTable({ lessons }: { lessons: Lesson[] }) {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+
+  const handleEditClick = (lesson: Lesson) => {
+    setSelectedLesson(lesson);
+    setIsEditDialogOpen(true);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>All Lessons</CardTitle>
-        <CardDescription>
-          A list of all lessons offered in your system.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Lesson Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {lessons.map((lesson) => (
-              <TableRow key={lesson.lesson_id}>
-                <TableCell className="font-medium">{lesson.lesson_name}</TableCell>
-                <TableCell>
-                  <Badge variant={lesson.lesson_type === '1-1' ? 'secondary' : 'default'}>
-                    {lesson.lesson_type}
-                  </Badge>
-                </TableCell>
-                <TableCell>{lesson.description}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>All Lessons</CardTitle>
+          <CardDescription>
+            A list of all lessons offered in your system.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Lesson Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {lessons.map((lesson) => (
+                <TableRow key={lesson.lesson_id}>
+                  <TableCell className="font-medium">
+                    {lesson.lesson_name}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={lesson.lesson_type === "1-1" ? "secondary" : "default"}
+                    >
+                      {lesson.lesson_type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{lesson.description}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditClick(lesson)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Lesson</DialogTitle>
+          </DialogHeader>
+          {selectedLesson && (
+            <EditLessonForm
+              setOpen={setIsEditDialogOpen}
+              lesson={selectedLesson}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
