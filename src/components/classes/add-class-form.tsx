@@ -279,7 +279,6 @@ export default function AddClassForm({
                       variant="outline"
                       role="combobox"
                       className="w-full justify-between"
-                      disabled={sessionType === '1-1' && selectedStudents.length > 0}
                     >
                       {selectedStudents.length > 0
                         ? `${selectedStudents.length} student(s) selected`
@@ -292,27 +291,29 @@ export default function AddClassForm({
                       <CommandInput placeholder="Search students..." />
                       <CommandEmpty>No students found.</CommandEmpty>
                       <CommandGroup>
-                        {allStudents.map((student) => (
-                          <CommandItem
-                            key={student.id}
-                            onSelect={() => {
-                              if (sessionType === '1-1' && selectedStudents.length >= 1 && !selectedStudents.includes(student.id)) {
-                                return;
-                              }
-                              toggleStudent(student.id)}
-                            }
-                            disabled={sessionType === '1-1' && selectedStudents.length >= 1 && !selectedStudents.includes(student.id)}
-                            className="cursor-pointer"
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                selectedStudents.includes(student.id) ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {student.name}
-                          </CommandItem>
-                        ))}
+                        {allStudents.map((student) => {
+                          const isSelected = selectedStudents.includes(student.id);
+                          const isDisabled = sessionType === '1-1' && selectedStudents.length >= 1 && !isSelected;
+                          return (
+                            <CommandItem
+                              key={student.id}
+                              onSelect={() => {
+                                if (isDisabled) return;
+                                toggleStudent(student.id)
+                              }}
+                              disabled={isDisabled}
+                              className="cursor-pointer"
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  isSelected ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {student.name}
+                            </CommandItem>
+                          )
+                        })}
                       </CommandGroup>
                     </Command>
                   </PopoverContent>
