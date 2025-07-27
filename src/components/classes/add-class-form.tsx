@@ -279,6 +279,7 @@ export default function AddClassForm({
                       variant="outline"
                       role="combobox"
                       className="w-full justify-between"
+                      disabled={sessionType === '1-1' && selectedStudents.length > 0}
                     >
                       {selectedStudents.length > 0
                         ? `${selectedStudents.length} student(s) selected`
@@ -293,15 +294,13 @@ export default function AddClassForm({
                       <CommandGroup>
                         {allStudents.map((student) => {
                           const isSelected = selectedStudents.includes(student.id);
-                          const isDisabled = sessionType === '1-1' && selectedStudents.length >= 1 && !isSelected;
                           return (
                             <CommandItem
                               key={student.id}
                               onSelect={() => {
-                                if (isDisabled) return;
-                                toggleStudent(student.id)
+                                toggleStudent(student.id);
                               }}
-                              disabled={isDisabled}
+                              disabled={sessionType === '1-1' && selectedStudents.length > 0 && !isSelected}
                               className="cursor-pointer"
                             >
                               <Check
