@@ -61,12 +61,14 @@ export default function AddFeeForm({
 
   const onSubmit = async (data: FeeFormValues) => {
     try {
-      await addDoc(collection(db, "fees"), {
+      const submissionData = {
         ...data,
+        student_id: data.student_id === "all-students" ? "" : data.student_id,
         effective_date: data.effective_date.toISOString(),
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
-      });
+      };
+      await addDoc(collection(db, "fees"), submissionData);
       toast({
         title: "Fee Added",
         description: "The new fee has been successfully added.",
@@ -120,7 +122,7 @@ export default function AddFeeForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">All Students in Lesson</SelectItem>
+                  <SelectItem value="all-students">All Students in Lesson</SelectItem>
                   {students.map(student => (
                     <SelectItem key={student.student_id} value={student.student_id}>{student.name}</SelectItem>
                   ))}

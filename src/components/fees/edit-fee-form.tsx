@@ -57,6 +57,7 @@ export default function EditFeeForm({
     resolver: zodResolver(feeSchema),
     defaultValues: {
       ...fee,
+      student_id: !fee.student_id ? "all-students" : fee.student_id,
       effective_date: new Date(fee.effective_date),
     },
   });
@@ -64,11 +65,13 @@ export default function EditFeeForm({
   const onSubmit = async (data: FeeFormValues) => {
     try {
       const feeDocRef = doc(db, "fees", fee.fee_id);
-      await updateDoc(feeDocRef, {
+      const submissionData = {
         ...data,
+        student_id: data.student_id === "all-students" ? "" : data.student_id,
         effective_date: data.effective_date.toISOString(),
         updated_at: serverTimestamp(),
-      });
+      };
+      await updateDoc(feeDocRef, submissionData);
       toast({
         title: "Fee Updated",
         description: "The fee has been successfully updated.",
@@ -122,7 +125,7 @@ export default function EditFeeForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">All Students in Lesson</SelectItem>
+                  <SelectItem value="all-students">All Students in Lesson</SelectItem>
                   {students.map(student => (
                     <SelectItem key={student.student_id} value={student.student_id}>{student.name}</SelectItem>
                   ))}
