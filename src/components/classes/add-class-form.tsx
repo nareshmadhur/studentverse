@@ -49,6 +49,11 @@ export default function AddClassForm({
   const { toast } = useToast();
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
+    defaultValues: {
+      lesson_id: "",
+      duration_minutes: 60,
+      location: "",
+    },
   });
 
   const onSubmit = async (data: ClassFormValues) => {

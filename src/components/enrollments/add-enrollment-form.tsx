@@ -52,6 +52,8 @@ export default function AddEnrollmentForm({
     resolver: zodResolver(enrollmentSchema),
     defaultValues: {
       status: "active",
+      student_id: "",
+      lesson_id: "",
     },
   });
 
