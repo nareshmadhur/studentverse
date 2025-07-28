@@ -9,18 +9,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Fee, Student } from "@/lib/definitions";
 import FeesTable from "@/components/fees/fees-table";
 import AddFeeForm from "@/components/fees/add-fee-form";
+import { useSearchParams } from "next/navigation";
 
-export default function FeesPage() {
+function FeesPageContent() {
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [fees, setFees] = useState<Fee[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const preselectedStudentId = searchParams.get('studentId');
 
+  useEffect(() => {
+    if (searchParams.get('openDialog') === 'true') {
+      setOpen(true);
+    }
+  }, [searchParams]);
+  
   useEffect(() => {
     const q = query(collection(db, "fees"), where("deleted", "==", false));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -76,8 +85,21 @@ export default function FeesPage() {
         <DialogHeader>
           <DialogTitle>Add a new fee</DialogTitle>
         </DialogHeader>
-        <AddFeeForm setOpen={setOpen} students={students} />
+        <AddFeeForm 
+          setOpen={setOpen} 
+          students={students} 
+          preselectedStudentId={preselectedStudentId}
+        />
       </DialogContent>
     </Dialog>
   );
+}
+
+
+export default function FeesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FeesPageContent />
+    </Suspense>
+  )
 }

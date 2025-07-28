@@ -41,7 +41,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function StudentsTable({ students }: { students: Student[] }) {
@@ -50,12 +49,18 @@ export default function StudentsTable({ students }: { students: Student[] }) {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const router = useRouter();
 
-  const handleEditClick = (student: Student) => {
+  const handleEditClick = (e: React.MouseEvent, student: Student) => {
+    e.stopPropagation();
     setSelectedStudent(student);
     setIsEditDialogOpen(true);
   };
+  
+  const handleDeleteTriggerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
 
-  const handleDelete = async (studentId: string) => {
+  const handleDelete = async (e: React.MouseEvent, studentId: string) => {
+    e.stopPropagation();
     try {
       const studentDocRef = doc(db, "students", studentId);
       await updateDoc(studentDocRef, {
@@ -126,20 +131,19 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                   </TableCell>
                   <TableCell 
                     className="flex justify-end gap-2"
-                    onClick={(e) => e.stopPropagation()}
                   >
-                    <Button variant="outline" size="icon" onClick={() => handleEditClick(student)}>
+                    <Button variant="outline" size="icon" onClick={(e) => handleEditClick(e, student)}>
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
                     </Button>
                     <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                      <AlertDialogTrigger asChild onClick={handleDeleteTriggerClick}>
                         <Button variant="destructive" size="icon">
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                           <AlertDialogDescription>
@@ -148,7 +152,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(student.id)}>
+                          <AlertDialogAction onClick={(e) => handleDelete(e, student.id)}>
                             Continue
                           </AlertDialogAction>
                         </AlertDialogFooter>

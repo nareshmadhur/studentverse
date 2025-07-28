@@ -27,9 +27,10 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "../ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { useRouter } from "next/navigation";
 
 const feeSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
@@ -46,16 +47,19 @@ type FeeFormValues = z.infer<typeof feeSchema>;
 export default function AddFeeForm({
   setOpen,
   students,
+  preselectedStudentId,
 }: {
   setOpen: (open: boolean) => void;
   students: Student[];
+  preselectedStudentId?: string | null;
 }) {
   const { toast } = useToast();
+  const router = useRouter();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
-      studentId: "",
+      studentId: preselectedStudentId || "",
       discipline: "",
       sessionType: "1-1",
       feeType: "hourly",
@@ -64,6 +68,12 @@ export default function AddFeeForm({
       effectiveDate: new Date(),
     },
   });
+  
+  useEffect(() => {
+    if (preselectedStudentId) {
+      form.setValue('studentId', preselectedStudentId);
+    }
+  }, [preselectedStudentId, form]);
 
   const onSubmit = async (data: FeeFormValues) => {
     try {
@@ -78,6 +88,8 @@ export default function AddFeeForm({
         description: "The new fee has been successfully added.",
       });
       setOpen(false);
+      // Optional: Navigate to classes page after adding a fee
+      // router.push('/classes');
     } catch (error) {
       console.error("Error adding document: ", error);
       toast({
@@ -97,7 +109,7 @@ export default function AddFeeForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Student</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value} disabled={!!preselectedStudentId}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a student" />

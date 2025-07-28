@@ -23,6 +23,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 
 const studentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -41,6 +42,7 @@ export default function AddStudentForm({
   setOpen: (open: boolean) => void;
 }) {
   const { toast } = useToast();
+  const router = useRouter();
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
     defaultValues: {
@@ -55,7 +57,7 @@ export default function AddStudentForm({
 
   const onSubmit = async (data: StudentFormValues) => {
     try {
-      await addDoc(collection(db, "students"), {
+      const docRef = await addDoc(collection(db, "students"), {
         ...data,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -66,6 +68,7 @@ export default function AddStudentForm({
         description: `${data.name} has been successfully added.`,
       });
       setOpen(false);
+      router.push(`/fees?openDialog=true&studentId=${docRef.id}`);
     } catch (error) {
       console.error("Error adding document: ", error);
       toast({
