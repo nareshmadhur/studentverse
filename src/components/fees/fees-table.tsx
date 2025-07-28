@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Fee, Student, Class } from "@/lib/definitions";
+import type { Fee, Student } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -46,11 +46,9 @@ import {
 export default function FeesTable({ 
   fees, 
   students,
-  classes,
 }: { 
   fees: Fee[], 
   students: Student[],
-  classes: Class[],
 }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -82,15 +80,9 @@ export default function FeesTable({
     }
   };
   
-  const getStudentName = (studentId: string | null) => {
-    if (!studentId) return <Badge variant="secondary">Default</Badge>;
+  const getStudentName = (studentId: string) => {
     return students.find(s => s.id === studentId)?.name || "Unknown Student";
   }
-  
-  const getClassName = (classId: string) => {
-    return classes.find(l => l.id === classId)?.title || "Unknown Class";
-  }
-
 
   return (
     <>
@@ -105,10 +97,11 @@ export default function FeesTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Class</TableHead>
                 <TableHead>Student</TableHead>
+                <TableHead>Discipline</TableHead>
+                <TableHead>Session Type</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Type</TableHead>
+                <TableHead>Fee Type</TableHead>
                 <TableHead>Effective Date</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -118,8 +111,13 @@ export default function FeesTable({
             <TableBody>
               {fees.map((fee) => (
                 <TableRow key={fee.id}>
-                  <TableCell className="font-medium">{getClassName(fee.classId)}</TableCell>
-                  <TableCell>{getStudentName(fee.studentId)}</TableCell>
+                  <TableCell className="font-medium">{getStudentName(fee.studentId)}</TableCell>
+                  <TableCell>{fee.discipline || 'Any'}</TableCell>
+                  <TableCell>
+                     <Badge variant={fee.sessionType === '1-1' ? 'secondary' : 'default'}>
+                      {fee.sessionType}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{fee.amount.toFixed(2)} <Badge variant="outline">{fee.currencyCode}</Badge></TableCell>
                    <TableCell>
                     <Badge variant={fee.feeType === 'hourly' ? 'default' : 'secondary'}>
@@ -171,7 +169,6 @@ export default function FeesTable({
               setOpen={setIsEditDialogOpen}
               fee={selectedFee}
               students={students}
-              classes={classes}
             />
           )}
         </DialogContent>

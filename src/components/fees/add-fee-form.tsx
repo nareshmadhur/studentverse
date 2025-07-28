@@ -22,7 +22,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Student, Class } from "@/lib/definitions";
+import { Student } from "@/lib/definitions";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
@@ -32,8 +32,9 @@ import { Input } from "../ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 const feeSchema = z.object({
-  classId: z.string().min(1, "Class is required"),
-  studentId: z.string().nullable(),
+  studentId: z.string().min(1, "Student is required"),
+  discipline: z.string().optional(),
+  sessionType: z.enum(["1-1", "group"]),
   feeType: z.enum(["hourly", "subscription"]),
   amount: z.coerce.number().positive("Amount must be positive."),
   currencyCode: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
@@ -45,19 +46,18 @@ type FeeFormValues = z.infer<typeof feeSchema>;
 export default function AddFeeForm({
   setOpen,
   students,
-  classes
 }: {
   setOpen: (open: boolean) => void;
   students: Student[];
-  classes: Class[];
 }) {
   const { toast } = useToast();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
-      classId: "",
-      studentId: null,
+      studentId: "",
+      discipline: "",
+      sessionType: "1-1",
       feeType: "hourly",
       amount: 0,
       currencyCode: "USD",
@@ -93,45 +93,17 @@ export default function AddFeeForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="classId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Class</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a class" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {classes.map(c => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
           name="studentId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Student (Optional)</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(value === "default" ? null : value)}
-                defaultValue={field.value || "default"}
-              >
+              <FormLabel>Student</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Default fee for all students" />
+                    <SelectValue placeholder="Select a student" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="default">Default fee for all students</SelectItem>
                   {students.map(student => (
                     <SelectItem key={student.id} value={student.id}>
                       {student.name}
@@ -143,107 +115,147 @@ export default function AddFeeForm({
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Amount</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="e.g. 100" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="currencyCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Currency</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="discipline"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Discipline (Optional)</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a currency" />
-                  </SelectTrigger>
+                  <Input placeholder="e.g. guitar, vocals" {...field} />
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value="INR">INR</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                  <SelectItem value="AUD">AUD</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="feeType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Fee Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="sessionType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Session Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a session type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="1-1">1-1</SelectItem>
+                    <SelectItem value="group">Group</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a fee type" />
-                  </SelectTrigger>
+                  <Input type="number" placeholder="e.g. 100" {...field} />
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value="hourly">Hourly</SelectItem>
-                  <SelectItem value="subscription">Subscription</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="effectiveDate"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Effective Date</FormLabel>
-              <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                <PopoverTrigger asChild>
-                    <Button
-                    type="button"
-                    variant={"outline"}
-                    className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                    )}
-                    >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {field.value ? (
-                        format(field.value, "PPP")
-                    ) : (
-                        <span>Pick a date</span>
-                    )}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent>
-                    <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={(date) => {
-                        if (date) {
-                        field.onChange(date);
-                        setIsDatePickerOpen(false);
-                        }
-                    }}
-                    initialFocus
-                    />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end gap-2">
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="currencyCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Currency</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a currency" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="INR">INR</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="GBP">GBP</SelectItem>
+                    <SelectItem value="AUD">AUD</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+            control={form.control}
+            name="feeType"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Fee Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a fee type" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    <SelectItem value="hourly">Hourly</SelectItem>
+                    <SelectItem value="subscription">Subscription</SelectItem>
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="effectiveDate"
+            render={({ field }) => (
+                <FormItem className="flex flex-col">
+                <FormLabel>Effective Date</FormLabel>
+                <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                        type="button"
+                        variant={"outline"}
+                        className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                        )}
+                        >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? (
+                            format(field.value, "PPP")
+                        ) : (
+                            <span>Pick a date</span>
+                        )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                        <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={(date) => {
+                            if (date) {
+                            field.onChange(date);
+                            setIsDatePickerOpen(false);
+                            }
+                        }}
+                        initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
+        <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>

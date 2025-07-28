@@ -12,7 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Payment, Fee, Student, Class } from "@/lib/definitions";
+import { Payment, Fee, Student } from "@/lib/definitions";
 import PaymentsTable from "@/components/payments/payments-table";
 import AddPaymentForm from "@/components/payments/add-payment-form";
 
@@ -21,7 +21,6 @@ export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, "payments"), where("deleted", "==", false));
@@ -46,12 +45,10 @@ export default function PaymentsPage() {
     const fetchRelatedData = async () => {
       const feeQuery = query(collection(db, "fees"), where("deleted", "==", false));
       const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
-      const classQuery = query(collection(db, "classes"), where("deleted", "==", false));
 
-      const [feeSnapshot, studentSnapshot, classSnapshot] = await Promise.all([
+      const [feeSnapshot, studentSnapshot] = await Promise.all([
         getDocs(feeQuery),
         getDocs(studentQuery),
-        getDocs(classQuery)
       ]);
       
       const feeData: Fee[] = feeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
@@ -59,9 +56,6 @@ export default function PaymentsPage() {
 
       const studentData: Student[] = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentData);
-
-      const classData: Class[] = classSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Class));
-      setClasses(classData);
     }
 
     fetchRelatedData();
@@ -87,14 +81,13 @@ export default function PaymentsPage() {
           payments={payments} 
           fees={fees} 
           students={students} 
-          classes={classes} 
         />
       </div>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a new payment</DialogTitle>
         </DialogHeader>
-        <AddPaymentForm setOpen={setOpen} fees={fees} students={students} classes={classes} />
+        <AddPaymentForm setOpen={setOpen} fees={fees} students={students} />
       </DialogContent>
     </Dialog>
   );

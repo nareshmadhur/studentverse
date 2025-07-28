@@ -22,7 +22,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Payment, Fee, Student, Class } from "@/lib/definitions";
+import { Payment, Fee, Student } from "@/lib/definitions";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
@@ -45,13 +45,11 @@ export default function EditPaymentForm({
   payment,
   fees,
   students,
-  classes,
 }: {
   setOpen: (open: boolean) => void;
   payment: Payment;
   fees: Fee[];
   students: Student[];
-  classes: Class[];
 }) {
   const { toast } = useToast();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -89,12 +87,11 @@ export default function EditPaymentForm({
   
   const getFeeInfo = (feeId: string) => {
     const fee = fees.find(f => f.id === feeId);
-    if (!fee) return { studentName: "Unknown", className: "Unknown", feeAmount: 0 };
+    if (!fee) return { studentName: "Unknown", feeDescription: "Unknown", feeAmount: 0 };
     const student = students.find(s => s.id === fee.studentId);
-    const c = classes.find(l => l.id === fee.classId);
     return {
-      studentName: student?.name || "Default",
-      className: c?.title || "Unknown Class",
+      studentName: student?.name || "Unknown Student",
+      feeDescription: `${fee.discipline || 'General'} - ${fee.feeType}`,
       feeAmount: fee.amount
     }
   }
@@ -116,10 +113,10 @@ export default function EditPaymentForm({
                 </FormControl>
                 <SelectContent>
                   {fees.map(fee => {
-                    const { studentName, className, feeAmount } = getFeeInfo(fee.id);
+                    const { studentName, feeDescription, feeAmount } = getFeeInfo(fee.id);
                     return (
                       <SelectItem key={fee.id} value={fee.id}>
-                        {studentName} - {className} (${feeAmount})
+                        {studentName} - {feeDescription} (${feeAmount})
                       </SelectItem>
                     )
                   })}

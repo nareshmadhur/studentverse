@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Payment, Fee, Student, Class } from "@/lib/definitions";
+import type { Payment, Fee, Student } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -47,12 +47,10 @@ export default function PaymentsTable({
   payments,
   fees, 
   students,
-  classes,
 }: { 
   payments: Payment[],
   fees: Fee[], 
   students: Student[],
-  classes: Class[],
 }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -86,12 +84,11 @@ export default function PaymentsTable({
 
   const getFeeInfo = (feeId: string) => {
     const fee = fees.find(f => f.id === feeId);
-    if (!fee) return { studentName: "Unknown", className: "Unknown" };
+    if (!fee) return { studentName: "Unknown", feeDescription: "Unknown Fee" };
     const student = students.find(s => s.id === fee.studentId);
-    const c = classes.find(l => l.id === fee.classId);
     return {
-      studentName: student?.name || "Default",
-      className: c?.title || "Unknown Class",
+      studentName: student?.name || "Unknown Student",
+      feeDescription: `${fee.discipline || 'General'} - ${fee.feeType}`
     }
   }
 
@@ -109,7 +106,7 @@ export default function PaymentsTable({
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
-                <TableHead>Class</TableHead>
+                <TableHead>Fee Description</TableHead>
                 <TableHead>Amount Paid</TableHead>
                 <TableHead>Payment Date</TableHead>
                 <TableHead>Method</TableHead>
@@ -120,11 +117,11 @@ export default function PaymentsTable({
             </TableHeader>
             <TableBody>
               {payments.map((payment) => {
-                const { studentName, className } = getFeeInfo(payment.feeId);
+                const { studentName, feeDescription } = getFeeInfo(payment.feeId);
                 return (
                   <TableRow key={payment.id}>
                     <TableCell className="font-medium">{studentName}</TableCell>
-                    <TableCell>{className}</TableCell>
+                    <TableCell>{feeDescription}</TableCell>
                     <TableCell>${payment.amount.toFixed(2)}</TableCell>
                     <TableCell>{format(new Date(payment.paymentDate), "PPP")}</TableCell>
                     <TableCell>
@@ -176,7 +173,6 @@ export default function PaymentsTable({
               payment={selectedPayment}
               fees={fees}
               students={students}
-              classes={classes}
             />
           )}
         </DialogContent>

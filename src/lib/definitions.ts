@@ -38,8 +38,9 @@ export type Class = {
 
 export type Fee = {
   id: string;
-  studentId: string | null;
-  classId: string;
+  studentId: string;
+  discipline?: string;
+  sessionType: '1-1' | 'group';
   feeType: 'hourly' | 'subscription';
   amount: number;
   currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';

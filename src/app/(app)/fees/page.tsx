@@ -12,7 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Fee, Student, Class } from "@/lib/definitions";
+import { Fee, Student } from "@/lib/definitions";
 import FeesTable from "@/components/fees/fees-table";
 import AddFeeForm from "@/components/fees/add-fee-form";
 
@@ -20,7 +20,6 @@ export default function FeesPage() {
   const [open, setOpen] = useState(false);
   const [fees, setFees] = useState<Fee[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, "fees"), where("deleted", "==", false));
@@ -31,7 +30,8 @@ export default function FeesPage() {
         feeData.push({
           id: doc.id,
           studentId: data.studentId,
-          classId: data.classId,
+          discipline: data.discipline,
+          sessionType: data.sessionType,
           feeType: data.feeType,
           amount: data.amount,
           currencyCode: data.currencyCode,
@@ -44,23 +44,14 @@ export default function FeesPage() {
       setFees(feeData);
     });
 
-    const fetchRelatedData = async () => {
+    const fetchStudents = async () => {
       const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
-      const classQuery = query(collection(db, "classes"), where("deleted", "==", false));
-      
-      const [studentSnapshot, classSnapshot] = await Promise.all([
-        getDocs(studentQuery),
-        getDocs(classQuery)
-      ]);
-      
+      const studentSnapshot = await getDocs(studentQuery);
       const studentData: Student[] = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentData);
-
-      const classData: Class[] = classSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Class));
-      setClasses(classData);
     }
 
-    fetchRelatedData();
+    fetchStudents();
 
     return () => unsubscribe();
   }, []);
@@ -79,13 +70,13 @@ export default function FeesPage() {
             </Button>
           </DialogTrigger>
         </div>
-        <FeesTable fees={fees} students={students} classes={classes} />
+        <FeesTable fees={fees} students={students} />
       </div>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a new fee</DialogTitle>
         </DialogHeader>
-        <AddFeeForm setOpen={setOpen} students={students} classes={classes} />
+        <AddFeeForm setOpen={setOpen} students={students} />
       </DialogContent>
     </Dialog>
   );
