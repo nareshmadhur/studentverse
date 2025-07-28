@@ -4,7 +4,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GraduationCap, Users, CalendarDays, DollarSign, CreditCard, Beaker } from "lucide-react";
+import { GraduationCap, Users, CalendarDays, DollarSign, CreditCard, Beaker, FileText } from "lucide-react";
 
 import {
   Sidebar,
@@ -83,6 +83,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link href="/payments">
                   <CreditCard />
                   <span>Payments</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/billing")}
+                tooltip="Billing"
+              >
+                <Link href="/billing">
+                  <FileText />
+                  <span>Billing</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
