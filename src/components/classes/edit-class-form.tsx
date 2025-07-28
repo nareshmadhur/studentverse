@@ -21,18 +21,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, serverTimestamp, updateDoc, getDocs, query, where, collection, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Class, Student } from "@/lib/definitions";
+import { Class, Student, Fee } from "@/lib/definitions";
 import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Badge } from "../ui/badge";
 
 const classSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -48,6 +50,12 @@ const classSchema = z.object({
 
 type ClassFormValues = z.infer<typeof classSchema>;
 
+interface StudentFeeInfo {
+  student: Student;
+  fee: Fee | null;
+  loading: boolean;
+}
+
 export default function EditClassForm({
   setOpen,
   classItem,
@@ -59,7 +67,8 @@ export default function EditClassForm({
 }) {
   const { toast } = useToast();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [selectedStudents, setSelectedStudents] = useState<string[]>(classItem.students || []);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(classItem.students || []);
+  const [studentFeeDetails, setStudentFeeDetails] = useState<StudentFeeInfo[]>([]);
 
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -69,14 +78,55 @@ export default function EditClassForm({
     },
   });
 
-  const sessionType = form.watch("sessionType");
+  const { watch, setValue } = form;
+  const watchedDiscipline = watch("discipline");
+  const watchedSessionType = watch("sessionType");
+  const watchedScheduledDate = watch("scheduledDate");
+
+  const fetchFeesForSelectedStudents = useCallback(async () => {
+    if (selectedStudentIds.length === 0 || !watchedDiscipline || !watchedSessionType || !watchedScheduledDate) {
+      setStudentFeeDetails([]);
+      return;
+    }
+
+    const newDetails: StudentFeeInfo[] = await Promise.all(selectedStudentIds.map(async (studentId) => {
+      const student = allStudents.find(s => s.id === studentId);
+      if (!student) return { student: {} as Student, fee: null, loading: false };
+
+      const feeQuery = query(
+        collection(db, "fees"),
+        where("studentId", "==", studentId),
+        where("discipline", "==", watchedDiscipline),
+        where("sessionType", "==", watchedSessionType),
+        where("effectiveDate", "<=", Timestamp.fromDate(watchedScheduledDate)),
+        where("deleted", "==", false)
+      );
+
+      const querySnapshot = await getDocs(feeQuery);
+      let applicableFee: Fee | null = null;
+
+      if (!querySnapshot.empty) {
+        const fees: Fee[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
+        applicableFee = fees.sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime())[0];
+      }
+      
+      return { student, fee: applicableFee, loading: false };
+    }));
+    
+    setStudentFeeDetails(newDetails);
+  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, watchedScheduledDate, allStudents]);
+
+  useEffect(() => {
+    fetchFeesForSelectedStudents();
+  }, [fetchFeesForSelectedStudents]);
+
 
   const onSubmit = async (data: ClassFormValues) => {
     try {
       const classDocRef = doc(db, "classes", classItem.id);
       await updateDoc(classDocRef, {
         ...data,
-        students: selectedStudents,
+        students: selectedStudentIds,
         updatedAt: serverTimestamp(),
       });
       toast({
@@ -95,14 +145,28 @@ export default function EditClassForm({
   };
 
   useEffect(() => {
-    form.setValue('students', selectedStudents)
-  }, [selectedStudents, form]);
+    setValue('students', selectedStudentIds)
+  }, [selectedStudentIds, setValue]);
 
   const handleSessionTypeChange = (value: "1-1" | "group") => {
-    form.setValue("sessionType", value);
-    setSelectedStudents([]);
-    form.setValue("students", []);
+    setValue("sessionType", value);
+    setSelectedStudentIds([]);
+    setValue("students", []);
   };
+  
+  const handleStudentSelect = (studentId: string) => {
+    const isSelected = selectedStudentIds.includes(studentId);
+    if (watchedSessionType === '1-1') {
+      setSelectedStudentIds(isSelected ? [] : [studentId]);
+    } else {
+      setSelectedStudentIds(prev => 
+        isSelected
+          ? prev.filter(id => id !== studentId)
+          : [...prev, studentId]
+      );
+    }
+  }
+
 
   return (
     <Form {...form}>
@@ -270,9 +334,10 @@ export default function EditClassForm({
                       variant="outline"
                       role="combobox"
                       className="w-full justify-between"
+                      disabled={!watchedDiscipline || !watchedSessionType}
                     >
-                      {selectedStudents.length > 0
-                        ? `${selectedStudents.length} student(s) selected`
+                      {selectedStudentIds.length > 0
+                        ? `${selectedStudentIds.length} student(s) selected`
                         : "Select students..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -284,22 +349,12 @@ export default function EditClassForm({
                         <CommandEmpty>No students found.</CommandEmpty>
                         <CommandGroup>
                           {allStudents.map((student) => {
-                            const isSelected = selectedStudents.includes(student.id);
+                            const isSelected = selectedStudentIds.includes(student.id);
                             return (
                              <CommandItem
                                 key={student.id}
                                 value={student.id}
-                                onSelect={() => {
-                                  if (sessionType === '1-1') {
-                                    setSelectedStudents(prev => (prev.includes(student.id) ? [] : [student.id]));
-                                  } else {
-                                    setSelectedStudents(prev => 
-                                      prev.includes(student.id)
-                                        ? prev.filter(id => id !== student.id)
-                                        : [...prev, student.id]
-                                    );
-                                  }
-                                }}
+                                onSelect={() => handleStudentSelect(student.id)}
                               >
                                 <Check
                                   className={cn(
@@ -321,6 +376,28 @@ export default function EditClassForm({
             )}
           />
         </div>
+
+        {studentFeeDetails.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Student Details & Fees</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {studentFeeDetails.map(({ student, fee, loading }) => (
+                <div key={student.id} className="flex justify-between items-center p-2 rounded-md border">
+                  <span>{student.name}</span>
+                  {loading ? (
+                    <span>Loading fee...</span>
+                  ) : fee ? (
+                    <Badge variant="secondary">{fee.amount} {fee.currencyCode}</Badge>
+                  ) : (
+                    <Badge variant="outline">No fee found</Badge>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
