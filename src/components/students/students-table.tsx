@@ -18,13 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -48,6 +42,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
   };
 
   const handleDeleteClick = async (studentId: string) => {
+    if (!confirm("Are you sure you want to delete this student?")) return;
     try {
       const studentDocRef = doc(db, "students", studentId);
       await updateDoc(studentDocRef, {
@@ -107,29 +102,15 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                   <TableCell className="text-right">
                     <Badge variant="outline">{student.currencyCode}</Badge>
                   </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditClick(student)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDeleteClick(student.id)}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <TableCell className="flex justify-end gap-2">
+                    <Button variant="outline" size="icon" onClick={() => handleEditClick(student)}>
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                    <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(student.id)}>
+                      <Trash2 className="h-4 w-4" />
+                       <span className="sr-only">Delete</span>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

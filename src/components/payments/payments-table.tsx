@@ -18,13 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -59,6 +53,7 @@ export default function PaymentsTable({
   };
   
   const handleDeleteClick = async (paymentId: string) => {
+    if (!confirm("Are you sure you want to delete this payment?")) return;
     try {
       const paymentDocRef = doc(db, "payments", paymentId);
       await updateDoc(paymentDocRef, {
@@ -125,25 +120,15 @@ export default function PaymentsTable({
                     <TableCell>
                       <Badge variant="secondary">{payment.paymentMethod.replace(/_/g, ' ')}</Badge>
                     </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditClick(payment)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                           <DropdownMenuItem onClick={() => handleDeleteClick(payment.id)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <TableCell className="flex justify-end gap-2">
+                       <Button variant="outline" size="icon" onClick={() => handleEditClick(payment)}>
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(payment.id)}>
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 )
