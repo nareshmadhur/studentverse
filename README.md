@@ -41,7 +41,6 @@ Stores information about each student.
 | `phone`        | `string` (optional)                     | Student's phone number                     |
 | `country`      | `string`                                | Student's country of residence             |
 | `currencyCode` | `enum`                                  | Preferred currency (USD, INR, EUR, etc.)   |
-| `status`       | `enum ('active', 'inactive')`           | Student's current status                   |
 | `createdAt`    | `timestamp`                             | Record creation timestamp                  |
 | `updatedAt`    | `timestamp`                             | Record last update timestamp               |
 | `deleted`      | `boolean`                               | Flag for soft deletes (default: `false`)   |

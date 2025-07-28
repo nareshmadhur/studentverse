@@ -33,7 +33,6 @@ export default function StudentsPage() {
           phone: data.phone,
           country: data.country,
           currencyCode: data.currencyCode,
-          status: data.status,
           createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           deleted: data.deleted,

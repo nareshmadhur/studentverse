@@ -31,7 +31,6 @@ const studentSchema = z.object({
   phone: z.string().optional(),
   country: z.string().min(1, "Country is required"),
   currencyCode: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
-  status: z.enum(["active", "inactive"]),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -51,7 +50,6 @@ export default function AddStudentForm({
       phone: "",
       country: "",
       currencyCode: "USD",
-      status: "active",
     },
   });
 
@@ -152,27 +150,6 @@ export default function AddStudentForm({
                   <SelectItem value="EUR">EUR</SelectItem>
                   <SelectItem value="GBP">GBP</SelectItem>
                   <SelectItem value="AUD">AUD</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

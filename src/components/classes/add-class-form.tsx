@@ -28,7 +28,7 @@ import { CalendarIcon, Check, ChevronsUpDown, X } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -89,10 +89,6 @@ export default function AddClassForm({
   const watchedDiscipline = watch("discipline");
   const watchedSessionType = watch("sessionType");
   const watchedScheduledDate = watch("scheduledDate");
-
-  const activeStudents = useMemo(() => {
-    return allStudents.filter(student => student.status === 'active');
-  }, [allStudents]);
 
   useEffect(() => {
     if (preselectedStudentId) {
@@ -386,9 +382,9 @@ export default function AddClassForm({
                     <Command>
                       <CommandInput placeholder="Search students..." />
                       <CommandList>
-                        <CommandEmpty>No active students found.</CommandEmpty>
+                        <CommandEmpty>No students found.</CommandEmpty>
                         <CommandGroup>
-                          {activeStudents.map((student) => {
+                          {allStudents.map((student) => {
                             const isSelected = selectedStudentIds.includes(student.id);
                             return (
                               <CommandItem

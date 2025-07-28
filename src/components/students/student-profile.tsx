@@ -73,7 +73,6 @@ export default function StudentProfile({ id }: { id: string }) {
               <Skeleton className="h-4 w-1/2" />
               <Skeleton className="h-4 w-1/3" />
               <Skeleton className="h-4 w-1/4" />
-              <Skeleton className="h-4 w-1/2" />
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
@@ -84,10 +83,6 @@ export default function StudentProfile({ id }: { id: string }) {
               <div>
                 <p className="font-semibold text-muted-foreground">Country</p>
                 <p>{student?.country}</p>
-              </div>
-              <div>
-                <p className="font-semibold text-muted-foreground">Status</p>
-                <p className="capitalize">{student?.status}</p>
               </div>
               <div>
                 <p className="font-semibold text-muted-foreground">Preferred Currency</p>

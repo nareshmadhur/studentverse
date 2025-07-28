@@ -102,7 +102,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Country</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Currency</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -119,13 +118,6 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                   <TableCell className="font-medium">{student.name}</TableCell>
                   <TableCell>{student.email}</TableCell>
                   <TableCell>{student.country}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={student.status === "active" ? "default" : "secondary"}
-                    >
-                      {student.status}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="text-right">
                     <Badge variant="outline">{student.currencyCode}</Badge>
                   </TableCell>

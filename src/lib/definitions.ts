@@ -5,7 +5,6 @@ export type Student = {
   phone?: string;
   currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';
   country: string;
-  status: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;
   deleted: boolean;
