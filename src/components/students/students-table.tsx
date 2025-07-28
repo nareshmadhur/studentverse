@@ -30,6 +30,17 @@ import EditStudentForm from "./edit-student-form";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function StudentsTable({ students }: { students: Student[] }) {
   const { toast } = useToast();
@@ -41,8 +52,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
     setIsEditDialogOpen(true);
   };
 
-  const handleDeleteClick = async (studentId: string) => {
-    if (!confirm("Are you sure you want to delete this student?")) return;
+  const handleDelete = async (studentId: string) => {
     try {
       const studentDocRef = doc(db, "students", studentId);
       await updateDoc(studentDocRef, {
@@ -107,10 +117,28 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
                     </Button>
-                    <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(student.id)}>
-                      <Trash2 className="h-4 w-4" />
-                       <span className="sr-only">Delete</span>
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon">
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently mark the student as deleted.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(student.id)}>
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))}

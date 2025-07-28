@@ -31,6 +31,17 @@ import { format } from "date-fns";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function FeesTable({ 
   fees, 
@@ -50,8 +61,7 @@ export default function FeesTable({
     setIsEditDialogOpen(true);
   };
 
-  const handleDeleteClick = async (feeId: string) => {
-    if (!confirm("Are you sure you want to delete this fee?")) return;
+  const handleDelete = async (feeId: string) => {
     try {
       const feeDocRef = doc(db, "fees", feeId);
       await updateDoc(feeDocRef, {
@@ -122,10 +132,28 @@ export default function FeesTable({
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
                     </Button>
-                    <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(fee.id)}>
-                      <Trash2 className="h-4 w-4" />
-                       <span className="sr-only">Delete</span>
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon">
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently mark the fee as deleted.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(fee.id)}>
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))}
