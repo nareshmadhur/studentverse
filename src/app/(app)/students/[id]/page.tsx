@@ -13,13 +13,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StudentProfilePage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { id } = params;
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStudent = async () => {
       try {
-        const docRef = doc(db, "students", params.id);
+        const docRef = doc(db, "students", id);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -35,10 +36,10 @@ export default function StudentProfilePage({ params }: { params: { id: string } 
     };
 
     fetchStudent();
-  }, [params.id]);
+  }, [id]);
 
   const handleAddToNewClass = () => {
-    router.push(`/classes?openDialog=true&studentId=${params.id}`);
+    router.push(`/classes?openDialog=true&studentId=${id}`);
   };
 
   return (
