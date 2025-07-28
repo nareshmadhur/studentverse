@@ -52,10 +52,14 @@ export type Fee = {
 
 export type Payment = {
   id: string;
-  feeId: string;
+  studentId: string;
   amount: number;
-  paymentDate: string;
-  paymentMethod: 'card' | 'cash' | 'bank_transfer';
+  currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';
+  exchangeRate: number;
+  amountInInr: number;
+  transactionDate: string;
+  paymentMethod: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
   deleted: boolean;

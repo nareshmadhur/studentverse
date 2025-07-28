@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Payment, Fee, Student } from "@/lib/definitions";
+import type { Payment, Student } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -42,14 +42,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function PaymentsTable({ 
   payments,
-  fees, 
   students,
 }: { 
   payments: Payment[],
-  fees: Fee[], 
   students: Student[],
 }) {
   const { toast } = useToast();
@@ -82,15 +86,9 @@ export default function PaymentsTable({
     }
   };
 
-  const getFeeInfo = (feeId: string) => {
-    const fee = fees.find(f => f.id === feeId);
-    if (!fee) return { studentName: "Unknown", feeDescription: "Unknown Fee" };
-    const student = students.find(s => s.id === fee.studentId);
-    return {
-      studentName: student?.name || "Unknown Student",
-      feeDescription: `${fee.discipline || 'General'} - ${fee.feeType}`
-    }
-  }
+  const getStudentName = (studentId: string) => {
+    return students.find(s => s.id === studentId)?.name || "Unknown Student";
+  };
 
   return (
     <>
@@ -102,30 +100,37 @@ export default function PaymentsTable({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Fee Description</TableHead>
-                <TableHead>Amount Paid</TableHead>
-                <TableHead>Payment Date</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {payments.map((payment) => {
-                const { studentName, feeDescription } = getFeeInfo(payment.feeId);
-                return (
+          <TooltipProvider>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Amount (INR)</TableHead>
+                  <TableHead>Transaction Date</TableHead>
+                  <TableHead>Method</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {payments.map((payment) => (
                   <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{studentName}</TableCell>
-                    <TableCell>{feeDescription}</TableCell>
-                    <TableCell>${payment.amount.toFixed(2)}</TableCell>
-                    <TableCell>{format(new Date(payment.paymentDate), "PPP")}</TableCell>
+                    <TableCell className="font-medium">{getStudentName(payment.studentId)}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{payment.paymentMethod.replace(/_/g, ' ')}</Badge>
+                      {payment.amount.toFixed(2)}{' '}
+                      <Badge variant="outline">{payment.currencyCode}</Badge>
+                    </TableCell>
+                    <TableCell>₹{payment.amountInInr.toFixed(2)}</TableCell>
+                    <TableCell>{format(new Date(payment.transactionDate), "PPP")}</TableCell>
+                    <TableCell>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Badge variant="secondary">{payment.paymentMethod}</Badge>
+                        </TooltipTrigger>
+                        {payment.notes && <TooltipContent>{payment.notes}</TooltipContent>}
+                      </Tooltip>
                     </TableCell>
                     <TableCell className="flex justify-end gap-2">
                        <Button variant="outline" size="icon" onClick={() => handleEditClick(payment)}>
@@ -156,10 +161,10 @@ export default function PaymentsTable({
                       </AlertDialog>
                     </TableCell>
                   </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          </TooltipProvider>
         </CardContent>
       </Card>
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -171,7 +176,6 @@ export default function PaymentsTable({
             <EditPaymentForm
               setOpen={setIsEditDialogOpen}
               payment={selectedPayment}
-              fees={fees}
               students={students}
             />
           )}

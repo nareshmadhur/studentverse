@@ -12,14 +12,13 @@ import {
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Payment, Fee, Student } from "@/lib/definitions";
+import { Payment, Student } from "@/lib/definitions";
 import PaymentsTable from "@/components/payments/payments-table";
 import AddPaymentForm from "@/components/payments/add-payment-form";
 
 export default function PaymentsPage() {
   const [open, setOpen] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [fees, setFees] = useState<Fee[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
@@ -30,10 +29,14 @@ export default function PaymentsPage() {
         const data = doc.data();
         paymentData.push({
           id: doc.id,
-          feeId: data.feeId,
+          studentId: data.studentId,
           amount: data.amount,
-          paymentDate: (data.paymentDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+          currencyCode: data.currencyCode,
+          exchangeRate: data.exchangeRate,
+          amountInInr: data.amountInInr,
+          transactionDate: (data.transactionDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           paymentMethod: data.paymentMethod,
+          notes: data.notes,
           createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           deleted: data.deleted,
@@ -42,23 +45,14 @@ export default function PaymentsPage() {
       setPayments(paymentData);
     });
 
-    const fetchRelatedData = async () => {
-      const feeQuery = query(collection(db, "fees"), where("deleted", "==", false));
+    const fetchStudents = async () => {
       const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
-
-      const [feeSnapshot, studentSnapshot] = await Promise.all([
-        getDocs(feeQuery),
-        getDocs(studentQuery),
-      ]);
-      
-      const feeData: Fee[] = feeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
-      setFees(feeData);
-
+      const studentSnapshot = await getDocs(studentQuery);
       const studentData: Student[] = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentData);
     }
 
-    fetchRelatedData();
+    fetchStudents();
 
     return () => unsubscribe();
   }, []);
@@ -79,7 +73,6 @@ export default function PaymentsPage() {
         </div>
         <PaymentsTable 
           payments={payments} 
-          fees={fees} 
           students={students} 
         />
       </div>
@@ -87,7 +80,7 @@ export default function PaymentsPage() {
         <DialogHeader>
           <DialogTitle>Add a new payment</DialogTitle>
         </DialogHeader>
-        <AddPaymentForm setOpen={setOpen} fees={fees} students={students} />
+        <AddPaymentForm setOpen={setOpen} students={students} />
       </DialogContent>
     </Dialog>
   );
