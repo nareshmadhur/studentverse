@@ -84,7 +84,7 @@ export default function EditClassForm({
   const watchedScheduledDate = watch("scheduledDate");
 
   const fetchFeesForSelectedStudents = useCallback(async () => {
-    if (selectedStudentIds.length === 0 || !watchedDiscipline || !watchedSessionType || !watchedScheduledDate) {
+    if (selectedStudentIds.length === 0 || !watchedSessionType || !watchedScheduledDate) {
       setStudentFeeDetails([]);
       return;
     }
@@ -93,14 +93,22 @@ export default function EditClassForm({
       const student = allStudents.find(s => s.id === studentId);
       if (!student) return { student: {} as Student, fee: null, loading: false };
 
-      const feeQuery = query(
-        collection(db, "fees"),
+      const feeQueryConstraints = [
         where("studentId", "==", studentId),
-        where("discipline", "==", watchedDiscipline),
         where("sessionType", "==", watchedSessionType),
         where("feeType", "==", "hourly"),
         where("effectiveDate", "<=", Timestamp.fromDate(watchedScheduledDate)),
         where("deleted", "==", false)
+      ];
+
+      // Add discipline constraint only if it has a value.
+      if (watchedDiscipline) {
+        feeQueryConstraints.push(where("discipline", "in", [watchedDiscipline, ""]));
+      }
+
+      const feeQuery = query(
+        collection(db, "fees"),
+        ...feeQueryConstraints
       );
 
       const querySnapshot = await getDocs(feeQuery);
@@ -108,7 +116,14 @@ export default function EditClassForm({
 
       if (!querySnapshot.empty) {
         const fees: Fee[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
-        applicableFee = fees.sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime())[0];
+
+        // Prioritize specific discipline match over default, then by most recent effective date
+        fees.sort((a, b) => {
+          if (a.discipline === watchedDiscipline && b.discipline !== watchedDiscipline) return -1;
+          if (b.discipline === watchedDiscipline && a.discipline !== watchedDiscipline) return 1;
+          return new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime();
+        });
+        applicableFee = fees[0];
       }
       
       return { student, fee: applicableFee, loading: false };
