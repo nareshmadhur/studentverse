@@ -41,11 +41,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function StudentsTable({ students }: { students: Student[] }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const router = useRouter();
 
   const handleEditClick = (student: Student) => {
     setSelectedStudent(student);
@@ -73,6 +76,11 @@ export default function StudentsTable({ students }: { students: Student[] }) {
     }
   };
 
+  const handleRowClick = (studentId: string) => {
+    router.push(`/students/${studentId}`);
+  };
+
+
   return (
     <>
       <Card>
@@ -98,7 +106,11 @@ export default function StudentsTable({ students }: { students: Student[] }) {
             </TableHeader>
             <TableBody>
               {students.map((student) => (
-                <TableRow key={student.id}>
+                <TableRow 
+                  key={student.id} 
+                  onClick={() => handleRowClick(student.id)}
+                  className="cursor-pointer"
+                >
                   <TableCell className="font-medium">{student.name}</TableCell>
                   <TableCell>{student.email}</TableCell>
                   <TableCell>{student.country}</TableCell>
@@ -112,7 +124,10 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                   <TableCell className="text-right">
                     <Badge variant="outline">{student.currencyCode}</Badge>
                   </TableCell>
-                  <TableCell className="flex justify-end gap-2">
+                  <TableCell 
+                    className="flex justify-end gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Button variant="outline" size="icon" onClick={() => handleEditClick(student)}>
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>

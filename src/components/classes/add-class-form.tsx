@@ -51,9 +51,11 @@ type ClassFormValues = z.infer<typeof classSchema>;
 export default function AddClassForm({
   setOpen,
   allStudents,
+  preselectedStudentId,
 }: {
   setOpen: (open: boolean) => void;
   allStudents: Student[];
+  preselectedStudentId?: string | null;
 }) {
   const { toast } = useToast();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -75,6 +77,13 @@ export default function AddClassForm({
   });
 
   const sessionType = form.watch("sessionType");
+
+  useEffect(() => {
+    if (preselectedStudentId) {
+      setSelectedStudents([preselectedStudentId]);
+      form.setValue('sessionType', '1-1');
+    }
+  }, [preselectedStudentId, form]);
 
   const onSubmit = async (data: ClassFormValues) => {
     try {
@@ -102,8 +111,13 @@ export default function AddClassForm({
   
   const handleSessionTypeChange = (value: "1-1" | "group") => {
     form.setValue("sessionType", value);
-    setSelectedStudents([]);
-    form.setValue("students", []);
+    if (!preselectedStudentId) {
+      setSelectedStudents([]);
+      form.setValue("students", []);
+    } else {
+      setSelectedStudents([preselectedStudentId]);
+      form.setValue("students", [preselectedStudentId]);
+    }
   };
 
   useEffect(() => {
@@ -163,7 +177,7 @@ export default function AddClassForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Session Type</FormLabel>
-                <Select onValueChange={handleSessionTypeChange} defaultValue={field.value}>
+                <Select onValueChange={handleSessionTypeChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a session type" />
@@ -277,6 +291,7 @@ export default function AddClassForm({
                       variant="outline"
                       role="combobox"
                       className="w-full justify-between"
+                      disabled={sessionType === '1-1' && !!preselectedStudentId}
                     >
                       {selectedStudents.length > 0
                         ? `${selectedStudents.length} student(s) selected`

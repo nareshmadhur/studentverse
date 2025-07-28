@@ -9,17 +9,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Class, Student } from "@/lib/definitions";
 import ClassesTable from "@/components/classes/classes-table";
 import AddClassForm from "@/components/classes/add-class-form";
+import { useSearchParams } from "next/navigation";
 
-export default function ClassesPage() {
+function ClassesPageContent() {
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [classes, setClasses] = useState<Class[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const preselectedStudentId = searchParams.get('studentId');
+
+  useEffect(() => {
+    if (searchParams.get('openDialog') === 'true') {
+      setOpen(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const q = query(collection(db, "classes"), where("deleted", "==", false));
@@ -82,8 +91,20 @@ export default function ClassesPage() {
         <DialogHeader>
           <DialogTitle>Add a new class</DialogTitle>
         </DialogHeader>
-        <AddClassForm setOpen={setOpen} allStudents={students} />
+        <AddClassForm 
+          setOpen={setOpen} 
+          allStudents={students} 
+          preselectedStudentId={preselectedStudentId} 
+        />
       </DialogContent>
     </Dialog>
   );
+}
+
+export default function ClassesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClassesPageContent />
+    </Suspense>
+  )
 }
