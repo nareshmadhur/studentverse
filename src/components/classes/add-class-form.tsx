@@ -112,6 +112,7 @@ export default function AddClassForm({
         where("studentId", "==", studentId),
         where("discipline", "==", watchedDiscipline),
         where("sessionType", "==", watchedSessionType),
+        where("feeType", "==", "hourly"),
         where("effectiveDate", "<=", Timestamp.fromDate(watchedScheduledDate)),
         where("deleted", "==", false)
       );
