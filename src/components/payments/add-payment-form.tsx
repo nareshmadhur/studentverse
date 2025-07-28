@@ -36,7 +36,6 @@ const paymentSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
   amount: z.coerce.number().positive("Amount must be positive."),
   currencyCode: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
-  exchangeRate: z.coerce.number().positive("Exchange rate is required."),
   transactionDate: z.date({ required_error: "A payment date is required." }),
   paymentMethod: z.string().min(1, "Payment method is required"),
   notes: z.string().optional(),
@@ -59,7 +58,6 @@ export default function AddPaymentForm({
       studentId: "",
       amount: 0,
       currencyCode: "USD",
-      exchangeRate: 1,
       transactionDate: new Date(),
       paymentMethod: "Card",
       notes: "",
@@ -68,10 +66,8 @@ export default function AddPaymentForm({
 
   const onSubmit = async (data: PaymentFormValues) => {
     try {
-      const amountInInr = data.amount * data.exchangeRate;
       await addDoc(collection(db, "payments"), {
         ...data,
-        amountInInr,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         deleted: false,
@@ -160,12 +156,12 @@ export default function AddPaymentForm({
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="exchangeRate"
+            name="paymentMethod"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Exchange Rate (to INR)</FormLabel>
+                <FormLabel>Payment Method</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="e.g. 83.50" {...field} />
+                  <Input placeholder="e.g. Card, Cash" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -214,19 +210,6 @@ export default function AddPaymentForm({
             )}
           />
         </div>
-        <FormField
-          control={form.control}
-          name="paymentMethod"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Payment Method</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Card, Cash, Online Transfer" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name="notes"

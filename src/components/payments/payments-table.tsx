@@ -106,7 +106,6 @@ export default function PaymentsTable({
                 <TableRow>
                   <TableHead>Student</TableHead>
                   <TableHead>Amount</TableHead>
-                  <TableHead>Amount (INR)</TableHead>
                   <TableHead>Transaction Date</TableHead>
                   <TableHead>Method</TableHead>
                   <TableHead>
@@ -122,7 +121,6 @@ export default function PaymentsTable({
                       {payment.amount.toFixed(2)}{' '}
                       <Badge variant="outline">{payment.currencyCode}</Badge>
                     </TableCell>
-                    <TableCell>₹{payment.amountInInr.toFixed(2)}</TableCell>
                     <TableCell>{format(new Date(payment.transactionDate), "PPP")}</TableCell>
                     <TableCell>
                       <Tooltip>

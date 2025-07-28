@@ -32,8 +32,6 @@ export default function PaymentsPage() {
           studentId: data.studentId,
           amount: data.amount,
           currencyCode: data.currencyCode,
-          exchangeRate: data.exchangeRate,
-          amountInInr: data.amountInInr,
           transactionDate: (data.transactionDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           paymentMethod: data.paymentMethod,
           notes: data.notes,

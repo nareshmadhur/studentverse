@@ -55,8 +55,6 @@ export type Payment = {
   studentId: string;
   amount: number;
   currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';
-  exchangeRate: number;
-  amountInInr: number;
   transactionDate: string;
   paymentMethod: string;
   notes?: string;
