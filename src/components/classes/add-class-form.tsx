@@ -118,6 +118,8 @@ export default function AddClassForm({
       // Add discipline constraint only if it has a value.
       if (watchedDiscipline) {
         feeQueryConstraints.push(where("discipline", "in", [watchedDiscipline, ""]));
+      } else {
+        feeQueryConstraints.push(where("discipline", "==", ""));
       }
 
       const feeQuery = query(
