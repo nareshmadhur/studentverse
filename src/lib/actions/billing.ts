@@ -29,7 +29,13 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
   if (!studentDoc.exists()) {
     throw new Error("Student not found.");
   }
-  const student = { id: studentDoc.id, ...studentDoc.data() } as Student;
+  const studentData = studentDoc.data();
+  const student = { 
+    id: studentDoc.id, 
+    ...studentData,
+    createdAt: (studentData.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+    updatedAt: (studentData.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+  } as Student;
 
   // 2. Fetch all classes for the student within the date range
   const classesQuery = query(
@@ -46,8 +52,8 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
         id: doc.id,
         ...data,
         scheduledDate: (data.scheduledDate as Timestamp).toDate().toISOString(),
-        createdAt: (data.createdAt as Timestamp)?.toDate().toISOString(),
-        updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString(),
+        createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+        updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
       } as Class
   });
 
@@ -64,8 +70,8 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
         id: doc.id,
         ...data,
         effectiveDate: (data.effectiveDate as Timestamp).toDate().toISOString(),
-        createdAt: (data.createdAt as Timestamp)?.toDate().toISOString(),
-        updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString(),
+        createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+        updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
       } as Fee
   });
   
@@ -84,8 +90,8 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
       id: doc.id,
       ...data,
       transactionDate: (data.transactionDate as Timestamp).toDate().toISOString(),
-      createdAt: (data.createdAt as Timestamp)?.toDate().toISOString(),
-      updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString(),
+      createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+      updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
     } as Payment;
   });
 
