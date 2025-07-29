@@ -7,7 +7,7 @@ This is a Next.js application built with Firebase Studio for managing students, 
 - **Framework**: Next.js (with App Router)
 - **UI**: React, ShadCN UI Components, Tailwind CSS
 - **Database**: Firestore
-- **Authentication**: Firebase (implied, can be added)
+- **Authentication**: Firebase
 - **AI**: Genkit (optional, for future integrations)
 - **Deployment**: Firebase App Hosting
 
@@ -24,6 +24,25 @@ This is a Next.js application built with Firebase Studio for managing students, 
     ```
 
     The application will be available at [http://localhost:9002](http://localhost:9002).
+
+## Securing Your Database
+
+This application uses Firebase Authentication. To secure your Firestore database so that only logged-in users can access data, you need to deploy Firestore security rules.
+
+A basic set of rules has been created in `firestore.rules`. To deploy them, you can either:
+
+1.  **Use the Firebase CLI**:
+    - Install the Firebase CLI if you haven't already: `npm install -g firebase-tools`
+    - Login to your Firebase account: `firebase login`
+    - Initialize Firebase in your project directory (if you haven't): `firebase init`
+    - Deploy the rules: `firebase deploy --only firestore:rules`
+
+2.  **Use the Firebase Console**:
+    - Open your Firebase project in the [Firebase Console](https://console.firebase.google.com/).
+    - Go to the **Firestore Database** section.
+    - Click on the **Rules** tab.
+    - Copy the contents of the `firestore.rules` file from this project and paste them into the rules editor.
+    - Click **Publish**.
 
 ## Firestore Data Model
 
