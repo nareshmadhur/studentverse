@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -23,14 +24,14 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Student } from "@/lib/definitions";
+import { Student, Currency } from "@/lib/definitions";
 
 const studentSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
   country: z.string().min(1, "Country is required"),
-  currencyCode: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
+  currencyId: z.string().min(1, "Currency is required"),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -38,9 +39,11 @@ type StudentFormValues = z.infer<typeof studentSchema>;
 export default function EditStudentForm({
   setOpen,
   student,
+  currencies,
 }: {
   setOpen: (open: boolean) => void;
   student: Student;
+  currencies: Currency[];
 }) {
   const { toast } = useToast();
   const form = useForm<StudentFormValues>({
@@ -50,7 +53,7 @@ export default function EditStudentForm({
       email: student.email,
       phone: student.phone,
       country: student.country,
-      currencyCode: student.currencyCode,
+      currencyId: student.currencyId,
     },
   });
 
@@ -133,7 +136,7 @@ export default function EditStudentForm({
         />
         <FormField
           control={form.control}
-          name="currencyCode"
+          name="currencyId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Currency</FormLabel>
@@ -144,11 +147,11 @@ export default function EditStudentForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="INR">INR</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                  <SelectItem value="AUD">AUD</SelectItem>
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency.id} value={currency.id}>
+                      {currency.name} ({currency.symbol})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />

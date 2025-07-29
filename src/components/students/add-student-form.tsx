@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -24,21 +25,24 @@ import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { Currency } from "@/lib/definitions";
 
 const studentSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
   country: z.string().min(1, "Country is required"),
-  currencyCode: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
+  currencyId: z.string().min(1, "Currency is required"),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
 
 export default function AddStudentForm({
   setOpen,
+  currencies,
 }: {
   setOpen: (open: boolean) => void;
+  currencies: Currency[];
 }) {
   const { toast } = useToast();
   const router = useRouter();
@@ -49,7 +53,7 @@ export default function AddStudentForm({
       email: "",
       phone: "",
       country: "",
-      currencyCode: "USD",
+      currencyId: "",
     },
   });
 
@@ -134,7 +138,7 @@ export default function AddStudentForm({
         />
         <FormField
           control={form.control}
-          name="currencyCode"
+          name="currencyId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Currency</FormLabel>
@@ -145,11 +149,11 @@ export default function AddStudentForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="INR">INR</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                  <SelectItem value="AUD">AUD</SelectItem>
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency.id} value={currency.id}>
+                      {currency.name} ({currency.symbol})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />

@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { addDoc, collection, serverTimestamp, getDocs, query, where, Timestamp, onSnapshot } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Student, Discipline } from "@/lib/definitions";
 import { CalendarIcon } from "lucide-react";
@@ -39,7 +39,7 @@ const feeSchema = z.object({
   sessionType: z.enum(["1-1", "group"]),
   feeType: z.enum(["hourly", "subscription"]),
   amount: z.coerce.number().positive("Amount must be positive."),
-  currencyCode: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
+  currencyId: z.string(),
   effectiveDate: z.date({ required_error: "An effective date is required." }),
 });
 
@@ -67,7 +67,7 @@ export default function AddFeeForm({
       sessionType: "1-1",
       feeType: "hourly",
       amount: 0,
-      currencyCode: "USD",
+      currencyId: "",
       effectiveDate: new Date(),
     },
   });
@@ -84,7 +84,7 @@ export default function AddFeeForm({
   useEffect(() => {
     const student = students.find(s => s.id === selectedStudentId);
     if (student) {
-      setValue("currencyCode", student.currencyCode);
+      setValue("currencyId", student.currencyId);
     }
   }, [selectedStudentId, students, setValue]);
 
@@ -196,7 +196,7 @@ export default function AddFeeForm({
             )}
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
             name="amount"
@@ -205,19 +205,6 @@ export default function AddFeeForm({
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="e.g. 100" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="currencyCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Currency</FormLabel>
-                <FormControl>
-                  <Input {...field} disabled />
                 </FormControl>
                 <FormMessage />
               </FormItem>

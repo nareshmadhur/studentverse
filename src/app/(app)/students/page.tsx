@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -14,11 +15,12 @@ import {
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Student } from "@/lib/definitions";
+import { Student, Currency } from "@/lib/definitions";
 
 export default function StudentsPage() {
   const [open, setOpen] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, "students"), where("deleted", "==", false));
@@ -32,7 +34,7 @@ export default function StudentsPage() {
           email: data.email,
           phone: data.phone,
           country: data.country,
-          currencyCode: data.currencyCode,
+          currencyId: data.currencyId,
           createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           deleted: data.deleted,
@@ -40,7 +42,18 @@ export default function StudentsPage() {
       });
       setStudents(studentData);
     });
-    return () => unsubscribe();
+
+    const currenciesQuery = query(collection(db, "currencies"), where("deleted", "==", false));
+    const unsubscribeCurrencies = onSnapshot(currenciesQuery, (snapshot) => {
+        const currencyData: Currency[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Currency));
+        setCurrencies(currencyData);
+    });
+
+
+    return () => {
+      unsubscribe();
+      unsubscribeCurrencies();
+    }
   }, []);
 
   return (
@@ -57,13 +70,13 @@ export default function StudentsPage() {
             </Button>
           </DialogTrigger>
         </div>
-        <StudentsTable students={students} />
+        <StudentsTable students={students} currencies={currencies} />
       </div>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a new student</DialogTitle>
         </DialogHeader>
-        <AddStudentForm setOpen={setOpen} />
+        <AddStudentForm setOpen={setOpen} currencies={currencies} />
       </DialogContent>
     </Dialog>
   );

@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState } from "react";
-import type { Fee, Student } from "@/lib/definitions";
+import type { Fee, Student, Currency } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -46,9 +47,11 @@ import {
 export default function FeesTable({ 
   fees, 
   students,
+  currencies,
 }: { 
   fees: Fee[], 
   students: Student[],
+  currencies: Currency[],
 }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -84,6 +87,10 @@ export default function FeesTable({
     return students.find(s => s.id === studentId)?.name || "Unknown Student";
   }
 
+  const getCurrencySymbol = (currencyId: string) => {
+    return currencies.find(c => c.id === currencyId)?.symbol || '';
+  }
+
   return (
     <>
       <Card>
@@ -110,7 +117,7 @@ export default function FeesTable({
             </TableHeader>
             <TableBody>
               {fees.map((fee) => (
-                <TableRow key={fee.id}>
+                <TableRow key={fee.id} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && handleEditClick(fee)}>
                   <TableCell className="font-medium">{getStudentName(fee.studentId)}</TableCell>
                   <TableCell>{fee.discipline || 'Any'}</TableCell>
                   <TableCell>
@@ -118,7 +125,7 @@ export default function FeesTable({
                       {fee.sessionType}
                     </Badge>
                   </TableCell>
-                  <TableCell>{fee.amount.toFixed(2)} <Badge variant="outline">{fee.currencyCode}</Badge></TableCell>
+                  <TableCell>{getCurrencySymbol(fee.currencyId)}{fee.amount.toFixed(2)}</TableCell>
                    <TableCell>
                     <Badge variant={fee.feeType === 'hourly' ? 'default' : 'secondary'}>
                       {fee.feeType}

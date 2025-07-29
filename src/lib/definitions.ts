@@ -1,9 +1,10 @@
+
 export type Student = {
   id: string;
   name: string;
   email: string;
   phone?: string;
-  currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';
+  currencyId: string;
   country: string;
   createdAt: string;
   updatedAt: string;
@@ -14,7 +15,7 @@ export type FeeOverride = {
   studentId: string;
   feeType: 'hourly' | 'subscription';
   amount: number;
-  currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';
+  currencyId: string;
   effectiveDate: string;
 }
 
@@ -42,7 +43,7 @@ export type Fee = {
   sessionType: '1-1' | 'group';
   feeType: 'hourly' | 'subscription';
   amount: number;
-  currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';
+  currencyId: string;
   effectiveDate: string;
   createdAt: string;
   updatedAt: string;
@@ -53,7 +54,7 @@ export type Payment = {
   id: string;
   studentId: string;
   amount: number;
-  currencyCode: 'INR' | 'USD' | 'EUR' | 'GBP' | 'AUD';
+  currencyId: string;
   transactionDate: string;
   paymentMethod: string;
   notes?: string;
@@ -65,6 +66,16 @@ export type Payment = {
 export type Discipline = {
   id: string;
   name: string;
+  createdAt: string;
+  updatedAt: string;
+  deleted: boolean;
+}
+
+export type Currency = {
+  id: string;
+  name: string;
+  code: string;
+  symbol: string;
   createdAt: string;
   updatedAt: string;
   deleted: boolean;

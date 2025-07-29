@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState } from "react";
-import type { Student } from "@/lib/definitions";
+import type { Student, Currency } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -43,19 +44,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
 
-export default function StudentsTable({ students }: { students: Student[] }) {
+export default function StudentsTable({ students, currencies }: { students: Student[], currencies: Currency[] }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const router = useRouter();
 
-  const handleEditClick = (e: React.MouseEvent, student: Student) => {
+  const handleEditClick = (e: React.MouseEvent | React.KeyboardEvent, student: Student) => {
     e.stopPropagation();
     setSelectedStudent(student);
     setIsEditDialogOpen(true);
   };
   
-  const handleDeleteTriggerClick = (e: React.MouseEvent) => {
+  const handleDeleteTriggerClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
   };
 
@@ -85,6 +86,9 @@ export default function StudentsTable({ students }: { students: Student[] }) {
     router.push(`/students/${studentId}`);
   };
 
+  const getCurrencyCode = (currencyId: string) => {
+    return currencies.find(c => c.id === currencyId)?.code || '';
+  }
 
   return (
     <>
@@ -113,29 +117,31 @@ export default function StudentsTable({ students }: { students: Student[] }) {
                 <TableRow 
                   key={student.id} 
                   onClick={() => handleRowClick(student.id)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleRowClick(student.id)}
                   className="cursor-pointer"
+                  tabIndex={0}
                 >
                   <TableCell className="font-medium">{student.name}</TableCell>
                   <TableCell>{student.email}</TableCell>
                   <TableCell>{student.country}</TableCell>
                   <TableCell className="text-right">
-                    <Badge variant="outline">{student.currencyCode}</Badge>
+                    <Badge variant="outline">{getCurrencyCode(student.currencyId)}</Badge>
                   </TableCell>
                   <TableCell 
                     className="flex justify-end gap-2"
                   >
-                    <Button variant="outline" size="icon" onClick={(e) => handleEditClick(e, student)}>
+                    <Button variant="outline" size="icon" onClick={(e) => handleEditClick(e, student)} onKeyDown={(e) => e.key === 'Enter' && handleEditClick(e, student)}>
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
                     </Button>
                     <AlertDialog>
-                      <AlertDialogTrigger asChild onClick={handleDeleteTriggerClick}>
+                      <AlertDialogTrigger asChild onClick={handleDeleteTriggerClick} onKeyDown={(e) => e.key === 'Enter' && handleDeleteTriggerClick(e)}>
                         <Button variant="destructive" size="icon">
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                      <AlertDialogContent onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.key === 'Escape' && e.stopPropagation()}>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                           <AlertDialogDescription>
@@ -166,6 +172,7 @@ export default function StudentsTable({ students }: { students: Student[] }) {
             <EditStudentForm
               setOpen={setIsEditDialogOpen}
               student={selectedStudent}
+              currencies={currencies}
             />
           )}
         </DialogContent>

@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import type { Student, Class, Fee, Payment } from "@/lib/definitions";
+import type { Student, Class, Fee, Payment, Currency } from "@/lib/definitions";
 import { getStatementData, Statement, StatementItem } from "@/lib/actions/billing";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,10 +11,19 @@ import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { Badge } from "../ui/badge";
 
-export default function StudentStatement({ studentId, dateRange }: { studentId: string; dateRange: DateRange }) {
+export default function StudentStatement({ studentId, dateRange, currencies }: { studentId: string; dateRange: DateRange, currencies: Currency[] }) {
   const [statement, setStatement] = useState<Statement | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const getCurrencySymbol = (currencyId: string) => {
+    return currencies.find(c => c.id === currencyId)?.symbol || '';
+  };
+  
+  const studentCurrencySymbol = useMemo(() => {
+    if (!statement) return '';
+    return getCurrencySymbol(statement.student.currencyId);
+  }, [statement, currencies]);
 
   useEffect(() => {
     const generateStatement = async () => {
@@ -111,8 +120,7 @@ export default function StudentStatement({ studentId, dateRange }: { studentId: 
                 <TableCell>{item.class.title}</TableCell>
                 <TableCell>{item.class.discipline}</TableCell>
                 <TableCell className="text-right">
-                  {item.charge.toFixed(2)}{' '}
-                  <Badge variant="outline">{item.fee?.currencyCode || statement.student.currencyCode}</Badge>
+                  {getCurrencySymbol(item.fee?.currencyId || '')}{item.charge.toFixed(2)}
                 </TableCell>
               </TableRow>
             ))}
@@ -143,8 +151,7 @@ export default function StudentStatement({ studentId, dateRange }: { studentId: 
                 <TableCell>{payment.paymentMethod}</TableCell>
                 <TableCell>{payment.notes || 'N/A'}</TableCell>
                 <TableCell className="text-right">
-                  {payment.amount.toFixed(2)}{' '}
-                  <Badge variant="outline">{payment.currencyCode}</Badge>
+                  {getCurrencySymbol(payment.currencyId)}{payment.amount.toFixed(2)}
                 </TableCell>
               </TableRow>
             ))}
@@ -162,19 +169,18 @@ export default function StudentStatement({ studentId, dateRange }: { studentId: 
         <div className="grid grid-cols-1 gap-y-2 text-right">
             <div className="flex justify-between items-center gap-4">
                 <span className="text-muted-foreground">Total Charges:</span>
-                <span className="font-semibold w-28 text-lg">{totalAmountDue.toFixed(2)} {statement.student.currencyCode}</span>
+                <span className="font-semibold w-28 text-lg">{studentCurrencySymbol}{totalAmountDue.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center gap-4">
                 <span className="text-muted-foreground">Total Payments:</span>
-                <span className="font-semibold w-28 text-lg text-green-600">{totalPayments.toFixed(2)} {statement.student.currencyCode}</span>
+                <span className="font-semibold w-28 text-lg text-green-600">{studentCurrencySymbol}{totalPayments.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center gap-4 border-t pt-2 mt-2">
                 <span className="text-foreground font-bold">Balance Due:</span>
-                <span className="font-bold w-28 text-xl text-primary">{balance.toFixed(2)} {statement.student.currencyCode}</span>
+                <span className="font-bold w-28 text-xl text-primary">{studentCurrencySymbol}{balance.toFixed(2)}</span>
             </div>
         </div>
       </CardFooter>
     </Card>
   );
 }
-

@@ -36,7 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 const paymentSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
   amount: z.coerce.number().positive("Amount must be positive."),
-  currencyCode: z.enum(["INR", "USD", "EUR", "GBP", "AUD"]),
+  currencyId: z.string(),
   transactionDate: z.date({ required_error: "A payment date is required." }),
   paymentMethod: z.string().min(1, "Payment method is required"),
   notes: z.string().optional(),
@@ -58,7 +58,7 @@ export default function AddPaymentForm({
     defaultValues: {
       studentId: "",
       amount: 0,
-      currencyCode: "USD",
+      currencyId: "",
       transactionDate: new Date(),
       paymentMethod: "Card",
       notes: "",
@@ -71,7 +71,7 @@ export default function AddPaymentForm({
   useEffect(() => {
     const student = students.find(s => s.id === selectedStudentId);
     if (student) {
-      setValue("currencyCode", student.currencyCode);
+      setValue("currencyId", student.currencyId);
     }
   }, [selectedStudentId, students, setValue]);
 
@@ -125,7 +125,7 @@ export default function AddPaymentForm({
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
             name="amount"
@@ -134,19 +134,6 @@ export default function AddPaymentForm({
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="e.g. 100" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-           <FormField
-            control={form.control}
-            name="currencyCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Currency</FormLabel>
-                <FormControl>
-                  <Input {...field} disabled />
                 </FormControl>
                 <FormMessage />
               </FormItem>

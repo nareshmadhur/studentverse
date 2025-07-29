@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, query, collection, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Student } from "@/lib/definitions";
+import { Student, Currency } from "@/lib/definitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, ArrowLeft } from "lucide-react";
@@ -13,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function StudentProfile({ id }: { id: string }) {
   const router = useRouter();
   const [student, setStudent] = useState<Student | null>(null);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,12 +37,24 @@ export default function StudentProfile({ id }: { id: string }) {
       }
     };
 
+    const currenciesQuery = query(collection(db, "currencies"), where("deleted", "==", false));
+    const unsubscribeCurrencies = onSnapshot(currenciesQuery, (snapshot) => {
+        const currencyData: Currency[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Currency));
+        setCurrencies(currencyData);
+    });
+
     fetchStudent();
+    return () => unsubscribeCurrencies();
   }, [id]);
 
   const handleAddToNewClass = () => {
     router.push(`/classes?openDialog=true&studentId=${id}`);
   };
+
+  const getCurrencyInfo = (currencyId: string) => {
+    const currency = currencies.find(c => c.id === currencyId);
+    return currency ? `${currency.name} (${currency.symbol})` : 'N/A';
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -86,7 +100,7 @@ export default function StudentProfile({ id }: { id: string }) {
               </div>
               <div>
                 <p className="font-semibold text-muted-foreground">Preferred Currency</p>
-                <p>{student?.currencyCode}</p>
+                <p>{student ? getCurrencyInfo(student.currencyId) : 'N/A'}</p>
               </div>
             </div>
           )}

@@ -6,15 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Student } from "@/lib/definitions";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { Student, Currency } from "@/lib/definitions";
+import { collection, getDocs, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import StudentStatement from "@/components/billing/student-statement";
 import { DateRange } from "react-day-picker";
-import { addDays, startOfMonth } from "date-fns";
+import { startOfMonth } from "date-fns";
 
 export default function BillingPage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfMonth(new Date()),
@@ -34,7 +35,15 @@ export default function BillingPage() {
       );
       setStudents(studentData);
     };
+
+    const currenciesQuery = query(collection(db, "currencies"), where("deleted", "==", false));
+    const unsubscribeCurrencies = onSnapshot(currenciesQuery, (snapshot) => {
+        const currencyData: Currency[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Currency));
+        setCurrencies(currencyData);
+    });
+
     fetchStudents();
+    return () => unsubscribeCurrencies();
   }, []);
 
   const handleGenerateStatement = () => {
@@ -92,6 +101,7 @@ export default function BillingPage() {
         <StudentStatement 
           studentId={statementParams.studentId} 
           dateRange={statementParams.dateRange}
+          currencies={currencies}
         />
       )}
     </div>
