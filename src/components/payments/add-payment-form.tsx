@@ -125,7 +125,7 @@ export default function AddPaymentForm({
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="amount"
@@ -139,9 +139,7 @@ export default function AddPaymentForm({
               </FormItem>
             )}
           />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
+           <FormField
             control={form.control}
             name="paymentMethod"
             render={({ field }) => (
@@ -154,7 +152,8 @@ export default function AddPaymentForm({
               </FormItem>
             )}
           />
-          <FormField
+        </div>
+        <FormField
             control={form.control}
             name="transactionDate"
             render={({ field }) => (
@@ -178,7 +177,7 @@ export default function AddPaymentForm({
                       )}
                       </Button>
                   </PopoverTrigger>
-                  <PopoverContent>
+                  <PopoverContent className="w-auto p-0">
                       <Calendar
                       mode="single"
                       selected={field.value}
@@ -196,7 +195,6 @@ export default function AddPaymentForm({
               </FormItem>
             )}
           />
-        </div>
         <FormField
           control={form.control}
           name="notes"

@@ -123,7 +123,7 @@ export default function EditPaymentForm({
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="amount"
@@ -137,8 +137,6 @@ export default function EditPaymentForm({
               </FormItem>
             )}
           />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="paymentMethod"
@@ -152,7 +150,9 @@ export default function EditPaymentForm({
               </FormItem>
             )}
           />
-          <FormField
+        </div>
+        
+        <FormField
             control={form.control}
             name="transactionDate"
             render={({ field }) => (
@@ -176,7 +176,7 @@ export default function EditPaymentForm({
                       )}
                       </Button>
                   </PopoverTrigger>
-                  <PopoverContent>
+                  <PopoverContent className="w-auto p-0">
                       <Calendar
                       mode="single"
                       selected={field.value}
@@ -194,7 +194,6 @@ export default function EditPaymentForm({
               </FormItem>
             )}
           />
-        </div>
         
         <FormField
           control={form.control}
