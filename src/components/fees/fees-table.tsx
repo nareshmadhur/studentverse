@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Fee, Student, Currency } from "@/lib/definitions";
+import type { Fee, Student } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -43,15 +43,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { getCurrencySymbol } from "@/lib/utils";
 
 export default function FeesTable({ 
   fees, 
   students,
-  currencies,
 }: { 
   fees: Fee[], 
-  students: Student[],
-  currencies: Currency[],
+  students: Student[]
 }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -85,10 +84,6 @@ export default function FeesTable({
   
   const getStudentName = (studentId: string) => {
     return students.find(s => s.id === studentId)?.name || "Unknown Student";
-  }
-
-  const getCurrencySymbol = (currencyId: string) => {
-    return currencies.find(c => c.id === currencyId)?.symbol || '';
   }
 
   return (
@@ -125,7 +120,7 @@ export default function FeesTable({
                       {fee.sessionType}
                     </Badge>
                   </TableCell>
-                  <TableCell>{getCurrencySymbol(fee.currencyId)}{fee.amount.toFixed(2)}</TableCell>
+                  <TableCell>{getCurrencySymbol(fee.currencyCode)}{fee.amount.toFixed(2)}</TableCell>
                    <TableCell>
                     <Badge variant={fee.feeType === 'hourly' ? 'default' : 'secondary'}>
                       {fee.feeType}

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Payment, Student, Currency } from "@/lib/definitions";
+import type { Payment, Student } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -49,15 +49,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getCurrencySymbol } from "@/lib/utils";
 
 export default function PaymentsTable({ 
   payments,
   students,
-  currencies,
 }: { 
   payments: Payment[],
-  students: Student[],
-  currencies: Currency[]
+  students: Student[]
 }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -92,10 +91,6 @@ export default function PaymentsTable({
   const getStudentName = (studentId: string) => {
     return students.find(s => s.id === studentId)?.name || "Unknown Student";
   };
-  
-  const getCurrencySymbol = (currencyId: string) => {
-    return currencies.find(c => c.id === currencyId)?.symbol || '';
-  }
 
   return (
     <>
@@ -125,7 +120,7 @@ export default function PaymentsTable({
                   <TableRow key={payment.id} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && handleEditClick(payment)}>
                     <TableCell className="font-medium">{getStudentName(payment.studentId)}</TableCell>
                     <TableCell>
-                      {getCurrencySymbol(payment.currencyId)}{payment.amount.toFixed(2)}
+                      {getCurrencySymbol(payment.currencyCode)}{payment.amount.toFixed(2)}
                     </TableCell>
                     <TableCell>{format(new Date(payment.transactionDate), "PPP")}</TableCell>
                     <TableCell>

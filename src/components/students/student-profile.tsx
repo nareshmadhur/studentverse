@@ -2,9 +2,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, getDoc, onSnapshot, query, collection, where } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Student, Currency } from "@/lib/definitions";
+import { Student } from "@/lib/definitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, ArrowLeft, Pencil } from "lucide-react";
@@ -12,11 +12,12 @@ import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import EditStudentForm from "./edit-student-form";
+import { currencies } from "@/lib/data/form-data";
+import { getCurrencySymbol } from "@/lib/utils";
 
 export default function StudentProfile({ id }: { id: string }) {
   const router = useRouter();
   const [student, setStudent] = useState<Student | null>(null);
-  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -38,15 +39,8 @@ export default function StudentProfile({ id }: { id: string }) {
         setLoading(false);
     });
 
-    const currenciesQuery = query(collection(db, "currencies"), where("deleted", "==", false));
-    const unsubscribeCurrencies = onSnapshot(currenciesQuery, (snapshot) => {
-        const currencyData: Currency[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Currency));
-        setCurrencies(currencyData);
-    });
-
     return () => {
       unsubscribeStudent();
-      unsubscribeCurrencies();
     }
   }, [id]);
 
@@ -54,9 +48,9 @@ export default function StudentProfile({ id }: { id: string }) {
     router.push(`/classes?openDialog=true&studentId=${id}`);
   };
 
-  const getCurrencyInfo = (currencyId: string) => {
-    const currency = currencies.find(c => c.id === currencyId);
-    return currency ? `${currency.name} (${currency.symbol})` : 'N/A';
+  const getCurrencyInfo = (currencyCode: string) => {
+    const currency = currencies.find(c => c.code === currencyCode);
+    return currency ? `${currency.name} (${getCurrencySymbol(currencyCode)})` : 'N/A';
   }
 
   return (
@@ -112,7 +106,7 @@ export default function StudentProfile({ id }: { id: string }) {
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <p className="font-semibold text-muted-foreground">Preferred Currency</p>
-                  <p className="text-lg">{student ? getCurrencyInfo(student.currencyId) : 'N/A'}</p>
+                  <p className="text-lg">{student ? getCurrencyInfo(student.currencyCode) : 'N/A'}</p>
                 </div>
               </div>
             ) : (
@@ -129,7 +123,6 @@ export default function StudentProfile({ id }: { id: string }) {
            <EditStudentForm
               setOpen={setIsEditDialogOpen}
               student={student}
-              currencies={currencies}
             />
         )}
       </DialogContent>

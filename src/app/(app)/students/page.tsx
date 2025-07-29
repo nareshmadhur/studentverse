@@ -15,12 +15,11 @@ import {
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Student, Currency } from "@/lib/definitions";
+import { Student } from "@/lib/definitions";
 
 export default function StudentsPage() {
   const [open, setOpen] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
-  const [currencies, setCurrencies] = useState<Currency[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, "students"), where("deleted", "==", false));
@@ -34,7 +33,7 @@ export default function StudentsPage() {
           email: data.email,
           phone: data.phone,
           country: data.country,
-          currencyId: data.currencyId,
+          currencyCode: data.currencyCode,
           createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           deleted: data.deleted,
@@ -43,16 +42,8 @@ export default function StudentsPage() {
       setStudents(studentData);
     });
 
-    const currenciesQuery = query(collection(db, "currencies"), where("deleted", "==", false));
-    const unsubscribeCurrencies = onSnapshot(currenciesQuery, (snapshot) => {
-        const currencyData: Currency[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Currency));
-        setCurrencies(currencyData);
-    });
-
-
     return () => {
       unsubscribe();
-      unsubscribeCurrencies();
     }
   }, []);
 
@@ -70,13 +61,13 @@ export default function StudentsPage() {
             </Button>
           </DialogTrigger>
         </div>
-        <StudentsTable students={students} currencies={currencies} />
+        <StudentsTable students={students} />
       </div>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a new student</DialogTitle>
         </DialogHeader>
-        <AddStudentForm setOpen={setOpen} currencies={currencies} />
+        <AddStudentForm setOpen={setOpen} />
       </DialogContent>
     </Dialog>
   );

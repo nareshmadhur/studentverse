@@ -13,7 +13,7 @@ import {
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Payment, Student, Currency } from "@/lib/definitions";
+import { Payment, Student } from "@/lib/definitions";
 import PaymentsTable from "@/components/payments/payments-table";
 import AddPaymentForm from "@/components/payments/add-payment-form";
 
@@ -21,7 +21,6 @@ export default function PaymentsPage() {
   const [open, setOpen] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [currencies, setCurrencies] = useState<Currency[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, "payments"), where("deleted", "==", false));
@@ -33,7 +32,7 @@ export default function PaymentsPage() {
           id: doc.id,
           studentId: data.studentId,
           amount: data.amount,
-          currencyId: data.currencyId,
+          currencyCode: data.currencyCode,
           transactionDate: (data.transactionDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           paymentMethod: data.paymentMethod,
           notes: data.notes,
@@ -52,17 +51,10 @@ export default function PaymentsPage() {
       setStudents(studentData);
     }
     
-    const currenciesQuery = query(collection(db, "currencies"), where("deleted", "==", false));
-    const unsubscribeCurrencies = onSnapshot(currenciesQuery, (snapshot) => {
-        const currencyData: Currency[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Currency));
-        setCurrencies(currencyData);
-    });
-
     fetchStudents();
 
     return () => {
       unsubscribe();
-      unsubscribeCurrencies();
     }
   }, []);
 
@@ -83,7 +75,6 @@ export default function PaymentsPage() {
         <PaymentsTable 
           payments={payments} 
           students={students}
-          currencies={currencies}
         />
       </div>
       <DialogContent>

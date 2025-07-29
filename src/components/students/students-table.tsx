@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Student, Currency } from "@/lib/definitions";
+import type { Student } from "@/lib/definitions";
 import {
   Card,
   CardContent,
@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
 
-export default function StudentsTable({ students, currencies }: { students: Student[], currencies: Currency[] }) {
+export default function StudentsTable({ students }: { students: Student[] }) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -86,10 +86,6 @@ export default function StudentsTable({ students, currencies }: { students: Stud
     router.push(`/students/${studentId}`);
   };
 
-  const getCurrencyCode = (currencyId: string) => {
-    return currencies.find(c => c.id === currencyId)?.code || '';
-  }
-
   return (
     <>
       <Card>
@@ -125,7 +121,7 @@ export default function StudentsTable({ students, currencies }: { students: Stud
                   <TableCell>{student.email}</TableCell>
                   <TableCell>{student.country}</TableCell>
                   <TableCell className="text-right">
-                    <Badge variant="outline">{getCurrencyCode(student.currencyId)}</Badge>
+                    <Badge variant="outline">{student.currencyCode}</Badge>
                   </TableCell>
                   <TableCell 
                     className="flex justify-end gap-2"
@@ -172,7 +168,6 @@ export default function StudentsTable({ students, currencies }: { students: Stud
             <EditStudentForm
               setOpen={setIsEditDialogOpen}
               student={selectedStudent}
-              currencies={currencies}
             />
           )}
         </DialogContent>

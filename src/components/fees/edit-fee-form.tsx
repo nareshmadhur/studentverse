@@ -38,7 +38,7 @@ const feeSchema = z.object({
   sessionType: z.enum(["1-1", "group"]),
   feeType: z.enum(["hourly", "subscription"]),
   amount: z.coerce.number().positive("Amount must be positive."),
-  currencyId: z.string(),
+  currencyCode: z.string(),
   effectiveDate: z.date({ required_error: "An effective date is required." }),
 });
 
@@ -71,7 +71,7 @@ export default function EditFeeForm({
   useEffect(() => {
     const student = students.find(s => s.id === selectedStudentId);
     if (student) {
-      setValue("currencyId", student.currencyId);
+      setValue("currencyCode", student.currencyCode);
     }
   }, [selectedStudentId, students, setValue]);
 

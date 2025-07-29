@@ -13,7 +13,7 @@ import {
 import { useState, useEffect, Suspense } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Fee, Student, Currency } from "@/lib/definitions";
+import { Fee, Student } from "@/lib/definitions";
 import FeesTable from "@/components/fees/fees-table";
 import AddFeeForm from "@/components/fees/add-fee-form";
 import { useSearchParams } from "next/navigation";
@@ -23,7 +23,6 @@ function FeesPageContent() {
   const [open, setOpen] = useState(false);
   const [fees, setFees] = useState<Fee[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [currencies, setCurrencies] = useState<Currency[]>([]);
   const preselectedStudentId = searchParams.get('studentId');
 
   useEffect(() => {
@@ -45,7 +44,7 @@ function FeesPageContent() {
           sessionType: data.sessionType,
           feeType: data.feeType,
           amount: data.amount,
-          currencyId: data.currencyId,
+          currencyCode: data.currencyCode,
           effectiveDate: (data.effectiveDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
           updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
@@ -62,17 +61,10 @@ function FeesPageContent() {
       setStudents(studentData);
     }
     
-    const currenciesQuery = query(collection(db, "currencies"), where("deleted", "==", false));
-    const unsubscribeCurrencies = onSnapshot(currenciesQuery, (snapshot) => {
-        const currencyData: Currency[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Currency));
-        setCurrencies(currencyData);
-    });
-
     fetchStudents();
 
     return () => {
       unsubscribe();
-      unsubscribeCurrencies();
     }
   }, []);
 
@@ -90,7 +82,7 @@ function FeesPageContent() {
             </Button>
           </DialogTrigger>
         </div>
-        <FeesTable fees={fees} students={students} currencies={currencies} />
+        <FeesTable fees={fees} students={students} />
       </div>
       <DialogContent>
         <DialogHeader>

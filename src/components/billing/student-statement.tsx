@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import type { Student, Class, Fee, Payment, Currency } from "@/lib/definitions";
+import type { Student, Class, Fee, Payment } from "@/lib/definitions";
 import { getStatementData, Statement, StatementItem } from "@/lib/actions/billing";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,20 +10,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { Badge } from "../ui/badge";
+import { getCurrencySymbol } from "@/lib/utils";
 
-export default function StudentStatement({ studentId, dateRange, currencies }: { studentId: string; dateRange: DateRange, currencies: Currency[] }) {
+export default function StudentStatement({ studentId, dateRange }: { studentId: string; dateRange: DateRange }) {
   const [statement, setStatement] = useState<Statement | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const getCurrencySymbol = (currencyId: string) => {
-    return currencies.find(c => c.id === currencyId)?.symbol || '';
-  };
-  
-  const studentCurrencySymbol = useMemo(() => {
-    if (!statement) return '';
-    return getCurrencySymbol(statement.student.currencyId);
-  }, [statement, currencies]);
 
   useEffect(() => {
     const generateStatement = async () => {
@@ -45,6 +37,11 @@ export default function StudentStatement({ studentId, dateRange, currencies }: {
 
     generateStatement();
   }, [studentId, dateRange]);
+  
+  const studentCurrencySymbol = useMemo(() => {
+    if (!statement) return '';
+    return getCurrencySymbol(statement.student.currencyCode);
+  }, [statement]);
 
   const totalAmountDue = useMemo(() => {
     return statement?.items.reduce((acc, item) => acc + item.charge, 0) || 0;
@@ -120,7 +117,7 @@ export default function StudentStatement({ studentId, dateRange, currencies }: {
                 <TableCell>{item.class.title}</TableCell>
                 <TableCell>{item.class.discipline}</TableCell>
                 <TableCell className="text-right">
-                  {getCurrencySymbol(item.fee?.currencyId || '')}{item.charge.toFixed(2)}
+                  {getCurrencySymbol(item.fee?.currencyCode || '')}{item.charge.toFixed(2)}
                 </TableCell>
               </TableRow>
             ))}
@@ -151,7 +148,7 @@ export default function StudentStatement({ studentId, dateRange, currencies }: {
                 <TableCell>{payment.paymentMethod}</TableCell>
                 <TableCell>{payment.notes || 'N/A'}</TableCell>
                 <TableCell className="text-right">
-                  {getCurrencySymbol(payment.currencyId)}{payment.amount.toFixed(2)}
+                  {getCurrencySymbol(payment.currencyCode)}{payment.amount.toFixed(2)}
                 </TableCell>
               </TableRow>
             ))}

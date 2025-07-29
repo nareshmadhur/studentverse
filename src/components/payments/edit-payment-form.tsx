@@ -36,7 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 const paymentSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
   amount: z.coerce.number().positive("Amount must be positive."),
-  currencyId: z.string(),
+  currencyCode: z.string(),
   transactionDate: z.date({ required_error: "A payment date is required." }),
   paymentMethod: z.string().min(1, "Payment method is required"),
   notes: z.string().optional(),
@@ -69,7 +69,7 @@ export default function EditPaymentForm({
   useEffect(() => {
     const student = students.find(s => s.id === selectedStudentId);
     if (student) {
-      setValue("currencyId", student.currencyId);
+      setValue("currencyCode", student.currencyCode);
     }
   }, [selectedStudentId, students, setValue]);
 
