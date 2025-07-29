@@ -61,3 +61,11 @@ export type Payment = {
   updatedAt: string;
   deleted: boolean;
 };
+
+export type Discipline = {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  deleted: boolean;
+}

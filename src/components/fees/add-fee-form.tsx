@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -20,9 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, getDocs, query, where, Timestamp, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Student } from "@/lib/definitions";
+import { Student, Discipline } from "@/lib/definitions";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
@@ -56,6 +57,8 @@ export default function AddFeeForm({
   const { toast } = useToast();
   const router = useRouter();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
+  
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
@@ -68,12 +71,31 @@ export default function AddFeeForm({
       effectiveDate: new Date(),
     },
   });
+
+  const { watch, setValue } = form;
+  const selectedStudentId = watch("studentId");
   
   useEffect(() => {
     if (preselectedStudentId) {
       form.setValue('studentId', preselectedStudentId);
     }
   }, [preselectedStudentId, form]);
+
+  useEffect(() => {
+    const student = students.find(s => s.id === selectedStudentId);
+    if (student) {
+      setValue("currencyCode", student.currencyCode);
+    }
+  }, [selectedStudentId, students, setValue]);
+
+  useEffect(() => {
+    const q = query(collection(db, "disciplines"), where("deleted", "==", false));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const disciplineData: Discipline[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline));
+        setDisciplines(disciplineData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const onSubmit = async (data: FeeFormValues) => {
     try {
@@ -88,9 +110,6 @@ export default function AddFeeForm({
         description: "The new fee has been successfully added.",
       });
       setOpen(false);
-      // After adding the initial fee, you might want to go to classes
-      // or back to the student profile.
-      // For now, we'll clear the query params and stay on the fees page.
       router.push('/fees');
     } catch (error) {
       console.error("Error adding document: ", error);
@@ -136,9 +155,21 @@ export default function AddFeeForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Discipline (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. guitar, vocals" {...field} />
-                </FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a discipline" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="">Any (Default)</SelectItem>
+                    {disciplines.map(d => (
+                      <SelectItem key={d.id} value={d.name}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -185,20 +216,9 @@ export default function AddFeeForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Currency</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a currency" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="INR">INR</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                    <SelectItem value="AUD">AUD</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Input {...field} disabled />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

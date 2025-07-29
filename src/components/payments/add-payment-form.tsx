@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -27,7 +28,7 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -63,6 +64,16 @@ export default function AddPaymentForm({
       notes: "",
     },
   });
+
+  const { watch, setValue } = form;
+  const selectedStudentId = watch("studentId");
+
+  useEffect(() => {
+    const student = students.find(s => s.id === selectedStudentId);
+    if (student) {
+      setValue("currencyCode", student.currencyCode);
+    }
+  }, [selectedStudentId, students, setValue]);
 
   const onSubmit = async (data: PaymentFormValues) => {
     try {
@@ -128,26 +139,15 @@ export default function AddPaymentForm({
               </FormItem>
             )}
           />
-          <FormField
+           <FormField
             control={form.control}
             name="currencyCode"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Currency</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a currency" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="INR">INR</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                    <SelectItem value="AUD">AUD</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Input {...field} disabled />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

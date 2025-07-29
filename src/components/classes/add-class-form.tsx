@@ -21,9 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { addDoc, collection, serverTimestamp, getDocs, query, where, Timestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, getDocs, query, where, Timestamp, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Student, Fee } from "@/lib/definitions";
+import { Student, Fee, Discipline } from "@/lib/definitions";
 import { CalendarIcon, Check, ChevronsUpDown, X } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
@@ -69,6 +69,7 @@ export default function AddClassForm({
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [studentFeeDetails, setStudentFeeDetails] = useState<StudentFeeInfo[]>([]);
+  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -89,6 +90,15 @@ export default function AddClassForm({
   const watchedDiscipline = watch("discipline");
   const watchedSessionType = watch("sessionType");
   const watchedScheduledDate = watch("scheduledDate");
+
+  useEffect(() => {
+    const q = query(collection(db, "disciplines"), where("deleted", "==", false));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const disciplineData: Discipline[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline));
+        setDisciplines(disciplineData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (preselectedStudentId) {
@@ -115,7 +125,6 @@ export default function AddClassForm({
         where("deleted", "==", false)
       ];
 
-      // Add discipline constraint only if it has a value.
       if (watchedDiscipline) {
         feeQueryConstraints.push(where("discipline", "in", [watchedDiscipline, ""]));
       } else {
@@ -133,7 +142,6 @@ export default function AddClassForm({
       if (!querySnapshot.empty) {
         const fees: Fee[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
         
-        // Prioritize specific discipline match over default, then by most recent effective date
         fees.sort((a, b) => {
           if (a.discipline === watchedDiscipline && b.discipline !== watchedDiscipline) return -1;
           if (b.discipline === watchedDiscipline && a.discipline !== watchedDiscipline) return 1;
@@ -231,9 +239,20 @@ export default function AddClassForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Discipline</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. guitar, vocals" {...field} />
-                </FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a discipline" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {disciplines.map(d => (
+                      <SelectItem key={d.id} value={d.name}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

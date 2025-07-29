@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -20,14 +21,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, serverTimestamp, updateDoc, collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Fee, Student } from "@/lib/definitions";
+import { Fee, Student, Discipline } from "@/lib/definitions";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "../ui/input";
 import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
 
@@ -54,6 +55,8 @@ export default function EditFeeForm({
 }) {
   const { toast } = useToast();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
+
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
@@ -61,6 +64,25 @@ export default function EditFeeForm({
       effectiveDate: new Date(fee.effectiveDate),
     },
   });
+
+  const { watch, setValue } = form;
+  const selectedStudentId = watch("studentId");
+
+  useEffect(() => {
+    const student = students.find(s => s.id === selectedStudentId);
+    if (student) {
+      setValue("currencyCode", student.currencyCode);
+    }
+  }, [selectedStudentId, students, setValue]);
+
+  useEffect(() => {
+    const q = query(collection(db, "disciplines"), where("deleted", "==", false));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const disciplineData: Discipline[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline));
+        setDisciplines(disciplineData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const onSubmit = async (data: FeeFormValues) => {
     try {
@@ -118,9 +140,21 @@ export default function EditFeeForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Discipline (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. guitar, vocals" {...field} />
-                </FormControl>
+                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a discipline" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="">Any (Default)</SelectItem>
+                    {disciplines.map(d => (
+                      <SelectItem key={d.id} value={d.name}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -167,20 +201,9 @@ export default function EditFeeForm({
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Currency</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a currency" />
-                    </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                    <SelectItem value="INR">INR</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                    <SelectItem value="AUD">AUD</SelectItem>
-                    </SelectContent>
-                </Select>
+                 <FormControl>
+                  <Input {...field} disabled />
+                </FormControl>
                 <FormMessage />
                 </FormItem>
             )}

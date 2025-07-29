@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import {
 import { useState, useEffect, Suspense } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Class, Student } from "@/lib/definitions";
+import { Class, Student, Discipline } from "@/lib/definitions";
 import ClassesTable from "@/components/classes/classes-table";
 import AddClassForm from "@/components/classes/add-class-form";
 import { useSearchParams } from "next/navigation";
