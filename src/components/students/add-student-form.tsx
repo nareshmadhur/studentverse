@@ -160,7 +160,7 @@ export default function AddStudentForm({
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button type="submit">Add Student</Button>
+          <Button type="submit">Add Student and Set Fee</Button>
         </div>
       </form>
     </Form>

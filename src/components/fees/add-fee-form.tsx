@@ -88,8 +88,10 @@ export default function AddFeeForm({
         description: "The new fee has been successfully added.",
       });
       setOpen(false);
-      // Optional: Navigate to classes page after adding a fee
-      // router.push('/classes');
+      // After adding the initial fee, you might want to go to classes
+      // or back to the student profile.
+      // For now, we'll clear the query params and stay on the fees page.
+      router.push('/fees');
     } catch (error) {
       console.error("Error adding document: ", error);
       toast({
