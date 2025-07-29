@@ -112,7 +112,7 @@ export default function SignupPage() {
 
 
   return (
-    <Card className="w-full max-w-md">
+    <Card>
         <CardHeader>
             <CardTitle>Create an Account</CardTitle>
             <CardDescription>Enter your email and password to get started.</CardDescription>

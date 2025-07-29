@@ -114,7 +114,7 @@ export default function LoginPage() {
 
 
   return (
-    <Card className="w-full max-w-md">
+    <Card>
         <CardHeader>
             <CardTitle>Welcome Back</CardTitle>
             <CardDescription>Enter your credentials to access your account.</CardDescription>
