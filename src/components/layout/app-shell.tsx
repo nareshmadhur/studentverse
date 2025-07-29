@@ -163,8 +163,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {/* You can add header content here if needed, like a search bar */}
           </div>
         </header>
-        <div className="p-4 sm:p-6">
-          {children}
+        <div className="p-4 sm:p-6 lg:p-8">
+            <div className="mx-auto max-w-screen-2xl">
+              {children}
+            </div>
         </div>
       </main>
     </SidebarProvider>
