@@ -89,9 +89,9 @@ export default function EditClassForm({
       return;
     }
 
-    const newDetails: StudentFeeInfo[] = await Promise.all(selectedStudentIds.map(async (studentId) => {
+    const detailPromises = selectedStudentIds.map(async (studentId) => {
       const student = allStudents.find(s => s.id === studentId);
-      if (!student) return { student: {} as Student, fee: null, loading: false };
+      if (!student) return null;
 
       const feeQueryConstraints = [
         where("studentId", "==", studentId),
@@ -129,8 +129,9 @@ export default function EditClassForm({
       }
       
       return { student, fee: applicableFee, loading: false };
-    }));
+    });
     
+    const newDetails = (await Promise.all(detailPromises)).filter((detail): detail is StudentFeeInfo => detail !== null);
     setStudentFeeDetails(newDetails);
   }, [selectedStudentIds, watchedDiscipline, watchedSessionType, watchedScheduledDate, allStudents]);
 
