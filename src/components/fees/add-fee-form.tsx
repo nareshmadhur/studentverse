@@ -101,6 +101,7 @@ export default function AddFeeForm({
     try {
       await addDoc(collection(db, "fees"), {
         ...data,
+        discipline: data.discipline === '__any__' ? '' : data.discipline,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         deleted: false,
@@ -155,14 +156,14 @@ export default function AddFeeForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Discipline (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || '__any__'}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a discipline" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Any (Default)</SelectItem>
+                    <SelectItem value="__any__">Any (Default)</SelectItem>
                     {disciplines.map(d => (
                       <SelectItem key={d.id} value={d.name}>
                         {d.name}

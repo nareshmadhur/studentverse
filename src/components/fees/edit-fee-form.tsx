@@ -61,6 +61,7 @@ export default function EditFeeForm({
     resolver: zodResolver(feeSchema),
     defaultValues: {
       ...fee,
+      discipline: fee.discipline || '__any__',
       effectiveDate: new Date(fee.effectiveDate),
     },
   });
@@ -89,6 +90,7 @@ export default function EditFeeForm({
       const feeDocRef = doc(db, "fees", fee.id);
       await updateDoc(feeDocRef, {
         ...data,
+        discipline: data.discipline === '__any__' ? '' : data.discipline,
         updatedAt: serverTimestamp(),
       });
       toast({
@@ -147,7 +149,7 @@ export default function EditFeeForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Any (Default)</SelectItem>
+                    <SelectItem value="__any__">Any (Default)</SelectItem>
                     {disciplines.map(d => (
                       <SelectItem key={d.id} value={d.name}>
                         {d.name}
