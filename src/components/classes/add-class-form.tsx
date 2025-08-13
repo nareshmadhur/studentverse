@@ -91,6 +91,11 @@ export default function AddClassForm({
   const watchedSessionType = watch("sessionType");
   const watchedScheduledDate = watch("scheduledDate");
 
+  // LOGGING: Check if form state for date is updating
+  useEffect(() => {
+    console.log("Form 'scheduledDate' value changed to:", watchedScheduledDate);
+  }, [watchedScheduledDate]);
+
   useEffect(() => {
     const q = query(collection(db, "disciplines"), where("deleted", "==", false));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -156,6 +161,8 @@ export default function AddClassForm({
 
 
   const onSubmit = async (data: ClassFormValues) => {
+    // LOGGING: Check form data on submit
+    console.log("Submitting form with data:", data);
     try {
       await addDoc(collection(db, "classes"), {
         ...data,
@@ -333,7 +340,11 @@ export default function AddClassForm({
                       mode="single"
                       selected={field.value}
                       onSelect={(date) => {
-                        field.onChange(date);
+                        // LOGGING: Check if onSelect is fired and what the value is.
+                        console.log("Calendar onSelect fired with date:", date);
+                        if(date) {
+                           field.onChange(date);
+                        }
                         setIsDatePickerOpen(false);
                       }}
                       initialFocus
@@ -460,5 +471,3 @@ export default function AddClassForm({
     </Form>
   );
 }
-
-    
