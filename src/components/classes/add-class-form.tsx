@@ -84,9 +84,10 @@ export default function AddClassForm({
     },
   });
 
-  const { watch, setValue, getValues } = form;
+  const { watch, setValue } = form;
   const watchedDiscipline = watch("discipline");
   const watchedSessionType = watch("sessionType");
+  const watchedScheduledDate = watch("scheduledDate");
 
   const onSubmit = async (data: ClassFormValues) => {
     try {
@@ -128,8 +129,7 @@ export default function AddClassForm({
     }
   }, [preselectedStudentId, setValue]);
 
-  const fetchFeesForSelectedStudents = useCallback(async () => {
-    const scheduledDate = getValues("scheduledDate");
+  const fetchFeesForSelectedStudents = useCallback(async (scheduledDate: Date) => {
     if (selectedStudentIds.length === 0 || !watchedDiscipline || !watchedSessionType || !scheduledDate) {
       setStudentFeeDetails([]);
       return;
@@ -170,11 +170,11 @@ export default function AddClassForm({
   
     const newDetails = (await Promise.all(detailPromises)).filter((detail): detail is StudentFeeInfo => detail !== null);
     setStudentFeeDetails(newDetails);
-  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, allStudents, getValues]);
+  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, allStudents]);
 
   useEffect(() => {
-    fetchFeesForSelectedStudents();
-  }, [fetchFeesForSelectedStudents]);
+    fetchFeesForSelectedStudents(watchedScheduledDate);
+  }, [watchedScheduledDate, selectedStudentIds, watchedDiscipline, watchedSessionType, fetchFeesForSelectedStudents]);
   
   const handleSessionTypeChange = (value: "1-1" | "group") => {
     setValue("sessionType", value);
