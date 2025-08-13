@@ -92,7 +92,7 @@ export default function EditClassForm({
 
   const fetchFeesForSelectedStudents = useCallback(async () => {
     const scheduledDate = getValues("scheduledDate");
-    if (selectedStudentIds.length === 0 || !watchedSessionType || !scheduledDate) {
+    if (selectedStudentIds.length === 0 || !watchedDiscipline || !watchedSessionType || !scheduledDate) {
       setStudentFeeDetails([]);
       return;
     }
