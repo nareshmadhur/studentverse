@@ -63,7 +63,7 @@ export default function AddFeeForm({
     resolver: zodResolver(feeSchema),
     defaultValues: {
       studentId: preselectedStudentId || "",
-      discipline: "",
+      discipline: "__any__",
       sessionType: "1-1",
       feeType: "hourly",
       amount: 0,
@@ -156,7 +156,7 @@ export default function AddFeeForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Discipline (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || '__any__'}>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a discipline" />
@@ -258,15 +258,13 @@ export default function AddFeeForm({
                         )}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent>
+                    <PopoverContent className="w-auto p-0">
                         <Calendar
                         mode="single"
                         selected={field.value}
                         onSelect={(date) => {
-                            if (date) {
-                            field.onChange(date);
-                            setIsDatePickerOpen(false);
-                            }
+                          field.onChange(date);
+                          setIsDatePickerOpen(false);
                         }}
                         initialFocus
                         />

@@ -244,15 +244,13 @@ export default function EditFeeForm({
                         )}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent>
+                    <PopoverContent className="w-auto p-0">
                         <Calendar
                         mode="single"
                         selected={field.value}
                         onSelect={(date) => {
-                            if (date) {
                             field.onChange(date);
                             setIsDatePickerOpen(false);
-                            }
                         }}
                         initialFocus
                         />
