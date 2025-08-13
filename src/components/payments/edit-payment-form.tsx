@@ -54,6 +54,7 @@ export default function EditPaymentForm({
   students: Student[];
 }) {
   const { toast } = useToast();
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
@@ -157,7 +158,7 @@ export default function EditPaymentForm({
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Transaction Date</FormLabel>
-                <Popover>
+                <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
@@ -180,7 +181,10 @@ export default function EditPaymentForm({
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date);
+                          setIsDatePickerOpen(false);
+                        }}
                         initialFocus
                       />
                   </PopoverContent>

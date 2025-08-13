@@ -55,6 +55,7 @@ export default function EditFeeForm({
 }) {
   const { toast } = useToast();
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
@@ -225,7 +226,7 @@ export default function EditFeeForm({
             render={({ field }) => (
                 <FormItem className="flex flex-col">
                 <FormLabel>Effective Date</FormLabel>
-                <Popover>
+                <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -248,7 +249,10 @@ export default function EditFeeForm({
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            setIsDatePickerOpen(false);
+                          }}
                           initialFocus
                         />
                     </PopoverContent>

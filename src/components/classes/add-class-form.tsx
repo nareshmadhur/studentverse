@@ -69,6 +69,7 @@ export default function AddClassForm({
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [studentFeeDetails, setStudentFeeDetails] = useState<StudentFeeInfo[]>([]);
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -107,7 +108,7 @@ export default function AddClassForm({
   }, [preselectedStudentId, setValue]);
 
   const fetchFeesForSelectedStudents = useCallback(async () => {
-    if (selectedStudentIds.length === 0 || !watchedSessionType || !watchedScheduledDate) {
+    if (selectedStudentIds.length === 0 || !watchedDiscipline || !watchedSessionType || !watchedScheduledDate) {
       setStudentFeeDetails([]);
       return;
     }
@@ -308,7 +309,7 @@ export default function AddClassForm({
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Class Date & Time</FormLabel>
-                <Popover>
+                <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
@@ -331,7 +332,10 @@ export default function AddClassForm({
                      <Calendar
                       mode="single"
                       selected={field.value}
-                      onSelect={field.onChange}
+                      onSelect={(date) => {
+                        field.onChange(date);
+                        setIsDatePickerOpen(false);
+                      }}
                       initialFocus
                     />
                   </PopoverContent>

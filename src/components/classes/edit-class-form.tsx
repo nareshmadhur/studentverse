@@ -69,6 +69,7 @@ export default function EditClassForm({
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(classItem.students || []);
   const [studentFeeDetails, setStudentFeeDetails] = useState<StudentFeeInfo[]>([]);
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -288,7 +289,7 @@ export default function EditClassForm({
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Class Date & Time</FormLabel>
-                <Popover>
+                <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
@@ -311,7 +312,10 @@ export default function EditClassForm({
                      <Calendar
                       mode="single"
                       selected={field.value}
-                      onSelect={field.onChange}
+                      onSelect={(date) => {
+                        field.onChange(date);
+                        setIsDatePickerOpen(false);
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
