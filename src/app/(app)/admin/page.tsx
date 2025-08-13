@@ -56,17 +56,6 @@ export default function AdminPage() {
                     </div>
                 </CardContent>
             </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Debug Tools</CardTitle>
-                    <CardDescription>Temporary tools for debugging.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Link href="/admin/datepicker-test">
-                        <Button>Date Picker Test</Button>
-                    </Link>
-                </CardContent>
-            </Card>
         </div>
     );
 }

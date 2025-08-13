@@ -25,16 +25,18 @@ export function DatePicker({ field }: DatePickerProps) {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant={"outline"}
-          className={cn(
-            "w-full justify-start text-left font-normal",
-            !field.value && "text-muted-foreground"
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
-        </Button>
+        <FormControl>
+          <Button
+            variant={"outline"}
+            className={cn(
+              "w-full justify-start text-left font-normal",
+              !field.value && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+          </Button>
+        </FormControl>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
         <Calendar
