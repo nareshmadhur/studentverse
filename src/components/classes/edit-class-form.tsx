@@ -106,7 +106,7 @@ export default function EditClassForm({
         where("studentId", "==", studentId),
         where("sessionType", "==", watchedSessionType),
         where("feeType", "==", "hourly"),
-        where("effectiveDate", "<=", Timestamp.fromDate(watchedScheduledDate)),
+        where("effectiveDate", "<=", Timestamp.fromDate(new Date(watchedScheduledDate))),
         where("discipline", "in", [watchedDiscipline, ""]),
         where("deleted", "==", false)
       );
@@ -115,7 +115,7 @@ export default function EditClassForm({
       let applicableFee: Fee | null = null;
   
       if (!querySnapshot.empty) {
-        const fees: Fee[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
+        const fees: Fee[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp).toDate().toISOString() } as Fee));
   
         fees.sort((a, b) => {
           // Rule 1: Specific discipline is better than generic

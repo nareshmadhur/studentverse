@@ -89,6 +89,33 @@ export default function AddClassForm({
   const watchedSessionType = watch("sessionType");
   const watchedScheduledDate = watch("scheduledDate");
 
+  console.log("Form Date on Render:", watchedScheduledDate);
+
+  const onSubmit = async (data: ClassFormValues) => {
+    console.log("Submitting with date:", data.scheduledDate);
+    try {
+      await addDoc(collection(db, "classes"), {
+        ...data,
+        students: selectedStudentIds,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        deleted: false,
+      });
+      toast({
+        title: "Class Added",
+        description: "The new class has been successfully added.",
+      });
+      setOpen(false);
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      toast({
+        title: "Error",
+        description: "There was an error adding the class. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     const q = query(collection(db, "disciplines"), where("deleted", "==", false));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -120,7 +147,7 @@ export default function AddClassForm({
         where("studentId", "==", studentId),
         where("sessionType", "==", watchedSessionType),
         where("feeType", "==", "hourly"),
-        where("effectiveDate", "<=", Timestamp.fromDate(watchedScheduledDate)),
+        where("effectiveDate", "<=", Timestamp.fromDate(new Date(watchedScheduledDate))),
         where("discipline", "in", [watchedDiscipline, ""]),
         where("deleted", "==", false)
       );
@@ -129,7 +156,7 @@ export default function AddClassForm({
       let applicableFee: Fee | null = null;
   
       if (!querySnapshot.empty) {
-        const fees: Fee[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
+        const fees: Fee[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp).toDate().toISOString() } as Fee));
         
         fees.sort((a, b) => {
           // Rule 1: Specific discipline is better than generic
@@ -151,31 +178,6 @@ export default function AddClassForm({
   useEffect(() => {
     fetchFeesForSelectedStudents();
   }, [fetchFeesForSelectedStudents]);
-
-
-  const onSubmit = async (data: ClassFormValues) => {
-    try {
-      await addDoc(collection(db, "classes"), {
-        ...data,
-        students: selectedStudentIds,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        deleted: false,
-      });
-      toast({
-        title: "Class Added",
-        description: "The new class has been successfully added.",
-      });
-      setOpen(false);
-    } catch (error) {
-      console.error("Error adding document: ", error);
-      toast({
-        title: "Error",
-        description: "There was an error adding the class. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
   
   const handleSessionTypeChange = (value: "1-1" | "group") => {
     setValue("sessionType", value);

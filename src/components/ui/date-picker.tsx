@@ -20,6 +20,14 @@ interface DatePickerProps {
 
 export function DatePicker({ field }: DatePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [date, setDate] = React.useState<Date | undefined>(field.value ? new Date(field.value) : undefined);
+
+  React.useEffect(() => {
+    // When the internal date changes, update the form field
+    if (date) {
+      field.onChange(date);
+    }
+  }, [date, field.onChange]);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -39,8 +47,10 @@ export function DatePicker({ field }: DatePickerProps) {
         <Calendar
           mode="single"
           selected={field.value ? new Date(field.value) : undefined}
-          onSelect={(date) => {
-            field.onChange(date);
+          onSelect={(selectedDate) => {
+            if (selectedDate) {
+              setDate(selectedDate);
+            }
             setIsOpen(false);
           }}
           initialFocus
