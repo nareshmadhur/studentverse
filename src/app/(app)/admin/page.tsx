@@ -8,8 +8,6 @@ import { Discipline } from "@/lib/definitions";
 import AddDisciplineForm from "@/components/admin/add-discipline-form";
 import DisciplinesTable from "@/components/admin/disciplines-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default function AdminPage() {
     const [disciplines, setDisciplines] = useState<Discipline[]>([]);
