@@ -154,40 +154,50 @@ export default function EditPaymentForm({
         <FormField
             control={form.control}
             name="transactionDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Transaction Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
+            render={({ field }) => {
+              const [date, setDate] = useState<Date | undefined>(field.value);
+              const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
+              useEffect(() => {
+                if (date) {
+                  field.onChange(date);
+                }
+              }, [date, field]);
+
+              return (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Transaction Date</FormLabel>
+                  <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
                             "w-full justify-start text-left font-normal",
                             !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? (
-                            format(field.value, "PPP")
-                        ) : (
-                            <span>Pick a date</span>
-                        )}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(selectedDate) => {
+                          setDate(selectedDate);
+                          setIsDatePickerOpen(false);
+                        }}
                         initialFocus
                       />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         
         <FormField
@@ -213,5 +223,3 @@ export default function EditPaymentForm({
     </Form>
   );
 }
-
-    
