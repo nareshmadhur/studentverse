@@ -19,6 +19,180 @@ export interface Statement {
   payments: Payment[];
 }
 
+export interface BillingSummary {
+  totalAccrued: number;
+  totalRealized: number;
+  totalOutstanding: number;
+  studentDetails: {
+    studentId: string;
+    studentName: string;
+    currencyCode: string;
+    totalBilled: number;
+    totalPaid: number;
+    balance: number;
+    hasBillingIssues: boolean;
+  }[];
+}
+
+export async function getBillingSummary(dateRange: DateRange): Promise<BillingSummary> {
+  if (!dateRange.from || !dateRange.to) {
+    throw new Error("Date range is required.");
+  }
+
+  const startDate = Timestamp.fromDate(dateRange.from);
+  const endDate = Timestamp.fromDate(dateRange.to);
+
+  // 1. Fetch all data concurrently
+  const [studentsSnapshot, classesSnapshot, paymentsSnapshot, feesSnapshot] = await Promise.all([
+    getDocs(query(collection(db, "students"), where("deleted", "==", false))),
+    getDocs(query(collection(db, "classes"), where("scheduledDate", ">=", startDate), where("scheduledDate", "<=", endDate), where("deleted", "==", false))),
+    getDocs(query(collection(db, "payments"), where("transactionDate", ">=", startDate), where("transactionDate", "<=", endDate), where("deleted", "==", false))),
+    getDocs(query(collection(db, "fees"), where("deleted", "==", false))),
+  ]);
+
+  const students: Record<string, Student> = {};
+  studentsSnapshot.forEach(doc => {
+    const data = doc.data();
+    students[doc.id] = { 
+        id: doc.id,
+        ...data,
+        createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+        updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+    } as Student
+  });
+
+  const classes: Class[] = classesSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        scheduledDate: (data.scheduledDate as Timestamp).toDate().toISOString(),
+        createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+        updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+      } as Class
+  });
+
+  const payments: Payment[] = paymentsSnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      transactionDate: (data.transactionDate as Timestamp).toDate().toISOString(),
+      createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+      updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+    } as Payment;
+  });
+
+  const fees: Fee[] = feesSnapshot.docs.map(doc => {
+       const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        effectiveDate: (data.effectiveDate as Timestamp).toDate().toISOString(),
+        createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+        updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+      } as Fee
+  });
+
+  const studentDetails: Record<string, BillingSummary['studentDetails'][0]> = {};
+
+  // Initialize student details from students who had classes
+  classes.forEach(classItem => {
+    classItem.students.forEach(studentId => {
+      if (!studentDetails[studentId] && students[studentId]) {
+        studentDetails[studentId] = {
+          studentId,
+          studentName: students[studentId].name,
+          currencyCode: students[studentId].currencyCode,
+          totalBilled: 0,
+          totalPaid: 0,
+          balance: 0,
+          hasBillingIssues: false,
+        };
+      }
+    });
+  });
+  
+  // Initialize student details from students who made payments
+  payments.forEach(payment => {
+      const studentId = payment.studentId;
+       if (!studentDetails[studentId] && students[studentId]) {
+        studentDetails[studentId] = {
+          studentId,
+          studentName: students[studentId].name,
+          currencyCode: students[studentId].currencyCode,
+          totalBilled: 0,
+          totalPaid: 0,
+          balance: 0,
+          hasBillingIssues: false,
+        };
+      }
+  });
+
+
+  // 2. Calculate charges for each class and aggregate by student
+  classes.forEach(classItem => {
+    classItem.students.forEach(studentId => {
+      if (!studentDetails[studentId]) return;
+
+      const studentFees = fees.filter(f => f.studentId === studentId);
+      const applicableFees = studentFees.filter(fee => {
+        const isHourly = fee.feeType === 'hourly';
+        const sessionMatch = fee.sessionType === classItem.sessionType;
+        const disciplineMatch = !fee.discipline || fee.discipline === classItem.discipline;
+        const dateMatch = new Date(fee.effectiveDate) <= new Date(classItem.scheduledDate);
+        return isHourly && sessionMatch && disciplineMatch && dateMatch;
+      });
+
+      let bestFee: Fee | null = null;
+      if (applicableFees.length > 0) {
+        applicableFees.sort((a, b) => {
+          if (a.discipline && !b.discipline) return -1;
+          if (!a.discipline && b.discipline) return 1;
+          return new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime();
+        });
+        bestFee = applicableFees[0];
+      }
+      
+      if (bestFee) {
+        studentDetails[studentId].totalBilled += bestFee.amount;
+      } else {
+        studentDetails[studentId].hasBillingIssues = true;
+      }
+    });
+  });
+
+  // 3. Aggregate payments by student
+  payments.forEach(payment => {
+    if (studentDetails[payment.studentId]) {
+      studentDetails[payment.studentId].totalPaid += payment.amount;
+    }
+  });
+
+  // 4. Calculate balances and totals
+  let totalAccrued = 0;
+  let totalRealized = 0;
+
+  Object.values(studentDetails).forEach(detail => {
+    detail.balance = detail.totalBilled - detail.totalPaid;
+    totalAccrued += detail.totalBilled;
+    totalRealized += detail.totalPaid;
+  });
+
+  const totalOutstanding = totalAccrued - totalRealized;
+
+  // 5. Sort student details by name
+  const sortedStudentDetails = Object.values(studentDetails).sort((a, b) => a.studentName.localeCompare(b.studentName));
+
+
+  return {
+    totalAccrued,
+    totalRealized,
+    totalOutstanding,
+    studentDetails: sortedStudentDetails,
+  };
+}
+
 export async function getStatementData(studentId: string, dateRange: DateRange): Promise<Statement> {
   if (!dateRange.from || !dateRange.to) {
     throw new Error("Date range is required.");
