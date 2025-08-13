@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -39,8 +40,8 @@ export function DatePicker({ field }: DatePickerProps) {
         <Calendar
           mode="single"
           selected={field.value ? new Date(field.value) : undefined}
-          onSelect={(selectedDate) => {
-            field.onChange(selectedDate);
+          onSelect={(date) => {
+            field.onChange(date);
             setIsOpen(false);
           }}
           initialFocus
