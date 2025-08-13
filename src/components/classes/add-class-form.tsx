@@ -24,9 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp, getDocs, query, where, Timestamp, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Student, Fee, Discipline } from "@/lib/definitions";
-import { CalendarIcon, Check, ChevronsUpDown, X } from "lucide-react";
-import { Calendar } from "../ui/calendar";
-import { format } from "date-fns";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "../ui/input";
@@ -35,6 +33,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { DatePicker } from "../ui/date-picker";
 
 const classSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -305,42 +304,15 @@ export default function AddClassForm({
           <FormField
             control={form.control}
             name="scheduledDate"
-            render={({ field }) => {
-              const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-              return (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Class Date & Time</FormLabel>
-                  <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={(date) => {
-                          field.onChange(date);
-                          setIsDatePickerOpen(false);
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Class Date & Time</FormLabel>
+                 <FormControl>
+                    <DatePicker field={field} />
+                  </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
           <FormField
             control={form.control}
