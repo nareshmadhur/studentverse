@@ -84,15 +84,11 @@ export default function AddClassForm({
     },
   });
 
-  const { watch, setValue } = form;
+  const { watch, setValue, getValues } = form;
   const watchedDiscipline = watch("discipline");
   const watchedSessionType = watch("sessionType");
-  const watchedScheduledDate = watch("scheduledDate");
-
-  console.log("Form Date on Render:", watchedScheduledDate);
 
   const onSubmit = async (data: ClassFormValues) => {
-    console.log("Submitting with date:", data.scheduledDate);
     try {
       await addDoc(collection(db, "classes"), {
         ...data,
@@ -133,7 +129,8 @@ export default function AddClassForm({
   }, [preselectedStudentId, setValue]);
 
   const fetchFeesForSelectedStudents = useCallback(async () => {
-    if (selectedStudentIds.length === 0 || !watchedDiscipline || !watchedSessionType || !watchedScheduledDate) {
+    const scheduledDate = getValues("scheduledDate");
+    if (selectedStudentIds.length === 0 || !watchedDiscipline || !watchedSessionType || !scheduledDate) {
       setStudentFeeDetails([]);
       return;
     }
@@ -147,7 +144,7 @@ export default function AddClassForm({
         where("studentId", "==", studentId),
         where("sessionType", "==", watchedSessionType),
         where("feeType", "==", "hourly"),
-        where("effectiveDate", "<=", Timestamp.fromDate(new Date(watchedScheduledDate))),
+        where("effectiveDate", "<=", Timestamp.fromDate(new Date(scheduledDate))),
         where("discipline", "in", [watchedDiscipline, ""]),
         where("deleted", "==", false)
       );
@@ -173,7 +170,7 @@ export default function AddClassForm({
   
     const newDetails = (await Promise.all(detailPromises)).filter((detail): detail is StudentFeeInfo => detail !== null);
     setStudentFeeDetails(newDetails);
-  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, watchedScheduledDate, allStudents]);
+  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, allStudents, getValues]);
 
   useEffect(() => {
     fetchFeesForSelectedStudents();

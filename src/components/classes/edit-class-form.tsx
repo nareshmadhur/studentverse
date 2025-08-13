@@ -77,10 +77,9 @@ export default function EditClassForm({
     },
   });
 
-  const { watch, setValue } = form;
+  const { watch, setValue, getValues } = form;
   const watchedDiscipline = watch("discipline");
   const watchedSessionType = watch("sessionType");
-  const watchedScheduledDate = watch("scheduledDate");
 
   useEffect(() => {
     const q = query(collection(db, "disciplines"), where("deleted", "==", false));
@@ -92,7 +91,8 @@ export default function EditClassForm({
   }, []);
 
   const fetchFeesForSelectedStudents = useCallback(async () => {
-    if (selectedStudentIds.length === 0 || !watchedSessionType || !watchedScheduledDate) {
+    const scheduledDate = getValues("scheduledDate");
+    if (selectedStudentIds.length === 0 || !watchedSessionType || !scheduledDate) {
       setStudentFeeDetails([]);
       return;
     }
@@ -106,7 +106,7 @@ export default function EditClassForm({
         where("studentId", "==", studentId),
         where("sessionType", "==", watchedSessionType),
         where("feeType", "==", "hourly"),
-        where("effectiveDate", "<=", Timestamp.fromDate(new Date(watchedScheduledDate))),
+        where("effectiveDate", "<=", Timestamp.fromDate(new Date(scheduledDate))),
         where("discipline", "in", [watchedDiscipline, ""]),
         where("deleted", "==", false)
       );
@@ -132,7 +132,7 @@ export default function EditClassForm({
     
     const newDetails = (await Promise.all(detailPromises)).filter((detail): detail is StudentFeeInfo => detail !== null);
     setStudentFeeDetails(newDetails);
-  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, watchedScheduledDate, allStudents]);
+  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, allStudents, getValues]);
 
   useEffect(() => {
     fetchFeesForSelectedStudents();
