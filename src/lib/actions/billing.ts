@@ -101,36 +101,35 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
 
   const studentDetails: Record<string, BillingSummary['studentDetails'][0]> = {};
 
-  const initializeStudent = (studentId: string) => {
-    if (!studentDetails[studentId] && students[studentId]) {
-      studentDetails[studentId] = {
-        studentId,
-        studentName: students[studentId].name,
-        currencyCode: students[studentId].currencyCode,
-        billedOneOnOneAmount: 0,
-        billedOneOnOneCount: 0,
-        billedGroupAmount: 0,
-        billedGroupCount: 0,
-        totalBilled: 0,
-        totalPaid: 0,
-        balance: 0,
-        hasBillingIssues: false,
-      };
-    }
-  }
-
-  // Initialize student details from students who had classes or payments
-  classes.forEach(classItem => classItem.students.forEach(initializeStudent));
-  payments.forEach(payment => initializeStudent(payment.studentId));
-
+  // Initialize student details ONLY for students who had classes in the period.
+  classes.forEach(classItem => {
+    classItem.students.forEach(studentId => {
+      if (!studentDetails[studentId] && students[studentId]) {
+        studentDetails[studentId] = {
+          studentId,
+          studentName: students[studentId].name,
+          currencyCode: students[studentId].currencyCode,
+          billedOneOnOneAmount: 0,
+          billedOneOnOneCount: 0,
+          billedGroupAmount: 0,
+          billedGroupCount: 0,
+          totalBilled: 0,
+          totalPaid: 0,
+          balance: 0,
+          hasBillingIssues: false,
+        };
+      }
+    });
+  });
 
   // 2. Calculate charges for each class and aggregate by student
   classes.forEach(classItem => {
     classItem.students.forEach(studentId => {
+      // Ensure the student exists in details (they should, because we initialized from classes)
       if (!studentDetails[studentId]) return;
 
       const studentFees = fees.filter(f => f.studentId === studentId && f.feeType === 'hourly');
-
+      
       const applicableFees = studentFees.filter(fee => {
         const sessionMatch = fee.sessionType === classItem.sessionType;
         const disciplineMatch = fee.discipline === classItem.discipline || fee.discipline === '';
@@ -164,16 +163,16 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
     });
   });
 
-  // 3. Aggregate payments by student
+  // 3. Aggregate payments by student (only for students who are already in the details list)
   payments.forEach(payment => {
     if (studentDetails[payment.studentId]) {
       studentDetails[payment.studentId].totalPaid += payment.amount;
     }
   });
 
-  // 4. Calculate balances and totals
+  // 4. Calculate balances and totals for the students in the list
   let totalAccrued = 0;
-  let totalRealized = 0;
+  let totalRealized = 0; // This will now only sum payments from students with classes in period
 
   Object.values(studentDetails).forEach(detail => {
     detail.totalBilled = detail.billedOneOnOneAmount + detail.billedGroupAmount;
@@ -181,6 +180,10 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
     totalAccrued += detail.totalBilled;
     totalRealized += detail.totalPaid;
   });
+  
+  // To get a true "Revenue Realized" for the entire period (including payments for past work),
+  // we calculate it separately.
+  const totalRealizedInPeriod = payments.reduce((acc, p) => acc + p.amount, 0);
 
   const totalOutstanding = totalAccrued - totalRealized;
 
@@ -190,7 +193,7 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
 
   return {
     totalAccrued,
-    totalRealized,
+    totalRealized: totalRealizedInPeriod,
     totalOutstanding,
     studentDetails: sortedStudentDetails,
   };
