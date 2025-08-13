@@ -150,13 +150,14 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
       }
       
       if (bestFee) {
-          if (classItem.sessionType === '1-1') {
-              studentDetails[studentId].billedOneOnOneAmount += bestFee.amount;
-              studentDetails[studentId].billedOneOnOneCount++;
-          } else {
-              studentDetails[studentId].billedGroupAmount += bestFee.amount;
-              studentDetails[studentId].billedGroupCount++;
-          }
+        const amount = bestFee.amount || 0;
+        if (classItem.sessionType === '1-1') {
+            studentDetails[studentId].billedOneOnOneAmount += amount;
+            studentDetails[studentId].billedOneOnOneCount++;
+        } else {
+            studentDetails[studentId].billedGroupAmount += amount;
+            studentDetails[studentId].billedGroupCount++;
+        }
       } else {
         studentDetails[studentId].hasBillingIssues = true;
       }
@@ -172,20 +173,18 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
 
   // 4. Calculate balances and totals for the students in the list
   let totalAccrued = 0;
-  let totalRealized = 0; // This will now only sum payments from students with classes in period
-
+  
   Object.values(studentDetails).forEach(detail => {
     detail.totalBilled = detail.billedOneOnOneAmount + detail.billedGroupAmount;
     detail.balance = detail.totalBilled - detail.totalPaid;
     totalAccrued += detail.totalBilled;
-    totalRealized += detail.totalPaid;
   });
   
   // To get a true "Revenue Realized" for the entire period (including payments for past work),
   // we calculate it separately.
   const totalRealizedInPeriod = payments.reduce((acc, p) => acc + p.amount, 0);
 
-  const totalOutstanding = totalAccrued - totalRealized;
+  const totalOutstanding = totalAccrued - totalRealizedInPeriod;
 
   // 5. Sort student details by name
   const sortedStudentDetails = Object.values(studentDetails).sort((a, b) => a.studentName.localeCompare(b.studentName));
