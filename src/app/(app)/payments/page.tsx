@@ -47,7 +47,15 @@ export default function PaymentsPage() {
     const fetchStudents = async () => {
       const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
       const studentSnapshot = await getDocs(studentQuery);
-      const studentData: Student[] = studentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      const studentData: Student[] = studentSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+          updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+        } as Student
+      });
       setStudents(studentData);
     }
     

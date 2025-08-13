@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Student } from "@/lib/definitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +28,13 @@ export default function StudentProfile({ id }: { id: string }) {
     const docRef = doc(db, "students", id);
     const unsubscribeStudent = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
-        setStudent({ id: docSnap.id, ...docSnap.data() } as Student);
+        const data = docSnap.data();
+        setStudent({ 
+            id: docSnap.id, 
+            ...data,
+            createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+            updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+        } as Student);
       } else {
         console.log("No such document!");
         setStudent(null);
