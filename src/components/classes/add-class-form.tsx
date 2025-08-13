@@ -306,15 +306,7 @@ export default function AddClassForm({
             control={form.control}
             name="scheduledDate"
             render={({ field }) => {
-              const [date, setDate] = useState<Date | undefined>(field.value);
               const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-
-              useEffect(() => {
-                if (date) {
-                  field.onChange(date);
-                }
-              }, [date, field]);
-
               return (
                 <FormItem className="flex flex-col">
                   <FormLabel>Class Date & Time</FormLabel>
@@ -337,8 +329,8 @@ export default function AddClassForm({
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={(selectedDate) => {
-                          setDate(selectedDate);
+                        onSelect={(date) => {
+                          field.onChange(date);
                           setIsDatePickerOpen(false);
                         }}
                         initialFocus

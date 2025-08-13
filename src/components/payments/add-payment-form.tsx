@@ -157,15 +157,7 @@ export default function AddPaymentForm({
             control={form.control}
             name="transactionDate"
             render={({ field }) => {
-              const [date, setDate] = useState<Date | undefined>(field.value);
               const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-
-              useEffect(() => {
-                if (date) {
-                  field.onChange(date);
-                }
-              }, [date, field]);
-
               return (
                 <FormItem className="flex flex-col">
                   <FormLabel>Transaction Date</FormLabel>
@@ -188,8 +180,8 @@ export default function AddPaymentForm({
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={(selectedDate) => {
-                          setDate(selectedDate);
+                        onSelect={(date) => {
+                          field.onChange(date);
                           setIsDatePickerOpen(false);
                         }}
                         initialFocus
