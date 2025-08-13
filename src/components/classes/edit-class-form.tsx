@@ -98,39 +98,32 @@ export default function EditClassForm({
       setStudentFeeDetails([]);
       return;
     }
-
+  
     const detailPromises = selectedStudentIds.map(async (studentId) => {
       const student = allStudents.find(s => s.id === studentId);
       if (!student) return null;
-
-      const feeQueryConstraints = [
+  
+      const feeQuery = query(
+        collection(db, "fees"),
         where("studentId", "==", studentId),
         where("sessionType", "==", watchedSessionType),
         where("feeType", "==", "hourly"),
         where("effectiveDate", "<=", Timestamp.fromDate(watchedScheduledDate)),
+        where("discipline", "in", [watchedDiscipline, ""]),
         where("deleted", "==", false)
-      ];
-
-      if (watchedDiscipline) {
-        feeQueryConstraints.push(where("discipline", "in", [watchedDiscipline, ""]));
-      } else {
-        feeQueryConstraints.push(where("discipline", "==", ""));
-      }
-
-      const feeQuery = query(
-        collection(db, "fees"),
-        ...feeQueryConstraints
       );
-
+  
       const querySnapshot = await getDocs(feeQuery);
       let applicableFee: Fee | null = null;
-
+  
       if (!querySnapshot.empty) {
         const fees: Fee[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Fee));
-
+  
         fees.sort((a, b) => {
+          // Rule 1: Specific discipline is better than generic
           if (a.discipline === watchedDiscipline && b.discipline !== watchedDiscipline) return -1;
           if (b.discipline === watchedDiscipline && a.discipline !== watchedDiscipline) return 1;
+          // Rule 2: Most recent effective date is better
           return new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime();
         });
         applicableFee = fees[0];
