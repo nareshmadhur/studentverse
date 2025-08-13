@@ -27,8 +27,10 @@ export interface BillingSummary {
     studentId: string;
     studentName: string;
     currencyCode: string;
-    billedOneOnOne: number;
-    billedGroup: number;
+    billedOneOnOneAmount: number;
+    billedOneOnOneCount: number;
+    billedGroupAmount: number;
+    billedGroupCount: number;
     totalBilled: number;
     totalPaid: number;
     balance: number;
@@ -105,8 +107,10 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
         studentId,
         studentName: students[studentId].name,
         currencyCode: students[studentId].currencyCode,
-        billedOneOnOne: 0,
-        billedGroup: 0,
+        billedOneOnOneAmount: 0,
+        billedOneOnOneCount: 0,
+        billedGroupAmount: 0,
+        billedGroupCount: 0,
         totalBilled: 0,
         totalPaid: 0,
         balance: 0,
@@ -148,9 +152,11 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
       
       if (bestFee) {
           if (classItem.sessionType === '1-1') {
-              studentDetails[studentId].billedOneOnOne += bestFee.amount;
+              studentDetails[studentId].billedOneOnOneAmount += bestFee.amount;
+              studentDetails[studentId].billedOneOnOneCount++;
           } else {
-              studentDetails[studentId].billedGroup += bestFee.amount;
+              studentDetails[studentId].billedGroupAmount += bestFee.amount;
+              studentDetails[studentId].billedGroupCount++;
           }
       } else {
         studentDetails[studentId].hasBillingIssues = true;
@@ -170,7 +176,7 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
   let totalRealized = 0;
 
   Object.values(studentDetails).forEach(detail => {
-    detail.totalBilled = detail.billedOneOnOne + detail.billedGroup;
+    detail.totalBilled = detail.billedOneOnOneAmount + detail.billedGroupAmount;
     detail.balance = detail.totalBilled - detail.totalPaid;
     totalAccrued += detail.totalBilled;
     totalRealized += detail.totalPaid;

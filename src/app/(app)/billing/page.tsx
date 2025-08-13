@@ -130,8 +130,8 @@ export default function BillingPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
-                <TableHead className="text-right">1-1 Billed</TableHead>
-                <TableHead className="text-right">Group Billed</TableHead>
+                <TableHead className="text-right">1-1 Sessions</TableHead>
+                <TableHead className="text-right">Group Sessions</TableHead>
                 <TableHead className="text-right">Total Billed</TableHead>
                 <TableHead className="text-right">Paid</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
@@ -160,8 +160,18 @@ export default function BillingPage() {
                   return (
                     <TableRow key={details.studentId}>
                       <TableCell className="font-medium">{details.studentName}</TableCell>
-                       <TableCell className="text-right">{currentCurrencySymbol}{details.billedOneOnOne.toFixed(2)}</TableCell>
-                       <TableCell className="text-right">{currentCurrencySymbol}{details.billedGroup.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <div>{currentCurrencySymbol}{details.billedOneOnOneAmount.toFixed(2)}</div>
+                        <div className="text-xs text-muted-foreground">
+                            {details.billedOneOnOneCount > 0 ? `from ${details.billedOneOnOneCount} lesson(s)`: ' '}
+                        </div>
+                      </TableCell>
+                       <TableCell className="text-right">
+                        <div>{currentCurrencySymbol}{details.billedGroupAmount.toFixed(2)}</div>
+                        <div className="text-xs text-muted-foreground">
+                             {details.billedGroupCount > 0 ? `from ${details.billedGroupCount} lesson(s)`: ' '}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right font-semibold">{currentCurrencySymbol}{details.totalBilled.toFixed(2)}</TableCell>
                       <TableCell className="text-right text-green-600">{currentCurrencySymbol}{details.totalPaid.toFixed(2)}</TableCell>
                       <TableCell className="text-right font-semibold">{currentCurrencySymbol}{details.balance.toFixed(2)}</TableCell>
