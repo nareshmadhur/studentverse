@@ -154,6 +154,7 @@ export default function AddClassForm({
 
 
   const onSubmit = async (data: ClassFormValues) => {
+    console.log("Submitting date:", data.scheduledDate);
     try {
       await addDoc(collection(db, "classes"), {
         ...data,
