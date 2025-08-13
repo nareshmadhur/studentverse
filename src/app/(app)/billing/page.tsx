@@ -130,7 +130,9 @@ export default function BillingPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
-                <TableHead className="text-right">Billed</TableHead>
+                <TableHead className="text-right">1-1 Billed</TableHead>
+                <TableHead className="text-right">Group Billed</TableHead>
+                <TableHead className="text-right">Total Billed</TableHead>
                 <TableHead className="text-right">Paid</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
                 <TableHead className="text-center">Status</TableHead>
@@ -145,6 +147,8 @@ export default function BillingPage() {
                     <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
                     <TableCell className="text-center"><Skeleton className="h-6 w-20 mx-auto" /></TableCell>
                     <TableCell></TableCell>
                   </TableRow>
@@ -152,12 +156,15 @@ export default function BillingPage() {
               ) : summary?.studentDetails && summary.studentDetails.length > 0 ? (
                 summary.studentDetails.map((details) => {
                   const status = getPaymentStatus(details);
+                  const currentCurrencySymbol = getCurrencySymbol(details.currencyCode);
                   return (
                     <TableRow key={details.studentId}>
                       <TableCell className="font-medium">{details.studentName}</TableCell>
-                      <TableCell className="text-right">{currencySymbol}{details.totalBilled.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-green-600">{currencySymbol}{details.totalPaid.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-semibold">{currencySymbol}{details.balance.toFixed(2)}</TableCell>
+                       <TableCell className="text-right">{currentCurrencySymbol}{details.billedOneOnOne.toFixed(2)}</TableCell>
+                       <TableCell className="text-right">{currentCurrencySymbol}{details.billedGroup.toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-semibold">{currentCurrencySymbol}{details.totalBilled.toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-green-600">{currentCurrencySymbol}{details.totalPaid.toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-semibold">{currentCurrencySymbol}{details.balance.toFixed(2)}</TableCell>
                       <TableCell className="text-center">
                         <Badge variant={status.variant}>{status.text}</Badge>
                       </TableCell>
@@ -181,7 +188,7 @@ export default function BillingPage() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
                     No student activity in this period.
                   </TableCell>
                 </TableRow>

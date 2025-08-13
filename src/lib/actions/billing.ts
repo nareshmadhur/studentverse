@@ -27,6 +27,8 @@ export interface BillingSummary {
     studentId: string;
     studentName: string;
     currencyCode: string;
+    billedOneOnOne: number;
+    billedGroup: number;
     totalBilled: number;
     totalPaid: number;
     balance: number;
@@ -88,6 +90,7 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
       return {
         id: doc.id,
         ...data,
+        discipline: data.discipline || '',
         effectiveDate: (data.effectiveDate as Timestamp).toDate().toISOString(),
         createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
         updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
@@ -96,38 +99,25 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
 
   const studentDetails: Record<string, BillingSummary['studentDetails'][0]> = {};
 
-  // Initialize student details from students who had classes
-  classes.forEach(classItem => {
-    classItem.students.forEach(studentId => {
-      if (!studentDetails[studentId] && students[studentId]) {
-        studentDetails[studentId] = {
-          studentId,
-          studentName: students[studentId].name,
-          currencyCode: students[studentId].currencyCode,
-          totalBilled: 0,
-          totalPaid: 0,
-          balance: 0,
-          hasBillingIssues: false,
-        };
-      }
-    });
-  });
-  
-  // Initialize student details from students who made payments
-  payments.forEach(payment => {
-      const studentId = payment.studentId;
-       if (!studentDetails[studentId] && students[studentId]) {
-        studentDetails[studentId] = {
-          studentId,
-          studentName: students[studentId].name,
-          currencyCode: students[studentId].currencyCode,
-          totalBilled: 0,
-          totalPaid: 0,
-          balance: 0,
-          hasBillingIssues: false,
-        };
-      }
-  });
+  const initializeStudent = (studentId: string) => {
+    if (!studentDetails[studentId] && students[studentId]) {
+      studentDetails[studentId] = {
+        studentId,
+        studentName: students[studentId].name,
+        currencyCode: students[studentId].currencyCode,
+        billedOneOnOne: 0,
+        billedGroup: 0,
+        totalBilled: 0,
+        totalPaid: 0,
+        balance: 0,
+        hasBillingIssues: false,
+      };
+    }
+  }
+
+  // Initialize student details from students who had classes or payments
+  classes.forEach(classItem => classItem.students.forEach(initializeStudent));
+  payments.forEach(payment => initializeStudent(payment.studentId));
 
 
   // 2. Calculate charges for each class and aggregate by student
@@ -135,27 +125,33 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
     classItem.students.forEach(studentId => {
       if (!studentDetails[studentId]) return;
 
-      const studentFees = fees.filter(f => f.studentId === studentId);
+      const studentFees = fees.filter(f => f.studentId === studentId && f.feeType === 'hourly');
+
       const applicableFees = studentFees.filter(fee => {
-        const isHourly = fee.feeType === 'hourly';
         const sessionMatch = fee.sessionType === classItem.sessionType;
-        const disciplineMatch = !fee.discipline || fee.discipline === classItem.discipline;
+        const disciplineMatch = fee.discipline === classItem.discipline || fee.discipline === '';
         const dateMatch = new Date(fee.effectiveDate) <= new Date(classItem.scheduledDate);
-        return isHourly && sessionMatch && disciplineMatch && dateMatch;
+        return sessionMatch && disciplineMatch && dateMatch;
       });
 
       let bestFee: Fee | null = null;
       if (applicableFees.length > 0) {
         applicableFees.sort((a, b) => {
+          // Rule 1: Specific discipline is better than generic
           if (a.discipline && !b.discipline) return -1;
           if (!a.discipline && b.discipline) return 1;
+          // Rule 2: Most recent effective date is better
           return new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime();
         });
         bestFee = applicableFees[0];
       }
       
       if (bestFee) {
-        studentDetails[studentId].totalBilled += bestFee.amount;
+          if (classItem.sessionType === '1-1') {
+              studentDetails[studentId].billedOneOnOne += bestFee.amount;
+          } else {
+              studentDetails[studentId].billedGroup += bestFee.amount;
+          }
       } else {
         studentDetails[studentId].hasBillingIssues = true;
       }
@@ -174,6 +170,7 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
   let totalRealized = 0;
 
   Object.values(studentDetails).forEach(detail => {
+    detail.totalBilled = detail.billedOneOnOne + detail.billedGroup;
     detail.balance = detail.totalBilled - detail.totalPaid;
     totalAccrued += detail.totalBilled;
     totalRealized += detail.totalPaid;
@@ -243,6 +240,7 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
       return {
         id: doc.id,
         ...data,
+        discipline: data.discipline || '',
         effectiveDate: (data.effectiveDate as Timestamp).toDate().toISOString(),
         createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
         updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
@@ -272,18 +270,16 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
   // 5. Calculate charge for each class
   const statementItems: StatementItem[] = classes
     .map(classItem => {
-      // Find the applicable fee for this class
       const applicableFees = fees.filter(fee => {
         const isHourly = fee.feeType === 'hourly';
         const sessionMatch = fee.sessionType === classItem.sessionType;
-        const disciplineMatch = !fee.discipline || fee.discipline === classItem.discipline;
+        const disciplineMatch = fee.discipline === classItem.discipline || fee.discipline === '';
         const dateMatch = new Date(fee.effectiveDate) <= new Date(classItem.scheduledDate);
         return isHourly && sessionMatch && disciplineMatch && dateMatch;
       });
 
       let bestFee: Fee | null = null;
       if (applicableFees.length > 0) {
-        // Sort to find the best match: specific discipline first, then most recent effective date
         applicableFees.sort((a, b) => {
           if (a.discipline && !b.discipline) return -1;
           if (!a.discipline && b.discipline) return 1;
@@ -295,10 +291,9 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
       return {
         class: classItem,
         fee: bestFee,
-        charge: bestFee?.amount || 0, // Default to 0 if no fee is found
+        charge: bestFee?.amount || 0,
       };
     })
-    // Sort items by class date
     .sort((a, b) => new Date(a.class.scheduledDate).getTime() - new Date(b.class.scheduledDate).getTime());
 
   return {
