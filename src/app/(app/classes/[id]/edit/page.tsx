@@ -13,9 +13,8 @@ import { Class, Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
-export default function EditClassPage({ params }: { params: { id: string } }) {
+export default function EditClassPage({ params: { id } }: { params: { id: string } }) {
     const router = useRouter();
-    const { id } = params;
     const [classItem, setClassItem] = useState<Class | null>(null);
     const [allStudents, setAllStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
