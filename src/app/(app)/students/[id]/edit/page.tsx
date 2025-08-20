@@ -13,9 +13,8 @@ import { Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
-export default function EditStudentPage({ params }: { params: { id: string } }) {
+export default function EditStudentPage({ params: { id } }: { params: { id: string } }) {
     const router = useRouter();
-    const { id } = params;
     const [student, setStudent] = useState<Student | null>(null);
     const [loading, setLoading] = useState(true);
 

@@ -12,9 +12,8 @@ import { db } from "@/lib/firebase";
 import { Payment, Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function EditPaymentPage({ params }: { params: { id: string } }) {
+export default function EditPaymentPage({ params: { id } }: { params: { id: string } }) {
     const router = useRouter();
-    const { id } = params;
     const [payment, setPayment] = useState<Payment | null>(null);
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
