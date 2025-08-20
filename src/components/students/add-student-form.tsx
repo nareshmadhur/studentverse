@@ -14,13 +14,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -42,11 +35,7 @@ const studentSchema = z.object({
 
 type StudentFormValues = z.infer<typeof studentSchema>;
 
-export default function AddStudentForm({
-  setOpen,
-}: {
-  setOpen: (open: boolean) => void;
-}) {
+export default function AddStudentForm() {
   const { toast } = useToast();
   const router = useRouter();
   const [countrySearchOpen, setCountrySearchOpen] = useState(false);
@@ -75,8 +64,7 @@ export default function AddStudentForm({
         title: "Student Added",
         description: `${data.name} has been successfully added.`,
       });
-      setOpen(false);
-      router.push(`/fees?openDialog=true&studentId=${docRef.id}`);
+      router.push(`/fees/new?studentId=${docRef.id}`);
     } catch (error) {
       console.error("Error adding document: ", error);
       toast({
@@ -161,7 +149,7 @@ export default function AddStudentForm({
                                 key={country.code}
                                 value={country.name}
                                 onSelect={(currentValue) => {
-                                  form.setValue("country", currentValue === field.value ? "" : currentValue);
+                                  form.setValue("country", currentValue === field.value ? "" : country.name);
                                   setCountrySearchOpen(false);
                                 }}
                               >
@@ -225,7 +213,7 @@ export default function AddStudentForm({
             />
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button type="submit">Add Student and Set Fee</Button>

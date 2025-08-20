@@ -1,6 +1,6 @@
+
 "use client";
 
-import { useState } from "react";
 import type { Class, Student } from "@/lib/definitions";
 import {
   Card,
@@ -20,13 +20,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import EditClassForm from "./edit-class-form";
 import { format } from "date-fns";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -42,6 +35,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import Link from "next/link";
 
 export default function ClassesTable({ 
   classes, 
@@ -51,13 +45,6 @@ export default function ClassesTable({
   students: Student[] 
 }) {
   const { toast } = useToast();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
-
-  const handleEditClick = (classItem: Class) => {
-    setSelectedClass(classItem);
-    setIsEditDialogOpen(true);
-  };
   
   const handleDelete = async (classId: string) => {
     try {
@@ -81,90 +68,76 @@ export default function ClassesTable({
   };
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>All Classes</CardTitle>
-          <CardDescription>
-            A list of all scheduled classes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Discipline</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Students</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {classes.map((classItem) => (
-                <TableRow key={classItem.id}>
-                  <TableCell className="font-medium">
-                    {classItem.title}
-                  </TableCell>
-                  <TableCell>{classItem.discipline}</TableCell>
-                   <TableCell>
-                    <Badge variant={classItem.sessionType === '1-1' ? 'secondary' : 'default'}>
-                      {classItem.sessionType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{format(new Date(classItem.scheduledDate), "PPP p")}</TableCell>
-                  <TableCell>{classItem.students.length}</TableCell>
-                  <TableCell className="flex justify-end gap-2">
-                    <Button variant="outline" size="icon" onClick={() => handleEditClick(classItem)}>
+    <Card>
+      <CardHeader>
+        <CardTitle>All Classes</CardTitle>
+        <CardDescription>
+          A list of all scheduled classes.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Discipline</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Students</TableHead>
+              <TableHead>
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {classes.map((classItem) => (
+              <TableRow key={classItem.id}>
+                <TableCell className="font-medium">
+                  {classItem.title}
+                </TableCell>
+                <TableCell>{classItem.discipline}</TableCell>
+                  <TableCell>
+                  <Badge variant={classItem.sessionType === '1-1' ? 'secondary' : 'default'}>
+                    {classItem.sessionType}
+                  </Badge>
+                </TableCell>
+                <TableCell>{format(new Date(classItem.scheduledDate), "PPP p")}</TableCell>
+                <TableCell>{classItem.students.length}</TableCell>
+                <TableCell className="flex justify-end gap-2">
+                  <Button asChild variant="outline" size="icon">
+                    <Link href={`/classes/${classItem.id}/edit`}>
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon">
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                             This action cannot be undone. This will permanently mark the class as deleted.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(classItem.id)}>
-                            Continue
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[625px]">
-          <DialogHeader>
-            <DialogTitle>Edit Class</DialogTitle>
-          </DialogHeader>
-          {selectedClass && (
-            <EditClassForm
-              setOpen={setIsEditDialogOpen}
-              classItem={selectedClass}
-              allStudents={students}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+                    </Link>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently mark the class as deleted.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(classItem.id)}>
+                          Continue
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

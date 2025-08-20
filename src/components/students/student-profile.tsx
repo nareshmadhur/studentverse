@@ -10,16 +10,14 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, ArrowLeft, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import EditStudentForm from "./edit-student-form";
 import { currencies } from "@/lib/data/form-data";
 import { getCurrencySymbol } from "@/lib/utils";
+import Link from "next/link";
 
 export default function StudentProfile({ id }: { id: string }) {
   const router = useRouter();
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -51,7 +49,7 @@ export default function StudentProfile({ id }: { id: string }) {
   }, [id]);
 
   const handleAddToNewClass = () => {
-    router.push(`/classes?openDialog=true&studentId=${id}`);
+    router.push(`/classes/new?studentId=${id}`);
   };
 
   const getCurrencyInfo = (currencyCode: string) => {
@@ -60,78 +58,65 @@ export default function StudentProfile({ id }: { id: string }) {
   }
 
   return (
-    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => router.back()} size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-headline font-bold text-foreground">
-            Student Profile
-          </h1>
-          <div className="w-24"></div>
-        </div>
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                {loading ? <Skeleton className="h-8 w-48 mb-2" /> : <CardTitle>{student?.name}</CardTitle>}
-                {loading ? <Skeleton className="h-4 w-64" /> : <CardDescription>{student?.email}</CardDescription>}
-              </div>
-              <div className="flex gap-2">
-                 <DialogTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Edit Student</span>
-                    </Button>
-                  </DialogTrigger>
-                <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleAddToNewClass}>
-                  <PlusCircle className="mr-2 h-5 w-5" />
-                  New Class
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <Button variant="outline" onClick={() => router.back()} size="sm">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <h1 className="text-3xl font-headline font-bold text-foreground">
+          Student Profile
+        </h1>
+        <div className="w-24"></div>
+      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              {loading ? <Skeleton className="h-8 w-48 mb-2" /> : <CardTitle>{student?.name}</CardTitle>}
+              {loading ? <Skeleton className="h-4 w-64" /> : <CardDescription>{student?.email}</CardDescription>}
+            </div>
+            <div className="flex gap-2">
+                <Button asChild variant="outline" size="icon">
+                  <Link href={`/students/${id}/edit`}>
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit Student</span>
+                  </Link>
                 </Button>
+              <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleAddToNewClass}>
+                <PlusCircle className="mr-2 h-5 w-5" />
+                New Class
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-4 w-1/4" />
+            </div>
+          ) : student ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="font-semibold text-muted-foreground">Phone</p>
+                <p className="text-lg">{student?.phone || 'N/A'}</p>
+              </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="font-semibold text-muted-foreground">Country</p>
+                <p className="text-lg">{student?.country}</p>
+              </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="font-semibold text-muted-foreground">Preferred Currency</p>
+                <p className="text-lg">{student ? getCurrencyInfo(student.currencyCode) : 'N/A'}</p>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-4 w-1/4" />
-              </div>
-            ) : student ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <p className="font-semibold text-muted-foreground">Phone</p>
-                  <p className="text-lg">{student?.phone || 'N/A'}</p>
-                </div>
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <p className="font-semibold text-muted-foreground">Country</p>
-                  <p className="text-lg">{student?.country}</p>
-                </div>
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <p className="font-semibold text-muted-foreground">Preferred Currency</p>
-                  <p className="text-lg">{student ? getCurrencyInfo(student.currencyCode) : 'N/A'}</p>
-                </div>
-              </div>
-            ) : (
-                <p>Student data not found.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Student</DialogTitle>
-        </DialogHeader>
-        {student && (
-           <EditStudentForm
-              setOpen={setIsEditDialogOpen}
-              student={student}
-            />
-        )}
-      </DialogContent>
-    </Dialog>
+          ) : (
+              <p>Student data not found.</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

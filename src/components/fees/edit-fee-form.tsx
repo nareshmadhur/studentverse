@@ -27,6 +27,7 @@ import { Fee, Student, Discipline } from "@/lib/definitions";
 import { useState, useEffect } from "react";
 import { Input } from "../ui/input";
 import { DatePicker } from "../ui/date-picker";
+import { useRouter } from "next/navigation";
 
 const feeSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
@@ -41,15 +42,14 @@ const feeSchema = z.object({
 type FeeFormValues = z.infer<typeof feeSchema>;
 
 export default function EditFeeForm({
-  setOpen,
   fee,
   students,
 }: {
-  setOpen: (open: boolean) => void;
   fee: Fee;
   students: Student[];
 }) {
   const { toast } = useToast();
+  const router = useRouter();
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
 
   const form = useForm<FeeFormValues>({
@@ -92,7 +92,7 @@ export default function EditFeeForm({
         title: "Fee Updated",
         description: "The fee has been successfully updated.",
       });
-      setOpen(false);
+      router.push("/fees");
     } catch (error) {
       console.error("Error updating document: ", error);
       toast({
@@ -230,7 +230,7 @@ export default function EditFeeForm({
             />
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>

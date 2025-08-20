@@ -34,6 +34,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { DatePicker } from "../ui/date-picker";
+import { useRouter } from "next/navigation";
 
 const classSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -44,7 +45,7 @@ const classSchema = z.object({
   scheduledDate: z.date({ required_error: "A class date and time is required." }),
   durationMinutes: z.coerce.number().min(1, "Duration must be at least 1 minute."),
   location: z.string().optional(),
-  students: z.array(z.string()).optional(),
+  students: z.array(z.string()).min(1, "At least one student is required."),
 });
 
 type ClassFormValues = z.infer<typeof classSchema>;
@@ -56,15 +57,14 @@ interface StudentFeeInfo {
 }
 
 export default function EditClassForm({
-  setOpen,
   classItem,
   allStudents,
 }: {
-  setOpen: (open: boolean) => void;
   classItem: Class;
   allStudents: Student[];
 }) {
   const { toast } = useToast();
+  const router = useRouter();
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(classItem.students || []);
   const [studentFeeDetails, setStudentFeeDetails] = useState<StudentFeeInfo[]>([]);
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
@@ -77,9 +77,10 @@ export default function EditClassForm({
     },
   });
 
-  const { watch, setValue, getValues } = form;
+  const { watch, setValue, getValues, control } = form;
   const watchedDiscipline = watch("discipline");
   const watchedSessionType = watch("sessionType");
+  const watchedScheduledDate = watch("scheduledDate");
 
   useEffect(() => {
     const q = query(collection(db, "disciplines"), where("deleted", "==", false));
@@ -118,10 +119,8 @@ export default function EditClassForm({
         const fees: Fee[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp).toDate().toISOString() } as Fee));
   
         fees.sort((a, b) => {
-          // Rule 1: Specific discipline is better than generic
           if (a.discipline === watchedDiscipline && b.discipline !== watchedDiscipline) return -1;
           if (b.discipline === watchedDiscipline && a.discipline !== watchedDiscipline) return 1;
-          // Rule 2: Most recent effective date is better
           return new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime();
         });
         applicableFee = fees[0];
@@ -136,7 +135,7 @@ export default function EditClassForm({
 
   useEffect(() => {
     fetchFeesForSelectedStudents();
-  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, fetchFeesForSelectedStudents]);
+  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, watchedScheduledDate, fetchFeesForSelectedStudents]);
 
 
   const onSubmit = async (data: ClassFormValues) => {
@@ -144,14 +143,13 @@ export default function EditClassForm({
       const classDocRef = doc(db, "classes", classItem.id);
       await updateDoc(classDocRef, {
         ...data,
-        students: selectedStudentIds,
         updatedAt: serverTimestamp(),
       });
       toast({
         title: "Class Updated",
         description: "The class has been successfully updated.",
       });
-      setOpen(false);
+      router.push('/classes');
     } catch (error) {
       console.error("Error updating document: ", error);
       toast({
@@ -161,28 +159,20 @@ export default function EditClassForm({
       });
     }
   };
-
-  useEffect(() => {
-    setValue('students', selectedStudentIds)
-  }, [selectedStudentIds, setValue]);
-
-  const handleSessionTypeChange = (value: "1-1" | "group") => {
-    setValue("sessionType", value);
-    setSelectedStudentIds([]);
-    setValue("students", []);
-  };
   
   const handleStudentSelect = (studentId: string) => {
     const isSelected = selectedStudentIds.includes(studentId);
+    let newSelectedIds: string[];
+
     if (watchedSessionType === '1-1') {
-      setSelectedStudentIds(isSelected ? [] : [studentId]);
+      newSelectedIds = isSelected ? [] : [studentId];
     } else {
-      setSelectedStudentIds(prev => 
-        isSelected
-          ? prev.filter(id => id !== studentId)
-          : [...prev, studentId]
-      );
+      newSelectedIds = isSelected
+          ? selectedStudentIds.filter(id => id !== studentId)
+          : [...selectedStudentIds, studentId]
     }
+    setSelectedStudentIds(newSelectedIds);
+    setValue("students", newSelectedIds);
   }
 
 
@@ -191,7 +181,7 @@ export default function EditClassForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField
-            control={form.control}
+            control={control}
             name="title"
             render={({ field }) => (
               <FormItem>
@@ -204,7 +194,7 @@ export default function EditClassForm({
             )}
           />
           <FormField
-            control={form.control}
+            control={control}
             name="discipline"
             render={({ field }) => (
               <FormItem>
@@ -231,7 +221,7 @@ export default function EditClassForm({
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
-            control={form.control}
+            control={control}
             name="category"
             render={({ field }) => (
               <FormItem>
@@ -244,12 +234,12 @@ export default function EditClassForm({
             )}
           />
           <FormField
-            control={form.control}
+            control={control}
             name="sessionType"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Session Type</FormLabel>
-                <Select onValueChange={handleSessionTypeChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a session type" />
@@ -267,7 +257,7 @@ export default function EditClassForm({
         </div>
         
         <FormField
-          control={form.control}
+          control={control}
           name="description"
           render={({ field }) => (
             <FormItem>
@@ -282,7 +272,7 @@ export default function EditClassForm({
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
-            control={form.control}
+            control={control}
             name="scheduledDate"
             render={({ field }) => (
                 <FormItem className="flex flex-col">
@@ -295,7 +285,7 @@ export default function EditClassForm({
             )}
           />
           <FormField
-            control={form.control}
+            control={control}
             name="durationMinutes"
             render={({ field }) => (
               <FormItem>
@@ -311,7 +301,7 @@ export default function EditClassForm({
         
         <div className="grid grid-cols-2 gap-4">
            <FormField
-            control={form.control}
+            control={control}
             name="location"
             render={({ field }) => (
               <FormItem>
@@ -324,9 +314,9 @@ export default function EditClassForm({
             )}
           />
           <FormField
-            control={form.control}
+            control={control}
             name="students"
-            render={({ field }) => (
+            render={() => (
               <FormItem className="flex flex-col">
                 <FormLabel>Students</FormLabel>
                 <Popover>
@@ -343,7 +333,7 @@ export default function EditClassForm({
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                     <Command>
                       <CommandInput placeholder="Search students..." />
                       <CommandList>
@@ -401,7 +391,7 @@ export default function EditClassForm({
         )}
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>

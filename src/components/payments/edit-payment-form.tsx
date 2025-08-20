@@ -28,6 +28,7 @@ import { useEffect } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { DatePicker } from "../ui/date-picker";
+import { useRouter } from "next/navigation";
 
 const paymentSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
@@ -41,15 +42,14 @@ const paymentSchema = z.object({
 type PaymentFormValues = z.infer<typeof paymentSchema>;
 
 export default function EditPaymentForm({
-  setOpen,
   payment,
   students,
 }: {
-  setOpen: (open: boolean) => void;
   payment: Payment;
   students: Student[];
 }) {
   const { toast } = useToast();
+  const router = useRouter();
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
@@ -80,7 +80,7 @@ export default function EditPaymentForm({
         title: "Payment Updated",
         description: "The payment has been successfully updated.",
       });
-      setOpen(false);
+      router.push("/payments");
     } catch (error) {
       console.error("Error updating document: ", error);
       toast({
@@ -175,7 +175,7 @@ export default function EditPaymentForm({
           )}
         />
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>

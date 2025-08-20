@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState } from "react";
 import type { Fee, Student } from "@/lib/definitions";
 import {
   Card,
@@ -21,13 +20,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import EditFeeForm from "./edit-fee-form";
 import { format } from "date-fns";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -44,6 +36,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { getCurrencySymbol } from "@/lib/utils";
+import Link from "next/link";
 
 export default function FeesTable({ 
   fees, 
@@ -53,13 +46,6 @@ export default function FeesTable({
   students: Student[]
 }) {
   const { toast } = useToast();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedFee, setSelectedFee] = useState<Fee | null>(null);
-
-  const handleEditClick = (fee: Fee) => {
-    setSelectedFee(fee);
-    setIsEditDialogOpen(true);
-  };
 
   const handleDelete = async (feeId: string) => {
     try {
@@ -87,94 +73,80 @@ export default function FeesTable({
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>All Fees</CardTitle>
-          <CardDescription>
-            A list of all default and student-specific fees.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Discipline</TableHead>
-                <TableHead>Session Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Fee Type</TableHead>
-                <TableHead>Effective Date</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {fees.map((fee) => (
-                <TableRow key={fee.id} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && handleEditClick(fee)}>
-                  <TableCell className="font-medium">{getStudentName(fee.studentId)}</TableCell>
-                  <TableCell>{fee.discipline || 'Any'}</TableCell>
+    <Card>
+      <CardHeader>
+        <CardTitle>All Fees</CardTitle>
+        <CardDescription>
+          A list of all default and student-specific fees.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Student</TableHead>
+              <TableHead>Discipline</TableHead>
+              <TableHead>Session Type</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Fee Type</TableHead>
+              <TableHead>Effective Date</TableHead>
+              <TableHead>
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {fees.map((fee) => (
+              <TableRow key={fee.id}>
+                <TableCell className="font-medium">{getStudentName(fee.studentId)}</TableCell>
+                <TableCell>{fee.discipline || 'Any'}</TableCell>
+                <TableCell>
+                    <Badge variant={fee.sessionType === '1-1' ? 'secondary' : 'default'}>
+                    {fee.sessionType}
+                  </Badge>
+                </TableCell>
+                <TableCell>{getCurrencySymbol(fee.currencyCode)}{fee.amount.toFixed(2)}</TableCell>
                   <TableCell>
-                     <Badge variant={fee.sessionType === '1-1' ? 'secondary' : 'default'}>
-                      {fee.sessionType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{getCurrencySymbol(fee.currencyCode)}{fee.amount.toFixed(2)}</TableCell>
-                   <TableCell>
-                    <Badge variant={fee.feeType === 'hourly' ? 'default' : 'secondary'}>
-                      {fee.feeType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{format(new Date(fee.effectiveDate), "PPP")}</TableCell>
-                  <TableCell className="flex justify-end gap-2">
-                    <Button variant="outline" size="icon" onClick={() => handleEditClick(fee)}>
+                  <Badge variant={fee.feeType === 'hourly' ? 'default' : 'secondary'}>
+                    {fee.feeType}
+                  </Badge>
+                </TableCell>
+                <TableCell>{format(new Date(fee.effectiveDate), "PPP")}</TableCell>
+                <TableCell className="flex justify-end gap-2">
+                  <Button asChild variant="outline" size="icon">
+                    <Link href={`/fees/${fee.id}/edit`}>
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon">
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently mark the fee as deleted.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(fee.id)}>
-                            Continue
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Fee</DialogTitle>
-          </DialogHeader>
-          {selectedFee && (
-            <EditFeeForm
-              setOpen={setIsEditDialogOpen}
-              fee={selectedFee}
-              students={students}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+                    </Link>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently mark the fee as deleted.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(fee.id)}>
+                          Continue
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

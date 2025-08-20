@@ -24,6 +24,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { countries, currencies } from "@/lib/data/form-data";
+import { useRouter } from "next/navigation";
 
 const studentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -36,13 +37,12 @@ const studentSchema = z.object({
 type StudentFormValues = z.infer<typeof studentSchema>;
 
 export default function EditStudentForm({
-  setOpen,
   student,
 }: {
-  setOpen: (open: boolean) => void;
   student: Student;
 }) {
   const { toast } = useToast();
+  const router = useRouter();
   const [countrySearchOpen, setCountrySearchOpen] = useState(false);
   const [currencySearchOpen, setCurrencySearchOpen] = useState(false);
 
@@ -68,7 +68,7 @@ export default function EditStudentForm({
         title: "Student Updated",
         description: `${data.name} has been successfully updated.`,
       });
-      setOpen(false);
+      router.push(`/students/${student.id}`);
     } catch (error) {
       console.error("Error updating document: ", error);
       toast({
@@ -152,7 +152,7 @@ export default function EditStudentForm({
                                 key={country.code}
                                 value={country.name}
                                 onSelect={(currentValue) => {
-                                  form.setValue("country", currentValue === field.value ? "" : currentValue);
+                                  form.setValue("country", currentValue === field.value ? "" : country.name);
                                   setCountrySearchOpen(false);
                                 }}
                               >
@@ -216,7 +216,7 @@ export default function EditStudentForm({
             />
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>

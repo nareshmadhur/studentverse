@@ -42,11 +42,9 @@ const feeSchema = z.object({
 type FeeFormValues = z.infer<typeof feeSchema>;
 
 export default function AddFeeForm({
-  setOpen,
   students,
   preselectedStudentId,
 }: {
-  setOpen: (open: boolean) => void;
   students: Student[];
   preselectedStudentId?: string | null;
 }) {
@@ -105,7 +103,6 @@ export default function AddFeeForm({
         title: "Fee Added",
         description: "The new fee has been successfully added.",
       });
-      setOpen(false);
       router.push('/fees');
     } catch (error) {
       console.error("Error adding document: ", error);
@@ -244,7 +241,7 @@ export default function AddFeeForm({
             />
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button type="submit">Add Fee</Button>

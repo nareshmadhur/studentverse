@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState } from "react";
 import type { Payment, Student } from "@/lib/definitions";
 import {
   Card,
@@ -21,13 +20,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import EditPaymentForm from "./edit-payment-form";
 import { format } from "date-fns";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -50,6 +42,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getCurrencySymbol } from "@/lib/utils";
+import Link from "next/link";
 
 export default function PaymentsTable({ 
   payments,
@@ -59,14 +52,7 @@ export default function PaymentsTable({
   students: Student[]
 }) {
   const { toast } = useToast();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
-  const handleEditClick = (payment: Payment) => {
-    setSelectedPayment(payment);
-    setIsEditDialogOpen(true);
-  };
-  
   const handleDelete = async (paymentId: string) => {
     try {
       const paymentDocRef = doc(db, "payments", paymentId);
@@ -93,93 +79,79 @@ export default function PaymentsTable({
   };
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>All Payments</CardTitle>
-          <CardDescription>
-            A list of all recorded payments.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TooltipProvider>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Transaction Date</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments.map((payment) => (
-                  <TableRow key={payment.id} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && handleEditClick(payment)}>
-                    <TableCell className="font-medium">{getStudentName(payment.studentId)}</TableCell>
-                    <TableCell>
-                      {getCurrencySymbol(payment.currencyCode)}{payment.amount.toFixed(2)}
-                    </TableCell>
-                    <TableCell>{format(new Date(payment.transactionDate), "PPP")}</TableCell>
-                    <TableCell>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Badge variant="secondary">{payment.paymentMethod}</Badge>
-                        </TooltipTrigger>
-                        {payment.notes && <TooltipContent>{payment.notes}</TooltipContent>}
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell className="flex justify-end gap-2">
-                       <Button variant="outline" size="icon" onClick={() => handleEditClick(payment)}>
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
+    <Card>
+      <CardHeader>
+        <CardTitle>All Payments</CardTitle>
+        <CardDescription>
+          A list of all recorded payments.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <TooltipProvider>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Transaction Date</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead>
+                  <span className="sr-only">Actions</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {payments.map((payment) => (
+                <TableRow key={payment.id}>
+                  <TableCell className="font-medium">{getStudentName(payment.studentId)}</TableCell>
+                  <TableCell>
+                    {getCurrencySymbol(payment.currencyCode)}{payment.amount.toFixed(2)}
+                  </TableCell>
+                  <TableCell>{format(new Date(payment.transactionDate), "PPP")}</TableCell>
+                  <TableCell>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge variant="secondary">{payment.paymentMethod}</Badge>
+                      </TooltipTrigger>
+                      {payment.notes && <TooltipContent>{payment.notes}</TooltipContent>}
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell className="flex justify-end gap-2">
+                      <Button asChild variant="outline" size="icon">
+                        <Link href={`/payments/${payment.id}/edit`}>
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Link>
                       </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently mark the payment as deleted.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(payment.id)}>
-                              Continue
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TooltipProvider>
-        </CardContent>
-      </Card>
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Payment</DialogTitle>
-          </DialogHeader>
-          {selectedPayment && (
-            <EditPaymentForm
-              setOpen={setIsEditDialogOpen}
-              payment={selectedPayment}
-              students={students}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon">
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently mark the payment as deleted.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(payment.id)}>
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TooltipProvider>
+      </CardContent>
+    </Card>
   );
 }

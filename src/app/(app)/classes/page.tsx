@@ -3,33 +3,16 @@
 
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Class, Student, Discipline } from "@/lib/definitions";
+import { Class, Student } from "@/lib/definitions";
 import ClassesTable from "@/components/classes/classes-table";
-import AddClassForm from "@/components/classes/add-class-form";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
-function ClassesPageContent() {
-  const searchParams = useSearchParams();
-  const [open, setOpen] = useState(false);
+export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const preselectedStudentId = searchParams.get('studentId');
-
-  useEffect(() => {
-    if (searchParams.get('openDialog') === 'true') {
-      setOpen(true);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const q = query(collection(db, "classes"), where("deleted", "==", false));
@@ -78,39 +61,19 @@ function ClassesPageContent() {
   }, []);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-headline font-bold text-foreground">
-            Classes
-          </h1>
-          <DialogTrigger asChild>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <PlusCircle className="mr-2 h-5 w-5" />
-              Add Class
-            </Button>
-          </DialogTrigger>
-        </div>
-        <ClassesTable classes={classes} students={students} />
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-headline font-bold text-foreground">
+          Classes
+        </h1>
+        <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+          <Link href="/classes/new">
+            <PlusCircle className="mr-2 h-5 w-5" />
+            Add Class
+          </Link>
+        </Button>
       </div>
-      <DialogContent className="sm:max-w-[625px]">
-        <DialogHeader>
-          <DialogTitle>Add a new class</DialogTitle>
-        </DialogHeader>
-        <AddClassForm 
-          setOpen={setOpen} 
-          allStudents={students} 
-          preselectedStudentId={preselectedStudentId} 
-        />
-      </DialogContent>
-    </Dialog>
+      <ClassesTable classes={classes} students={students} />
+    </div>
   );
-}
-
-export default function ClassesPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ClassesPageContent />
-    </Suspense>
-  )
 }

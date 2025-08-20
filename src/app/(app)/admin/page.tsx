@@ -8,6 +8,8 @@ import { Discipline } from "@/lib/definitions";
 import AddDisciplineForm from "@/components/admin/add-discipline-form";
 import DisciplinesTable from "@/components/admin/disciplines-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function AdminPage() {
     const [disciplines, setDisciplines] = useState<Discipline[]>([]);
@@ -52,6 +54,17 @@ export default function AdminPage() {
                            <DisciplinesTable disciplines={disciplines} />
                         </div>
                     </div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Debugging</CardTitle>
+                    <CardDescription>Tools for debugging and testing components.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild>
+                        <Link href="/admin/datepicker-test">Date Picker Test Page</Link>
+                    </Button>
                 </CardContent>
             </Card>
         </div>
