@@ -14,13 +14,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditPaymentPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const { id } = params;
     const [payment, setPayment] = useState<Payment | null>(null);
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchPaymentAndStudents = async () => {
-            const paymentDocRef = doc(db, "payments", params.id);
+            const paymentDocRef = doc(db, "payments", id);
             const paymentDocSnap = await getDoc(paymentDocRef);
             
             if (paymentDocSnap.exists()) {
@@ -49,7 +50,7 @@ export default function EditPaymentPage({ params }: { params: { id: string } }) 
             setLoading(false);
         };
         fetchPaymentAndStudents();
-    }, [params.id]);
+    }, [id]);
 
     return (
         <div className="flex flex-col gap-6">

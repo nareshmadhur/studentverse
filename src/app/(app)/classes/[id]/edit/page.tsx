@@ -15,13 +15,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditClassPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const { id } = params;
     const [classItem, setClassItem] = useState<Class | null>(null);
     const [allStudents, setAllStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchClassAndStudents = async () => {
-            const classDocRef = doc(db, "classes", params.id);
+            const classDocRef = doc(db, "classes", id);
             const classDocSnap = await getDoc(classDocRef);
             
             if (classDocSnap.exists()) {
@@ -50,7 +51,7 @@ export default function EditClassPage({ params }: { params: { id: string } }) {
             setLoading(false);
         };
         fetchClassAndStudents();
-    }, [params.id]);
+    }, [id]);
 
 
     return (

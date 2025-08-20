@@ -15,12 +15,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditStudentPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const { id } = params;
     const [student, setStudent] = useState<Student | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchStudent = async () => {
-            const docRef = doc(db, "students", params.id);
+            const docRef = doc(db, "students", id);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
@@ -34,7 +35,7 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
             setLoading(false);
         };
         fetchStudent();
-    }, [params.id]);
+    }, [id]);
 
 
     return (
