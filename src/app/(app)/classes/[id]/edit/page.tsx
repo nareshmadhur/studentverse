@@ -13,15 +13,25 @@ import { Class, Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
-export default function EditClassPage({ params: { id } }: { params: { id: string } }) {
+export default function EditClassPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const { id } = params;
     const [classItem, setClassItem] = useState<Class | null>(null);
     const [allStudents, setAllStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
 
+    console.log("EditClassPage rendered. Params:", params);
+    console.log("Extracted ID:", id);
+
+
     useEffect(() => {
-        if (!id) return;
+        console.log("useEffect triggered with ID:", id);
+        if (!id) {
+            console.log("useEffect skipped: ID is missing.");
+            return;
+        };
         const fetchClassAndStudents = async () => {
+            console.log("Fetching data for ID:", id);
             const classDocRef = doc(db, "classes", id);
             const classDocSnap = await getDoc(classDocRef);
             
@@ -49,6 +59,7 @@ export default function EditClassPage({ params: { id } }: { params: { id: string
             });
             setAllStudents(studentData);
             setLoading(false);
+            console.log("Data fetching complete.");
         };
         fetchClassAndStudents();
     }, [id]);
