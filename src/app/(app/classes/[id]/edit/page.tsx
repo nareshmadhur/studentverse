@@ -1,7 +1,7 @@
 
 "use client";
 
-import EditFeeForm from "@/components/fees/edit-fee-form";
+import EditClassForm from "@/components/classes/edit-class-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -9,31 +9,32 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { doc, getDoc, getDocs, collection, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Fee, Student } from "@/lib/definitions";
+import { Class, Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function EditFeePage({ params }: { params: { id: string } }) {
+
+export default function EditClassPage({ params }: { params: { id: string } }) {
     const router = useRouter();
     const id = params.id;
-    const [fee, setFee] = useState<Fee | null>(null);
-    const [students, setStudents] = useState<Student[]>([]);
+    const [classItem, setClassItem] = useState<Class | null>(null);
+    const [allStudents, setAllStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!id) return;
-        const fetchFeeAndStudents = async () => {
-            const feeDocRef = doc(db, "fees", id);
-            const feeDocSnap = await getDoc(feeDocRef);
+        const fetchClassAndStudents = async () => {
+            const classDocRef = doc(db, "classes", id);
+            const classDocSnap = await getDoc(classDocRef);
             
-            if (feeDocSnap.exists()) {
-                const data = feeDocSnap.data();
-                setFee({ 
-                    id: feeDocSnap.id, 
+            if (classDocSnap.exists()) {
+                const data = classDocSnap.data();
+                setClassItem({ 
+                    id: classDocSnap.id, 
                     ...data,
-                    effectiveDate: (data.effectiveDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+                    scheduledDate: (data.scheduledDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
                     createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
                     updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
-                } as Fee);
+                } as Class);
             }
 
             const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
@@ -41,17 +42,18 @@ export default function EditFeePage({ params }: { params: { id: string } }) {
             const studentData: Student[] = studentSnapshot.docs.map(doc => {
                 const data = doc.data();
                 return {
-                    id: doc.id,
-                    ...data,
-                    createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
-                    updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+                id: doc.id,
+                ...data,
+                createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+                updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
                 } as Student
             });
-            setStudents(studentData);
+            setAllStudents(studentData);
             setLoading(false);
         };
-        fetchFeeAndStudents();
+        fetchClassAndStudents();
     }, [id]);
+
 
     return (
         <div className="flex flex-col gap-6">
@@ -60,13 +62,13 @@ export default function EditFeePage({ params }: { params: { id: string } }) {
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <h1 className="text-3xl font-headline font-bold text-foreground">
-                    Edit Fee
+                    Edit Class
                 </h1>
             </div>
             <Card>
                 <CardHeader>
-                    <CardTitle>Fee Details</CardTitle>
-                    <CardDescription>Update the fee's information.</CardDescription>
+                    <CardTitle>Class Details</CardTitle>
+                    <CardDescription>Update the class's information.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {loading ? (
@@ -75,10 +77,10 @@ export default function EditFeePage({ params }: { params: { id: string } }) {
                             <Skeleton className="h-10 w-full" />
                             <Skeleton className="h-10 w-full" />
                          </div>
-                    ) : fee && students.length > 0 ? (
-                        <EditFeeForm fee={fee} students={students} />
+                    ) : classItem && allStudents.length > 0 ? (
+                        <EditClassForm classItem={classItem} allStudents={allStudents} />
                     ) : (
-                        <p>Fee not found.</p>
+                        <p>Class not found.</p>
                     )}
                 </CardContent>
             </Card>
