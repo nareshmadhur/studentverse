@@ -14,12 +14,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditPaymentPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    const { id } = params;
+    const id = params.id;
     const [payment, setPayment] = useState<Payment | null>(null);
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!id) return;
         const fetchPaymentAndStudents = async () => {
             const paymentDocRef = doc(db, "payments", id);
             const paymentDocSnap = await getDoc(paymentDocRef);

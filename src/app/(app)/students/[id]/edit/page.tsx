@@ -15,11 +15,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditStudentPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    const { id } = params;
+    const id = params.id;
     const [student, setStudent] = useState<Student | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!id) return;
         const fetchStudent = async () => {
             const docRef = doc(db, "students", id);
             const docSnap = await getDoc(docRef);
