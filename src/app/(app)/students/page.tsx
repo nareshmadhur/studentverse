@@ -7,8 +7,8 @@ import { db } from "@/lib/firebase";
 import { Student, Class } from "@/lib/definitions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, User, Users, UserX } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { PlusCircle, User, Users, UserX, X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,6 +17,7 @@ import { addMonths, startOfDay } from "date-fns";
 import StudentProfile from "@/components/students/student-profile";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import AddStudentForm from "@/components/students/add-student-form";
 
 function StudentListPage() {
   const router = useRouter();
@@ -27,6 +28,7 @@ function StudentListPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -49,7 +51,7 @@ function StudentListPage() {
         };
       });
       setStudents(studentData);
-      if (!selectedStudentId && studentData.length > 0) {
+      if (!isAdding && !selectedStudentId && studentData.length > 0) {
         router.replace(`/students?id=${studentData[0].id}`, { scroll: false });
       }
     });
@@ -71,7 +73,7 @@ function StudentListPage() {
       unsubscribeStudents();
       unsubscribeClasses();
     };
-  }, []);
+  }, [isAdding]);
 
   useEffect(() => {
     // If a student is selected, but not in the list (e.g. deep link to deleted student), redirect
@@ -133,10 +135,26 @@ function StudentListPage() {
   }, [inactiveStudents, searchTerm]);
 
 
-  const handleStudentSelect = (id: string) => {
-    router.push(`/students?id=${id}`, { scroll: false });
+  const handleStudentSelect = (id: string | null) => {
+    setIsAdding(false);
+    const newPath = id ? `/students?id=${id}` : '/students';
+    router.push(newPath, { scroll: false });
   };
   
+  const handleAddClick = () => {
+    setIsAdding(true);
+    if (selectedStudentId) {
+      router.push('/students', { scroll: false });
+    }
+  };
+
+  const handleFinishAdding = (newStudentId?: string) => {
+    setIsAdding(false);
+    if (newStudentId) {
+      router.push(`/students?id=${newStudentId}`, { scroll: false });
+    }
+  }
+
   const StudentListItem = ({ student }: { student: Student }) => (
     <div
         role="button"
@@ -145,17 +163,17 @@ function StudentListPage() {
         onKeyDown={(e) => e.key === 'Enter' && handleStudentSelect(student.id)}
         className={cn(
             "flex items-center gap-4 p-2 rounded-lg cursor-pointer transition-colors",
-            selectedStudentId === student.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+            !isAdding && selectedStudentId === student.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
         )}
     >
         <Avatar>
-            <AvatarFallback className={cn(selectedStudentId === student.id ? "bg-primary-foreground text-primary" : "")}>
+            <AvatarFallback className={cn(!isAdding && selectedStudentId === student.id ? "bg-primary-foreground text-primary" : "")}>
                 {student.name.charAt(0).toUpperCase()}
             </AvatarFallback>
         </Avatar>
         <div className="flex-1 overflow-hidden">
             <p className="font-semibold truncate">{student.name}</p>
-            <p className={cn("text-xs truncate", selectedStudentId === student.id ? "text-primary-foreground/80" : "text-muted-foreground")}>
+            <p className={cn("text-xs truncate", !isAdding && selectedStudentId === student.id ? "text-primary-foreground/80" : "text-muted-foreground")}>
                 {student.email}
             </p>
         </div>
@@ -170,11 +188,9 @@ function StudentListPage() {
                 <h1 className="text-2xl font-headline font-bold text-foreground">
                     Students
                 </h1>
-                <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                    <Link href="/students/new">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add
-                    </Link>
+                <Button onClick={handleAddClick} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add
                 </Button>
             </div>
             <Input 
@@ -222,9 +238,26 @@ function StudentListPage() {
             </Card>
         </div>
 
-        {/* Right Column: Student Profile */}
+        {/* Right Column: Student Profile or Add Form */}
         <div className="md:col-span-2 lg:col-span-3 overflow-y-auto">
-           {selectedStudentId ? (
+           {isAdding ? (
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Add New Student</CardTitle>
+                      <CardDescription>Enter the details for the new student.</CardDescription>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => handleFinishAdding()}>
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                    <AddStudentForm onFinish={handleFinishAdding} />
+                </CardContent>
+              </Card>
+           ) : selectedStudentId ? (
                 <StudentProfile id={selectedStudentId} />
            ) : (
              <div className="flex items-center justify-center h-full rounded-lg bg-muted/50">
