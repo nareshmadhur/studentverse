@@ -32,17 +32,47 @@ export default function AdminPage() {
         const paymentsQuery = query(collection(db, "payments"));
 
         const unsubscribes = [
-            onSnapshot(disciplinesQuery, snapshot => setDisciplines(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline)))),
+            onSnapshot(disciplinesQuery, snapshot => setDisciplines(snapshot.docs.map(doc => {
+                const data = doc.data();
+                return { id: doc.id, ...data, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() } as Discipline
+            }))),
             onSnapshot(studentsQuery, snapshot => setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: (doc.data().createdAt as Timestamp)?.toDate().toISOString() } as Student)))),
             onSnapshot(classesQuery, snapshot => setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), scheduledDate: (doc.data().scheduledDate as Timestamp)?.toDate().toISOString() } as Class)))),
             onSnapshot(feesQuery, snapshot => setFees(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp)?.toDate().toISOString() } as Fee)))),
             onSnapshot(paymentsQuery, snapshot => setPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), transactionDate: (doc.data().transactionDate as Timestamp)?.toDate().toISOString() } as Payment)))),
         ];
         
-        Promise.all(unsubscribes).then(() => setLoading(false)).catch(console.error);
+        const allLoaded = Promise.all(snapshotPromises);
+        allLoaded.then(() => setLoading(false)).catch(console.error);
 
         return () => unsubscribes.forEach(unsub => unsub());
     }, []);
+
+    const snapshotPromises = [
+        new Promise(resolve => onSnapshot(disciplinesQuery, snapshot => {
+            setDisciplines(snapshot.docs.map(doc => {
+                const data = doc.data();
+                return { id: doc.id, ...data, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() } as Discipline;
+            }));
+            resolve(true);
+        })),
+        new Promise(resolve => onSnapshot(studentsQuery, snapshot => {
+            setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: (doc.data().createdAt as Timestamp)?.toDate().toISOString() } as Student)));
+            resolve(true);
+        })),
+        new Promise(resolve => onSnapshot(classesQuery, snapshot => {
+            setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), scheduledDate: (doc.data().scheduledDate as Timestamp)?.toDate().toISOString() } as Class)));
+            resolve(true);
+        })),
+        new Promise(resolve => onSnapshot(feesQuery, snapshot => {
+            setFees(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp)?.toDate().toISOString() } as Fee)));
+            resolve(true);
+        })),
+        new Promise(resolve => onSnapshot(paymentsQuery, snapshot => {
+            setPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), transactionDate: (doc.data().transactionDate as Timestamp)?.toDate().toISOString() } as Payment)));
+            resolve(true);
+        })),
+    ];
 
     return (
         <div className="flex flex-col gap-6">
@@ -71,7 +101,7 @@ export default function AdminPage() {
                             </div>
                             <div className="md:col-span-2">
                                 <h3 className="text-lg font-medium mb-4">Existing Disciplines</h3>
-                                <DisciplinesTable disciplines={disciplines.filter(d => !d.deleted)} />
+                                {loading ? <Skeleton className="h-64 w-full" /> : <DisciplinesTable disciplines={disciplines.filter(d => !d.deleted)} />}
                             </div>
                         </div>
                     </TabsContent>
