@@ -91,15 +91,23 @@ export default function AdminPage() {
                         <TabsTrigger value="payments"><CreditCard className="mr-2 h-4 w-4"/>Payments ({payments.length})</TabsTrigger>
                     </TabsList>
                     <TabsContent value="disciplines" className="mt-4">
-                        <div className="grid md:grid-cols-3 gap-6">
-                            <div className="md:col-span-1">
-                                <h3 className="text-lg font-medium mb-4">Add Discipline</h3>
-                                <AddDisciplineForm />
-                            </div>
-                            <div className="md:col-span-2">
-                                <h3 className="text-lg font-medium mb-4">Existing Disciplines</h3>
-                                {loading ? <Skeleton className="h-64 w-full" /> : <DisciplinesTable disciplines={disciplines.filter(d => !d.deleted)} />}
-                            </div>
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Add Discipline</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <AddDisciplineForm />
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle>Existing Disciplines</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {loading ? <Skeleton className="h-64 w-full" /> : <DisciplinesTable disciplines={disciplines.filter(d => !d.deleted)} />}
+                                </CardContent>
+                            </Card>
                         </div>
                     </TabsContent>
                     <TabsContent value="students" className="mt-4">
