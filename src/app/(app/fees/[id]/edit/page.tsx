@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditFeePage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    const { id } = params;
+    const id = params.id;
     const [fee, setFee] = useState<Fee | null>(null);
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
