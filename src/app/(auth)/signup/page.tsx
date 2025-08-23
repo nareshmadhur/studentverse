@@ -94,7 +94,7 @@ export default function SignupPage() {
         title: "Account Created & Verification Email Sent",
         description: "Please check your inbox to verify your email address.",
       });
-      router.push("/students");
+      router.push("/login");
     } catch (error: any) {
       handleAuthError(error);
     } finally {

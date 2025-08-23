@@ -68,8 +68,6 @@ export default function LoginPage() {
     switch (error.code) {
       case "auth/user-not-found":
       case "auth/wrong-password":
-        description = "Invalid email or password. Please try again.";
-        break;
       case "auth/invalid-credential":
         description = "Invalid email or password. Please try again.";
         break;
@@ -93,19 +91,16 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       if (!userCredential.user.emailVerified) {
         await signOut(auth);
-        throw { code: 'auth/email-not-verified' };
-      }
-      handleAuthSuccess();
-    } catch (error: any) {
-      if (error.code === 'auth/email-not-verified') {
         toast({
             title: "Email Not Verified",
             description: "Please check your inbox to verify your email before logging in.",
             variant: "destructive",
         });
       } else {
-        handleAuthError(error)
+        handleAuthSuccess();
       }
+    } catch (error: any) {
+        handleAuthError(error);
     } finally {
       setLoading(false);
     }
