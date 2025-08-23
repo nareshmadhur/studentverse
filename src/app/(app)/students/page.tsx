@@ -77,14 +77,6 @@ function StudentListPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    // If a student is selected, but not in the list (e.g. deep link to deleted student), redirect
-    if (selectedStudentId && !loading && students.length > 0 && !students.find(s => s.id === selectedStudentId)) {
-        router.replace(`/students?id=${students[0].id}`, { scroll: false });
-    }
-  }, [selectedStudentId, students, loading, router]);
-
-
   const studentClassMap = useMemo(() => {
     const map = new Map<string, Date>();
     classes.forEach(c => {
@@ -306,5 +298,7 @@ export default function StudentsPage() {
         </Suspense>
     )
 }
+
+    
 
     
