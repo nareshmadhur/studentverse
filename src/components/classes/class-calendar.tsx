@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon, Edit, Plus, Users, User, Clock, MapPin, Trash2 } from "lucide-react";
 import { Calendar, type CalendarProps } from "@/components/ui/calendar";
 import { Class, Student } from "@/lib/definitions";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -30,7 +30,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
-import { DayPicker, DayProps } from "react-day-picker";
+import { DayPicker, DayProps, DayContent } from "react-day-picker";
+import { cn } from "@/lib/utils";
 
 interface ClassCalendarProps {
   classes: Class[];
@@ -77,27 +78,38 @@ export function ClassCalendar({ classes, students }: ClassCalendarProps) {
     }
   };
 
-  const DayWithEvents = ({ date, children, ...props }: DayProps) => {
+  const DayWithEvents = (props: DayProps) => {
+    const { date, displayMonth } = props;
     const dayKey = format(date, "yyyy-MM-dd");
     const dayEvents = events.get(dayKey) || [];
 
-    const defaultButton = DayPicker.defaultProps.components?.Day?.({ date, children, ...props});
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
 
-    if (dayEvents.length === 0) {
-      return defaultButton;
-    }
-
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-            <div role="button" className="relative">
-                {defaultButton}
+    const button = (
+        <button
+            ref={buttonRef}
+            type="button"
+            className={cn(buttonVariants({ variant: 'ghost' }), 'h-9 w-9 p-0 font-normal relative')}
+        >
+            <DayContent {...props} />
+             {dayEvents.length > 0 && (
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
                     {dayEvents.slice(0, 3).map((event, i) => (
                         <div key={i} className="h-1.5 w-1.5 rounded-full bg-primary" />
                     ))}
                 </div>
-            </div>
+            )}
+        </button>
+    );
+
+    if (dayEvents.length === 0) {
+      return <DayContent {...props} />;
+    }
+
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+            {button}
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0">
           <div className="p-4">
@@ -176,7 +188,8 @@ export function ClassCalendar({ classes, students }: ClassCalendarProps) {
       onSelect={setDate}
       className="p-4"
       components={{
-        Day: DayWithEvents
+        Day: DayWithEvents,
+        DayContent: DayContent,
       }}
     />
   );
