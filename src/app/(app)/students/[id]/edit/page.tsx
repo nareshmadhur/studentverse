@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditStudentPage({ params }: { params: { id: string } }) {
     const router = useRouter();
-    const id = params.id;
+    const { id } = params;
     const [student, setStudent] = useState<Student | null>(null);
     const [loading, setLoading] = useState(true);
 
