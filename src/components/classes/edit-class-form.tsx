@@ -38,7 +38,6 @@ import { DatePicker } from "../ui/date-picker";
 const classSchema = z.object({
   title: z.string().min(1, "Title is required"),
   discipline: z.string().min(1, "Discipline is required"),
-  category: z.string().optional(),
   sessionType: z.enum(["1-1", "group"]),
   description: z.string().optional(),
   scheduledDate: z.date({ required_error: "A class date and time is required." }),
@@ -219,20 +218,7 @@ export default function EditClassForm({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Category (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. music, art" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="grid grid-cols-1">
           <FormField
             control={control}
             name="sessionType"

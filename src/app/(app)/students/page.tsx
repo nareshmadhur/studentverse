@@ -170,9 +170,9 @@ function StudentListPage() {
         role="button"
         tabIndex={0}
         onClick={() => handleStudentSelect(student.id)}
-        onKeyDown={(e) => e.key === 'Enter' && handleStudentSelect(student.id)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleStudentSelect(student.id); }}
         className={cn(
-            "flex items-center gap-4 p-2 rounded-lg cursor-pointer transition-colors",
+            "flex items-center gap-4 p-2 rounded-lg cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-ring",
             view === 'profile' && selectedStudentId === student.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
         )}
     >

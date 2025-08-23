@@ -22,7 +22,6 @@ export type FeeOverride = {
 export type Class = {
   id: string;
   discipline: string;
-  category?: string;
   sessionType: '1-1' | 'group';
   title: string;
   description?: string;
