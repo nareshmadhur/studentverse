@@ -42,9 +42,9 @@ export default function ClassesDataTab({ classes, students }: { classes: Class[]
 
     const filteredClasses = useMemo(() => {
         return enrichedClasses.filter(c => 
-            c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            c.discipline.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            c.studentNames.toLowerCase().includes(searchTerm.toLowerCase())
+            (c.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (c.discipline || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (c.studentNames || '').toLowerCase().includes(searchTerm.toLowerCase())
         ).sort((a,b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
     }, [enrichedClasses, searchTerm]);
 
