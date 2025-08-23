@@ -24,6 +24,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { countries, currencies } from "@/lib/data/form-data";
+import Link from "next/link";
 
 const studentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -63,12 +64,13 @@ export default function AddStudentForm({ onFinish }: { onFinish: (newStudentId?:
       toast({
         title: "Student Added",
         description: `${data.name} has been successfully added.`,
+        action: (
+          <Button asChild>
+            <Link href={`/students?id=${docRef.id}&action=addFee`}>Add Fee</Link>
+          </Button>
+        )
       });
-      // Instead of navigating, call the onFinish callback with the new student's ID
       onFinish(docRef.id);
-      
-      // Optionally, you can still navigate to the fees page for a new fee
-      // router.push(`/fees/new?studentId=${docRef.id}`);
 
     } catch (error) {
       console.error("Error adding document: ", error);

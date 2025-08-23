@@ -21,21 +21,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { doc, serverTimestamp, updateDoc, collection, query, where, onSnapshot } from "firebase/firestore";
+import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Fee, Student, Discipline } from "@/lib/definitions";
-import { useState, useEffect } from "react";
+import { Fee, Discipline } from "@/lib/definitions";
 import { Input } from "../ui/input";
 import { DatePicker } from "../ui/date-picker";
-import { useRouter } from "next/navigation";
 
 const feeSchema = z.object({
-  studentId: z.string().min(1, "Student is required"),
   discipline: z.string().optional(),
   sessionType: z.enum(["1-1", "group"]),
   feeType: z.enum(["hourly", "subscription"]),
   amount: z.coerce.number().positive("Amount must be positive."),
-  currencyCode: z.string(),
   effectiveDate: z.date({ required_error: "An effective date is required." }),
 });
 
@@ -43,42 +39,25 @@ type FeeFormValues = z.infer<typeof feeSchema>;
 
 export default function EditFeeForm({
   fee,
-  students,
+  disciplines,
+  onFinish,
 }: {
   fee: Fee;
-  students: Student[];
+  disciplines: Discipline[];
+  onFinish: () => void;
 }) {
   const { toast } = useToast();
-  const router = useRouter();
-  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
 
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
     defaultValues: {
-      ...fee,
       discipline: fee.discipline || '__any__',
+      sessionType: fee.sessionType,
+      feeType: fee.feeType,
+      amount: fee.amount,
       effectiveDate: new Date(fee.effectiveDate),
     },
   });
-
-  const { watch, setValue } = form;
-  const selectedStudentId = watch("studentId");
-
-  useEffect(() => {
-    const student = students.find(s => s.id === selectedStudentId);
-    if (student) {
-      setValue("currencyCode", student.currencyCode);
-    }
-  }, [selectedStudentId, students, setValue]);
-
-  useEffect(() => {
-    const q = query(collection(db, "disciplines"), where("deleted", "==", false));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const disciplineData: Discipline[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline));
-        setDisciplines(disciplineData);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const onSubmit = async (data: FeeFormValues) => {
     try {
@@ -92,7 +71,7 @@ export default function EditFeeForm({
         title: "Fee Updated",
         description: "The fee has been successfully updated.",
       });
-      router.push("/fees");
+      onFinish();
     } catch (error) {
       console.error("Error updating document: ", error);
       toast({
@@ -105,31 +84,7 @@ export default function EditFeeForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="studentId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Student</FormLabel>
-               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a student" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {students.map(student => (
-                    <SelectItem key={student.id} value={student.id}>
-                      {student.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
          <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -184,7 +139,7 @@ export default function EditFeeForm({
             name="amount"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Amount</FormLabel>
+                <FormLabel>Amount ({fee.currencyCode})</FormLabel>
                 <FormControl>
                     <Input type="number" placeholder="e.g. 100" {...field} />
                 </FormControl>
@@ -230,7 +185,7 @@ export default function EditFeeForm({
             />
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+          <Button type="button" variant="outline" onClick={onFinish}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>

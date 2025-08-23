@@ -4,13 +4,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { doc, onSnapshot, Timestamp, updateDoc, serverTimestamp, getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Student, Class, Fee, Payment } from "@/lib/definitions";
+import { Student, Class, Fee, Payment, Discipline } from "@/lib/definitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Pencil, Save, X, Trash2, AlertTriangle, Calendar, DollarSign, CreditCard } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { countries, currencies } from "@/lib/data/form-data";
+import { currencies } from "@/lib/data/form-data";
 import { getCurrencySymbol } from "@/lib/utils";
 import EditStudentForm from "./edit-student-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,17 +20,33 @@ import { Badge } from "../ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import AddFeeForm from "../fees/add-fee-form";
+import EditFeeForm from "../fees/edit-fee-form";
 
 
 export default function StudentProfile({ id }: { id: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [student, setStudent] = useState<Student | null>(null);
   const [classes, setClasses] = useState<Class[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [feeToEdit, setFeeToEdit] = useState<Fee | null>(null);
+  const [isAddFeeOpen, setAddFeeOpen] = useState(false);
+  const [isEditFeeOpen, setEditFeeOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'addFee') {
+      setAddFeeOpen(true);
+      // Clean up URL
+      router.replace(`/students?id=${id}`, { scroll: false });
+    }
+  }, [searchParams, id, router]);
 
   useEffect(() => {
     if (!id) return;
@@ -70,11 +86,17 @@ export default function StudentProfile({ id }: { id: string }) {
         setPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), transactionDate: (doc.data().transactionDate as Timestamp).toDate().toISOString() } as Payment)));
     });
 
+    const disciplinesQuery = query(collection(db, "disciplines"), where("deleted", "==", false));
+    const unsubscribeDisciplines = onSnapshot(disciplinesQuery, snapshot => {
+        setDisciplines(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline)));
+    });
+
     return () => {
       unsubscribeStudent();
       unsubscribeClasses();
       unsubscribeFees();
       unsubscribePayments();
+      unsubscribeDisciplines();
     }
   }, [id]);
 
@@ -95,6 +117,10 @@ export default function StudentProfile({ id }: { id: string }) {
     }
   };
 
+  const handleEditFee = (fee: Fee) => {
+    setFeeToEdit(fee);
+    setEditFeeOpen(true);
+  }
 
   if (loading) {
     return (
@@ -207,11 +233,20 @@ export default function StudentProfile({ id }: { id: string }) {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Fee Structure</CardTitle>
-                     <Button size="sm" asChild>
-                        <Link href={`/fees/new?studentId=${id}`}>
-                           <PlusCircle className="mr-2 h-4 w-4"/> Add Fee
-                        </Link>
-                    </Button>
+                    <Dialog open={isAddFeeOpen} onOpenChange={setAddFeeOpen}>
+                        <DialogTrigger asChild>
+                            <Button size="sm"><PlusCircle className="mr-2 h-4 w-4"/> Add Fee</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader><DialogTitle>Add New Fee for {student.name}</DialogTitle></DialogHeader>
+                            <AddFeeForm 
+                                studentId={student.id} 
+                                currencyCode={student.currencyCode} 
+                                disciplines={disciplines}
+                                onFinish={() => setAddFeeOpen(false)} 
+                            />
+                        </DialogContent>
+                    </Dialog>
                 </CardHeader>
                 <CardContent>
                    <Table>
@@ -219,12 +254,12 @@ export default function StudentProfile({ id }: { id: string }) {
                     <TableBody>
                         {fees.map(f => (
                            <TableRow key={f.id}>
-                               <TableCell>{f.discipline || 'Any'}</TableCell>
+                               <TableCell>{f.discipline || 'Any (Default)'}</TableCell>
                                <TableCell><Badge variant={f.sessionType === '1-1' ? 'secondary' : 'default'}>{f.sessionType}</Badge></TableCell>
                                <TableCell>{getCurrencySymbol(f.currencyCode)}{f.amount.toFixed(2)}</TableCell>
                                <TableCell>{format(new Date(f.effectiveDate), 'PPP')}</TableCell>
                                <TableCell className="text-right">
-                                    <Button asChild variant="ghost" size="icon"><Link href={`/fees/${f.id}/edit`}><Pencil className="h-4 w-4"/></Link></Button>
+                                    <Button variant="ghost" size="icon" onClick={() => handleEditFee(f)}><Pencil className="h-4 w-4"/></Button>
                                     <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4"/></Button></AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will delete the fee record.</AlertDialogDescription></AlertDialogHeader>
@@ -276,6 +311,22 @@ export default function StudentProfile({ id }: { id: string }) {
             </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isEditFeeOpen} onOpenChange={setEditFeeOpen}>
+        <DialogContent>
+            <DialogHeader><DialogTitle>Edit Fee for {student.name}</DialogTitle></DialogHeader>
+            {feeToEdit && (
+                <EditFeeForm
+                    fee={feeToEdit}
+                    disciplines={disciplines}
+                    onFinish={() => {
+                        setEditFeeOpen(false);
+                        setFeeToEdit(null);
+                    }}
+                />
+            )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -39,7 +39,7 @@ export type Class = {
 export type Fee = {
   id: string;
   studentId: string;
-  discipline?: string;
+  discipline: string; // Note: an empty string signifies a default/any discipline fee
   sessionType: '1-1' | 'group';
   feeType: 'hourly' | 'subscription';
   amount: number;
