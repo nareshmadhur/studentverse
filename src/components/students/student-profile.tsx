@@ -25,7 +25,7 @@ import EditFeeForm from "../fees/edit-fee-form";
 import AddFeeTableRow from "../fees/add-fee-table-row";
 
 
-export default function StudentProfile({ id }: { id: string }) {
+export default function StudentProfile({ id, startWithAddFee = false }: { id: string; startWithAddFee?: boolean }) {
   const router = useRouter();
   const { toast } = useToast();
   const [student, setStudent] = useState<Student | null>(null);
@@ -37,7 +37,13 @@ export default function StudentProfile({ id }: { id: string }) {
   const [isEditing, setIsEditing] = useState(false);
   const [feeToEdit, setFeeToEdit] = useState<Fee | null>(null);
   const [isEditFeeOpen, setEditFeeOpen] = useState(false);
-  const [isAddingFee, setIsAddingFee] = useState(false);
+  const [isAddingFee, setIsAddingFee] = useState(startWithAddFee);
+
+  useEffect(() => {
+    if (startWithAddFee) {
+        setIsAddingFee(true);
+    }
+  }, [startWithAddFee]);
 
   useEffect(() => {
     if (!id) return;
@@ -367,3 +373,5 @@ export default function StudentProfile({ id }: { id: string }) {
     </div>
   );
 }
+
+    

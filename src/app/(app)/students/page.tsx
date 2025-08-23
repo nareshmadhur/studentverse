@@ -29,6 +29,7 @@ function StudentListPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState<'profile' | 'addStudent'>('profile');
+  const [isAddingFeeForNewStudent, setIsAddingFeeForNewStudent] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -63,7 +64,7 @@ function StudentListPage() {
         return {
           id: doc.id,
           ...data,
-          scheduledDate: (data.scheduledDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+          scheduledDate: (data.scheduledDate as Timestamp)?.toDate().toISOString(),
         } as Class;
       });
       setClasses(classData);
@@ -138,6 +139,7 @@ function StudentListPage() {
 
   const handleStudentSelect = (id: string | null) => {
     setView('profile');
+    setIsAddingFeeForNewStudent(false);
     const newPath = id ? `/students?id=${id}` : '/students';
     router.push(newPath, { scroll: false });
   };
@@ -152,6 +154,7 @@ function StudentListPage() {
   const handleFinishAddingStudent = (newStudentId?: string) => {
     if (newStudentId) {
         setView('profile');
+        setIsAddingFeeForNewStudent(true);
         router.push(`/students?id=${newStudentId}`, { scroll: false });
     } else {
         setView('profile');
@@ -210,7 +213,7 @@ function StudentListPage() {
         case 'profile':
         default:
             if (selectedStudentId) {
-                return <StudentProfile id={selectedStudentId} />;
+                return <StudentProfile id={selectedStudentId} startWithAddFee={isAddingFeeForNewStudent} />;
             }
             if (!loading && students.length === 0) {
               return (
@@ -303,3 +306,5 @@ export default function StudentsPage() {
         </Suspense>
     )
 }
+
+    
