@@ -3,18 +3,23 @@
 
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, query, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getEnvironment, initializeFirebase, type Environment } from "@/lib/firebase";
 import { Discipline, Student, Class, Fee, Payment } from "@/lib/definitions";
 import AddDisciplineForm from "@/components/admin/add-discipline-form";
 import DisciplinesTable from "@/components/admin/disciplines-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookUser, Calendar, DollarSign, GraduationCap, CreditCard } from "lucide-react";
+import { BookUser, Calendar, DollarSign, GraduationCap, CreditCard, ChevronsUpDown, Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import StudentsDataTab from "@/components/admin/students-data-tab";
 import ClassesDataTab from "@/components/admin/classes-data-tab";
 import FeesDataTab from "@/components/admin/fees-data-tab";
 import PaymentsDataTab from "@/components/admin/payments-data-tab";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+import { firebaseConfigs } from "@/lib/firebase-config";
+import { cn } from "@/lib/utils";
 
 const disciplinesQuery = query(collection(db, "disciplines"));
 const studentsQuery = query(collection(db, "students"));
@@ -30,6 +35,18 @@ export default function AdminPage() {
     const [fees, setFees] = useState<Fee[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentEnv, setCurrentEnv] = useState<Environment>('development');
+    const [openEnvSelector, setOpenEnvSelector] = useState(false);
+
+    useEffect(() => {
+        setCurrentEnv(getEnvironment());
+    }, []);
+
+    const handleEnvChange = (env: Environment) => {
+        localStorage.setItem('tutoraid-env', env);
+        window.location.reload(); // Reload to re-initialize firebase and fetch new data
+    }
+
 
     useEffect(() => {
         let loadedCount = 0;
@@ -73,13 +90,42 @@ export default function AdminPage() {
 
     return (
         <div className="flex flex-col gap-6">
-            <h1 className="text-3xl font-headline font-bold text-foreground">
-                Data Manager
-            </h1>
+            <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-headline font-bold text-foreground">
+                    Data Manager
+                </h1>
+                 <Popover open={openEnvSelector} onOpenChange={setOpenEnvSelector}>
+                    <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={openEnvSelector} className="w-[200px] justify-between">
+                           Environment: <span className="font-bold capitalize">{currentEnv}</span>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0">
+                        <Command>
+                            <CommandGroup>
+                                {Object.keys(firebaseConfigs).map((env) => (
+                                    <CommandItem
+                                        key={env}
+                                        value={env}
+                                        onSelect={(currentValue) => {
+                                            handleEnvChange(currentValue as Environment)
+                                            setOpenEnvSelector(false)
+                                        }}
+                                    >
+                                        <Check className={cn("mr-2 h-4 w-4", currentEnv === env ? "opacity-100" : "opacity-0")} />
+                                        <span className="capitalize">{env}</span>
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
+            </div>
             <Card>
                 <CardHeader>
                     <CardTitle>Database Records</CardTitle>
-                    <CardDescription>View and manage all records in the database.</CardDescription>
+                    <CardDescription>View and manage all records in the <span className="font-bold capitalize">{currentEnv}</span> database.</CardDescription>
                 </CardHeader>
                 <CardContent>
                    <Tabs defaultValue="disciplines" className="w-full">

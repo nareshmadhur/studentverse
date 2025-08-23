@@ -1,24 +1,43 @@
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp, deleteApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { firebaseConfigs, type Environment } from './firebase-config';
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyC2uRlKpLaJtOweEgAKq-h2iuXf-WKPHeY",
-  authDomain: "studentverse-hgt33.firebaseapp.com",
-  projectId: "studentverse-hgt33",
-  storageBucket: "studentverse-hgt33.firebasestorage.app",
-  messagingSenderId: "251333761093",
-  appId: "1:251333761093:web:03ffbabfd62e9c55d32b2c"
+let app;
+let auth;
+let db;
+
+const getEnvironment = (): Environment => {
+    if (typeof window !== 'undefined') {
+        return (localStorage.getItem('tutoraid-env') as Environment) || 'development';
+    }
+    return 'development';
+}
+
+const initializeFirebase = (env: Environment) => {
+    const config = firebaseConfigs[env];
+    const appName = `tutoraid-${env}`;
+
+    // Check if the app for the current environment is already initialized
+    const existingApp = getApps().find(app => app.name === appName);
+
+    if (existingApp) {
+        app = existingApp;
+    } else {
+        // To avoid re-initializing on hot reloads, we check if an app with this name exists
+        try {
+            app = getApp(appName);
+        } catch (e) {
+            app = initializeApp(config, appName);
+        }
+    }
+    
+    auth = getAuth(app);
+    db = getFirestore(app);
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+// Initialize with the default/stored environment
+initializeFirebase(getEnvironment());
 
-export { db, auth };
+export { db, auth, getEnvironment, initializeFirebase, type Environment };
