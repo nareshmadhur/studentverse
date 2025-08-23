@@ -74,7 +74,6 @@ function StudentListPage() {
       unsubscribeStudents();
       unsubscribeClasses();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const studentClassMap = useMemo(() => {
@@ -146,12 +145,11 @@ function StudentListPage() {
   const handleFinishAddingStudent = (newStudentId?: string) => {
     if (newStudentId) {
         setView('profile');
-        setIsAddingFeeForNewStudent(true);
-        router.push(`/students?id=${newStudentId}`, { scroll: false });
+        router.push(`/students?id=${newStudentId}&tab=fees`, { scroll: false });
     } else {
         setView('profile');
-        if (students.length > 0) {
-            router.push(`/students?id=${selectedStudentId || students[0].id}`, { scroll: false });
+        if (students.length > 0 && !selectedStudentId) {
+            router.push(`/students?id=${students[0].id}`, { scroll: false });
         }
     }
   }
@@ -205,7 +203,7 @@ function StudentListPage() {
         case 'profile':
         default:
             if (selectedStudentId) {
-                return <StudentProfile id={selectedStudentId} startWithAddFee={isAddingFeeForNewStudent} />;
+                return <StudentProfile id={selectedStudentId} />;
             }
             if (!loading && students.length === 0) {
               return (
@@ -298,7 +296,3 @@ export default function StudentsPage() {
         </Suspense>
     )
 }
-
-    
-
-    

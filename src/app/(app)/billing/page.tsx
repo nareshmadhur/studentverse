@@ -180,7 +180,7 @@ function BillingPageContent() {
                       </TableCell>
                        <TableCell className="text-right">
                         {details.hasBillingIssues && (
-                           <Link href={`/fees?studentId=${details.studentId}&openDialog=true`}>
+                           <Link href={`/students?id=${details.studentId}&tab=fees`}>
                               <Button variant="destructive" size="sm">
                                 <AlertCircle className="mr-2 h-4 w-4" />
                                 Fix Fee

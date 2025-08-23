@@ -1,14 +1,14 @@
 
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { doc, onSnapshot, Timestamp, updateDoc, serverTimestamp, getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Student, Class, Fee, Payment, Discipline } from "@/lib/definitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Pencil, Save, X, Trash2, AlertTriangle, Calendar, DollarSign, CreditCard } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { currencies } from "@/lib/data/form-data";
 import { getCurrencySymbol } from "@/lib/utils";
@@ -25,8 +25,9 @@ import EditFeeForm from "../fees/edit-fee-form";
 import AddFeeTableRow from "../fees/add-fee-table-row";
 
 
-export default function StudentProfile({ id, startWithAddFee = false }: { id: string; startWithAddFee?: boolean }) {
+function StudentProfileContent({ id }: { id: string; }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [student, setStudent] = useState<Student | null>(null);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -37,13 +38,18 @@ export default function StudentProfile({ id, startWithAddFee = false }: { id: st
   const [isEditing, setIsEditing] = useState(false);
   const [feeToEdit, setFeeToEdit] = useState<Fee | null>(null);
   const [isEditFeeOpen, setEditFeeOpen] = useState(false);
-  const [isAddingFee, setIsAddingFee] = useState(startWithAddFee);
+
+  const activeTab = searchParams.get('tab') || 'classes';
+  const [isAddingFee, setIsAddingFee] = useState(activeTab === 'fees');
 
   useEffect(() => {
-    if (startWithAddFee) {
-        setIsAddingFee(true);
+    if (activeTab === 'fees' && !isAddingFee) {
+        // This can be used to trigger adding a fee if the tab is selected,
+        // for instance, after a redirect. Let's keep it simple for now.
+        // setIsAddingFee(true); // Uncomment to automatically open add row on tab select
     }
-  }, [startWithAddFee]);
+  }, [activeTab]);
+
 
   useEffect(() => {
     if (!id) return;
@@ -96,6 +102,10 @@ export default function StudentProfile({ id, startWithAddFee = false }: { id: st
       unsubscribeDisciplines();
     }
   }, [id]);
+
+  const handleTabChange = (value: string) => {
+    router.push(`/students?id=${id}&tab=${value}`, { scroll: false });
+  };
 
   const upcomingClasses = useMemo(() => {
     return classes.filter(c => new Date(c.scheduledDate) >= new Date()).sort((a,b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
@@ -206,7 +216,7 @@ export default function StudentProfile({ id, startWithAddFee = false }: { id: st
         </CardContent>
       </Card>
       
-       <Tabs defaultValue="classes">
+       <Tabs defaultValue={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="classes"><Calendar className="mr-2 h-4 w-4"/>Classes ({classes.length})</TabsTrigger>
           <TabsTrigger value="fees"><DollarSign className="mr-2 h-4 w-4" />Fee Structure ({fees.length})</TabsTrigger>
@@ -374,4 +384,11 @@ export default function StudentProfile({ id, startWithAddFee = false }: { id: st
   );
 }
 
-    
+
+export default function StudentProfile({ id }: { id: string; }) {
+    return (
+        <Suspense fallback={<Skeleton className="h-full w-full" />}>
+            <StudentProfileContent id={id} />
+        </Suspense>
+    )
+}
