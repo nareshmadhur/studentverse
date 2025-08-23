@@ -64,7 +64,7 @@ function StudentListPage() {
         return {
           id: doc.id,
           ...data,
-          scheduledDate: (data.scheduledDate as Timestamp)?.toDate().toISOString(),
+          scheduledDate: (data.scheduledDate as Timestamp).toDate().toISOString(),
         } as Class;
       });
       setClasses(classData);
