@@ -13,12 +13,12 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
   groupDays?: Date[];
 };
 
-function DayContentWithDots(props: DayProps) {
-  const { date, displayMonth } = props;
-  const { oneOnOneDays, groupDays } = useDayPicker();
 
-  const isOneOnOne = oneOnOneDays?.some(d => d.toDateString() === date.toDateString());
-  const isGroup = groupDays?.some(d => d.toDateString() === date.toDateString());
+function DayContentWithDots(props: DayProps & { oneOnOneDays?: Date[], groupDays?: Date[] }) {
+  const { date, displayMonth } = props;
+
+  const isOneOnOne = props.oneOnOneDays?.some(d => d.toDateString() === date.toDateString());
+  const isGroup = props.groupDays?.some(d => d.toDateString() === date.toDateString());
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
@@ -38,8 +38,8 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  oneOnOneDays,
-  groupDays,
+  oneOnOneDays = [],
+  groupDays = [],
   ...props
 }: CalendarProps) {
   return (
@@ -81,7 +81,7 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        DayContent: DayContentWithDots,
+        DayContent: (dayProps) => <DayContentWithDots {...dayProps} oneOnOneDays={oneOnOneDays} groupDays={groupDays} />,
         IconLeft: ({ className, ...props }) => (
           <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
         ),
@@ -89,21 +89,10 @@ function Calendar({
           <ChevronRight className={cn("h-4 w-4", className)} {...props} />
         ),
       }}
-      oneOnOneDays={oneOnOneDays}
-      groupDays={groupDays}
       {...props}
     />
   )
 }
 Calendar.displayName = "Calendar"
-
-// A helper hook to get the custom props from the DayPicker context
-function useDayPicker() {
-  const context = (DayPicker as any).useDayPicker?.();
-  if (!context) {
-    throw new Error('useDayPicker must be used within a DayPicker provider.');
-  }
-  return context;
-}
 
 export { Calendar }
