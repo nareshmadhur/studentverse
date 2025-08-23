@@ -4,7 +4,7 @@
 import * as React from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Edit, Plus, Users, User, Clock, MapPin, Trash2 } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, type CalendarProps } from "@/components/ui/calendar";
 import { Class, Student } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +30,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
+import { DayProps } from "react-day-picker";
 
 interface ClassCalendarProps {
   classes: Class[];
@@ -76,18 +77,19 @@ export function ClassCalendar({ classes, students }: ClassCalendarProps) {
     }
   };
 
-  const DayWithEvents = ({ date, ...props }: { date: Date } & React.ComponentProps<"button">) => {
+  const DayWithEvents = (props: DayProps) => {
+    const { date, ...buttonProps } = props;
     const dayKey = format(date, "yyyy-MM-dd");
     const dayEvents = events.get(dayKey) || [];
 
     if (dayEvents.length === 0) {
-      return <button {...props} />;
+      return <button {...buttonProps} />;
     }
 
     return (
       <Popover>
         <PopoverTrigger asChild>
-            <button {...props} className="relative">
+            <button {...buttonProps} className="relative">
                 {props.children}
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
                     {dayEvents.slice(0, 3).map((event, i) => (
