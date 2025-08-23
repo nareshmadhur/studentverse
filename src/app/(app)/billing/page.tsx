@@ -23,6 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 function BillingPageContent() {
   const router = useRouter();
@@ -142,6 +143,7 @@ function BillingPageContent() {
           <CardDescription>Details of charges and payments for each student in the selected period.</CardDescription>
         </CardHeader>
         <CardContent>
+          <TooltipProvider>
           <Table>
             <TableHeader>
               <TableRow>
@@ -179,13 +181,24 @@ function BillingPageContent() {
                         <Badge variant={status.variant}>{status.text}</Badge>
                       </TableCell>
                        <TableCell className="text-right">
-                        {details.hasBillingIssues && (
-                           <Link href={`/students?id=${details.studentId}&tab=fees`}>
-                              <Button variant="destructive" size="sm">
-                                <AlertCircle className="mr-2 h-4 w-4" />
-                                Fix Fee
-                              </Button>
-                           </Link>
+                        {details.billingIssues.length > 0 && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Link href={`/students?id=${details.studentId}&tab=fees`}>
+                                <Button variant="destructive" size="sm">
+                                  <AlertCircle className="mr-2 h-4 w-4" />
+                                  Fix Fee
+                                </Button>
+                              </Link>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <ul>
+                                {details.billingIssues.map((issue, index) => (
+                                  <li key={index}>{issue}</li>
+                                ))}
+                              </ul>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                          <Dialog open={isStatementOpen && statementStudentId === details.studentId} onOpenChange={onStatementOpenChange}>
                             <DialogTrigger asChild>
@@ -219,6 +232,7 @@ function BillingPageContent() {
               )}
             </TableBody>
           </Table>
+          </TooltipProvider>
         </CardContent>
       </Card>
     </div>

@@ -8,8 +8,10 @@ import { Class, Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 import EditClassForm from "@/components/classes/edit-class-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "../ui/button";
+import { ArrowLeft } from "lucide-react";
 
-export default function EditClassFormLoader({ classId }: { classId: string }) {
+export default function EditClassFormLoader({ classId, onFinished }: { classId: string, onFinished: () => void }) {
     const [classItem, setClassItem] = useState<Class | null>(null);
     const [allStudents, setAllStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
@@ -59,8 +61,15 @@ export default function EditClassFormLoader({ classId }: { classId: string }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Class Details</CardTitle>
-                <CardDescription>Update the class's information.</CardDescription>
+                <div className="flex items-center gap-4">
+                     <Button variant="outline" size="icon" onClick={onFinished}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div>
+                        <CardTitle>Edit Class</CardTitle>
+                        <CardDescription>Update the class's information.</CardDescription>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
                 {loading ? (
@@ -70,7 +79,7 @@ export default function EditClassFormLoader({ classId }: { classId: string }) {
                         <Skeleton className="h-10 w-full" />
                      </div>
                 ) : classItem && allStudents.length > 0 ? (
-                    <EditClassForm classItem={classItem} allStudents={allStudents} />
+                    <EditClassForm classItem={classItem} allStudents={allStudents} onFinished={onFinished} />
                 ) : (
                     <p>Class not found.</p>
                 )}

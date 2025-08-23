@@ -5,6 +5,7 @@ import { collection, doc, getDoc, getDocs, query, where, Timestamp } from "fireb
 import { db } from "@/lib/firebase";
 import { Student, Class, Fee, Payment } from "@/lib/definitions";
 import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 
 export interface StatementItem {
   class: Class;
@@ -34,7 +35,7 @@ export interface BillingSummary {
     totalBilled: number;
     totalPaid: number;
     balance: number;
-    hasBillingIssues: boolean;
+    billingIssues: string[];
   }[];
 }
 
@@ -148,7 +149,7 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
           totalBilled: 0,
           totalPaid: 0,
           balance: 0,
-          hasBillingIssues: false,
+          billingIssues: [],
         };
       }
     });
@@ -172,7 +173,8 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
             studentDetails[studentId].billedGroupCount++;
         }
       } else {
-        studentDetails[studentId].hasBillingIssues = true;
+        const issue = `No fee found for '${classItem.title}' (${classItem.sessionType}) on ${format(new Date(classItem.scheduledDate), 'PPP')}`;
+        studentDetails[studentId].billingIssues.push(issue);
       }
     });
   });

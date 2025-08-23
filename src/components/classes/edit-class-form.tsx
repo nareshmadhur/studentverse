@@ -34,7 +34,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { DatePicker } from "../ui/date-picker";
-import { useRouter } from "next/navigation";
 
 const classSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -59,12 +58,13 @@ interface StudentFeeInfo {
 export default function EditClassForm({
   classItem,
   allStudents,
+  onFinished,
 }: {
   classItem: Class;
   allStudents: Student[];
+  onFinished: () => void;
 }) {
   const { toast } = useToast();
-  const router = useRouter();
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(classItem.students || []);
   const [studentFeeDetails, setStudentFeeDetails] = useState<StudentFeeInfo[]>([]);
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
@@ -149,7 +149,7 @@ export default function EditClassForm({
         title: "Class Updated",
         description: "The class has been successfully updated.",
       });
-      router.push('/classes');
+      onFinished();
     } catch (error) {
       console.error("Error updating document: ", error);
       toast({
@@ -391,7 +391,7 @@ export default function EditClassForm({
         )}
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+          <Button type="button" variant="outline" onClick={onFinished}>
             Cancel
           </Button>
           <Button type="submit">Save Changes</Button>

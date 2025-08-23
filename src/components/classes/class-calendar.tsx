@@ -36,10 +36,11 @@ import { cn } from "@/lib/utils";
 interface ClassCalendarProps {
   classes: Class[];
   students: Student[];
+  selectedDate: Date | undefined;
+  onDateSelect: (date: Date | undefined) => void;
 }
 
-export function ClassCalendar({ classes, students }: ClassCalendarProps) {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
+export function ClassCalendar({ classes, students, selectedDate, onDateSelect }: ClassCalendarProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -79,7 +80,7 @@ export function ClassCalendar({ classes, students }: ClassCalendarProps) {
   };
 
   const DayWithEvents = (props: DayProps) => {
-    const { date, displayMonth } = props;
+    const { date } = props;
     const dayKey = format(date, "yyyy-MM-dd");
     const dayEvents = events.get(dayKey) || [];
 
@@ -147,9 +148,11 @@ export function ClassCalendar({ classes, students }: ClassCalendarProps) {
                             )}
                         </div>
                         <div className="flex justify-end gap-2 mt-2">
-                            <Button asChild variant="ghost" size="icon" className="h-8 w-8">
-                                <Link href={`/classes/${event.id}/edit`}><Edit className="h-4 w-4" /></Link>
-                            </Button>
+                             <Link href={`/classes?edit=${event.id}`}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+                            </Link>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="destructive" size="icon" className="h-8 w-8"><Trash2 className="h-4 w-4" /></Button>
@@ -184,8 +187,8 @@ export function ClassCalendar({ classes, students }: ClassCalendarProps) {
   return (
     <Calendar
       mode="single"
-      selected={date}
-      onSelect={setDate}
+      selected={selectedDate}
+      onSelect={onDateSelect}
       className="p-4"
       components={{
         Day: DayWithEvents,
