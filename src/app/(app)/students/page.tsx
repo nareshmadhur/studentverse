@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { collection, onSnapshot, query, where, Timestamp, orderBy, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, query, where, Timestamp, orderBy, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Student, Class } from "@/lib/definitions";
 import Link from "next/link";
@@ -18,7 +18,6 @@ import StudentProfile from "@/components/students/student-profile";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import AddStudentForm from "@/components/students/add-student-form";
-import InlineAddFeeForm from "@/components/fees/inline-add-fee-form";
 
 function StudentListPage() {
   const router = useRouter();
@@ -29,8 +28,7 @@ function StudentListPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [view, setView] = useState<'profile' | 'addStudent' | 'addFee'>('profile');
-  const [studentForFee, setStudentForFee] = useState<Student | null>(null);
+  const [view, setView] = useState<'profile' | 'addStudent'>('profile');
 
   useEffect(() => {
     setLoading(true);
@@ -140,7 +138,6 @@ function StudentListPage() {
 
   const handleStudentSelect = (id: string | null) => {
     setView('profile');
-    setStudentForFee(null);
     const newPath = id ? `/students?id=${id}` : '/students';
     router.push(newPath, { scroll: false });
   };
@@ -152,31 +149,16 @@ function StudentListPage() {
     }
   };
 
-  const handleFinishAddingStudent = (action: 'cancel' | 'addFee', newStudentId?: string) => {
-    if (action === 'cancel') {
+  const handleFinishAddingStudent = (newStudentId?: string) => {
+    if (newStudentId) {
+        setView('profile');
+        router.push(`/students?id=${newStudentId}`, { scroll: false });
+    } else {
         setView('profile');
         if (students.length > 0) {
             router.push(`/students?id=${selectedStudentId || students[0].id}`, { scroll: false });
         }
-    } else if (action === 'addFee' && newStudentId) {
-        // Need to find the student, but the `students` state might not be updated yet.
-        // We'll rely on a snapshot listener to eventually give us the student.
-        const unSub = onSnapshot(doc(db, "students", newStudentId), (doc) => {
-            if (doc.exists()) {
-                const newStudent = { id: doc.id, ...doc.data() } as Student;
-                setStudentForFee(newStudent);
-                setView('addFee');
-                router.push(`/students?id=${newStudentId}`, { scroll: false });
-                unSub(); // Unsubscribe after we get the data.
-            }
-        });
     }
-  }
-
-  const handleFinishAddingFee = () => {
-    setView('profile');
-    setStudentForFee(null);
-    // The router should already have the correct student id in the URL
   }
 
   const StudentListItem = ({ student }: { student: Student }) => (
@@ -215,7 +197,7 @@ function StudentListPage() {
                         <CardTitle>Add New Student</CardTitle>
                         <CardDescription>Enter the details for the new student.</CardDescription>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleFinishAddingStudent('cancel')}>
+                        <Button variant="ghost" size="icon" onClick={() => handleFinishAddingStudent()}>
                         <X className="h-5 w-5" />
                         </Button>
                     </div>
@@ -225,15 +207,10 @@ function StudentListPage() {
                     </CardContent>
               </Card>
             );
-        case 'addFee':
-            if (studentForFee) {
-                return <InlineAddFeeForm student={studentForFee} onFinish={handleFinishAddingFee} />;
-            }
-            return null; // Should not happen
         case 'profile':
         default:
             if (selectedStudentId) {
-                return <StudentProfile id={selectedStudentId} onAddFeeClick={(student) => { setStudentForFee(student); setView('addFee'); }} />;
+                return <StudentProfile id={selectedStudentId} />;
             }
             if (!loading && students.length === 0) {
               return (

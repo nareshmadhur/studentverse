@@ -22,9 +22,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import EditFeeForm from "../fees/edit-fee-form";
+import AddFeeTableRow from "../fees/add-fee-table-row";
 
 
-export default function StudentProfile({ id, onAddFeeClick }: { id: string, onAddFeeClick: (student: Student) => void }) {
+export default function StudentProfile({ id }: { id: string }) {
   const router = useRouter();
   const { toast } = useToast();
   const [student, setStudent] = useState<Student | null>(null);
@@ -36,6 +37,7 @@ export default function StudentProfile({ id, onAddFeeClick }: { id: string, onAd
   const [isEditing, setIsEditing] = useState(false);
   const [feeToEdit, setFeeToEdit] = useState<Fee | null>(null);
   const [isEditFeeOpen, setEditFeeOpen] = useState(false);
+  const [isAddingFee, setIsAddingFee] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -253,12 +255,27 @@ export default function StudentProfile({ id, onAddFeeClick }: { id: string, onAd
                         <CardTitle>Fee Structure</CardTitle>
                         <CardDescription>Billing rates for this student.</CardDescription>
                     </div>
-                    <Button size="sm" onClick={() => onAddFeeClick(student)}><PlusCircle className="mr-2 h-4 w-4"/> Add Fee</Button>
+                    <Button size="sm" onClick={() => setIsAddingFee(true)}><PlusCircle className="mr-2 h-4 w-4"/> Add Fee</Button>
                 </CardHeader>
                 <CardContent>
                    <Table>
-                    <TableHeader><TableRow><TableHead>Discipline</TableHead><TableHead>Type</TableHead><TableHead>Amount</TableHead><TableHead>Effective</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Discipline</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Effective</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
                     <TableBody>
+                        {isAddingFee && (
+                          <AddFeeTableRow
+                            student={student}
+                            disciplines={disciplines}
+                            onFinish={() => setIsAddingFee(false)}
+                          />
+                        )}
                         {fees.map(f => (
                            <TableRow key={f.id}>
                                <TableCell>{f.discipline || 'Any (Default)'}</TableCell>
@@ -276,7 +293,7 @@ export default function StudentProfile({ id, onAddFeeClick }: { id: string, onAd
                                </TableCell>
                            </TableRow>
                         ))}
-                         {fees.length === 0 && (
+                         {fees.length === 0 && !isAddingFee && (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center text-muted-foreground h-24">No fees defined for this student.</TableCell>
                             </TableRow>
