@@ -35,7 +35,7 @@ export default function ClassesDataTab({ classes, students }: { classes: Class[]
     const enrichedClasses = useMemo(() => {
         return classes.map(c => ({
             ...c,
-            studentNames: c.students.map(getStudentName).join(', ')
+            studentNames: (c.students || []).map(getStudentName).join(', ')
         }));
     }, [classes, students]);
 
