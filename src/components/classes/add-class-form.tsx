@@ -197,7 +197,7 @@ export default function AddClassForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={control}
             name="title"
@@ -275,7 +275,7 @@ export default function AddClassForm({
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={control}
             name="scheduledDate"
@@ -304,7 +304,7 @@ export default function AddClassForm({
           />
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
            <FormField
             control={control}
             name="location"

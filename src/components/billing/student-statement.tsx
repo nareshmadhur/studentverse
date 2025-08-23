@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { Badge } from "../ui/badge";
 import { getCurrencySymbol } from "@/lib/utils";
+import { ScrollArea } from "../ui/scroll-area";
 
 export default function StudentStatement({ studentId, dateRange }: { studentId: string; dateRange: DateRange }) {
   const [statement, setStatement] = useState<Statement | null>(null);
@@ -100,66 +101,70 @@ export default function StudentStatement({ studentId, dateRange }: { studentId: 
       </CardHeader>
       <CardContent>
         <h3 className="text-lg font-semibold mb-2 text-foreground">Classes Attended</h3>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Class Date</TableHead>
-              <TableHead>Class Title</TableHead>
-              <TableHead>Discipline</TableHead>
-              <TableHead className="text-right">Charge</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {statement.items.map((item) => (
-              <TableRow key={item.class.id}>
-                <TableCell>{format(new Date(item.class.scheduledDate), 'PPP')}</TableCell>
-                <TableCell>{item.class.title}</TableCell>
-                <TableCell>{item.class.discipline}</TableCell>
-                <TableCell className="text-right">
-                  {getCurrencySymbol(item.fee?.currencyCode || '')}{item.charge.toFixed(2)}
-                </TableCell>
+        <ScrollArea className="w-full whitespace-nowrap rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Class Date</TableHead>
+                <TableHead>Class Title</TableHead>
+                <TableHead>Discipline</TableHead>
+                <TableHead className="text-right">Charge</TableHead>
               </TableRow>
-            ))}
-             {statement.items.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                        No classes attended in this period.
-                    </TableCell>
+            </TableHeader>
+            <TableBody>
+              {statement.items.map((item) => (
+                <TableRow key={item.class.id}>
+                  <TableCell>{format(new Date(item.class.scheduledDate), 'PPP')}</TableCell>
+                  <TableCell>{item.class.title}</TableCell>
+                  <TableCell>{item.class.discipline}</TableCell>
+                  <TableCell className="text-right">
+                    {getCurrencySymbol(item.fee?.currencyCode || '')}{item.charge.toFixed(2)}
+                  </TableCell>
                 </TableRow>
-             )}
-          </TableBody>
-        </Table>
+              ))}
+              {statement.items.length === 0 && (
+                  <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          No classes attended in this period.
+                      </TableCell>
+                  </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </ScrollArea>
 
         <h3 className="text-lg font-semibold mt-6 mb-2 text-foreground">Payments Received</h3>
-         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Payment Date</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead>Notes</TableHead>
-              <TableHead className="text-right">Amount Paid</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {statement.payments.map((payment) => (
-              <TableRow key={payment.id}>
-                <TableCell>{format(new Date(payment.transactionDate), 'PPP')}</TableCell>
-                <TableCell>{payment.paymentMethod}</TableCell>
-                <TableCell>{payment.notes || 'N/A'}</TableCell>
-                <TableCell className="text-right">
-                  {getCurrencySymbol(payment.currencyCode)}{payment.amount.toFixed(2)}
-                </TableCell>
+         <ScrollArea className="w-full whitespace-nowrap rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Payment Date</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead>Notes</TableHead>
+                <TableHead className="text-right">Amount Paid</TableHead>
               </TableRow>
-            ))}
-            {statement.payments.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                        No payments received in this period.
-                    </TableCell>
+            </TableHeader>
+            <TableBody>
+              {statement.payments.map((payment) => (
+                <TableRow key={payment.id}>
+                  <TableCell>{format(new Date(payment.transactionDate), 'PPP')}</TableCell>
+                  <TableCell>{payment.paymentMethod}</TableCell>
+                  <TableCell>{payment.notes || 'N/A'}</TableCell>
+                  <TableCell className="text-right">
+                    {getCurrencySymbol(payment.currencyCode)}{payment.amount.toFixed(2)}
+                  </TableCell>
                 </TableRow>
-             )}
-          </TableBody>
-        </Table>
+              ))}
+              {statement.payments.length === 0 && (
+                  <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          No payments received in this period.
+                      </TableCell>
+                  </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </CardContent>
       <CardFooter className="flex justify-end bg-muted/50 p-6 mt-6">
         <div className="grid grid-cols-1 gap-y-2 text-right">

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 function BillingPageContent() {
   const router = useRouter();
@@ -75,7 +76,7 @@ function BillingPageContent() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
          <h1 className="text-3xl font-headline font-bold text-foreground">
           Billing
         </h1>
@@ -144,94 +145,96 @@ function BillingPageContent() {
         </CardHeader>
         <CardContent>
           <TooltipProvider>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead className="text-right">Billed</TableHead>
-                <TableHead className="text-right">Paid</TableHead>
-                <TableHead className="text-right">Balance</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
-                    <TableCell className="text-center"><Skeleton className="h-6 w-20 mx-auto" /></TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                ))
-              ) : summary?.studentDetails && summary.studentDetails.length > 0 ? (
-                summary.studentDetails.map((details) => {
-                  const status = getPaymentStatus(details);
-                  const currentCurrencySymbol = getCurrencySymbol(details.currencyCode);
-                  return (
-                    <TableRow key={details.studentId}>
-                      <TableCell className="font-medium">{details.studentName}</TableCell>
-                      <TableCell className="text-right font-semibold">{currentCurrencySymbol}{details.totalBilled.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-green-600">{currentCurrencySymbol}{details.totalPaid.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-semibold">{currentCurrencySymbol}{details.balance.toFixed(2)}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={status.variant}>{status.text}</Badge>
-                      </TableCell>
-                       <TableCell className="text-right">
-                        {details.billingIssues.length > 0 && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Link href={`/students?id=${details.studentId}&tab=fees`}>
-                                <Button variant="destructive" size="sm">
-                                  <AlertCircle className="mr-2 h-4 w-4" />
-                                  Fix Fee
-                                </Button>
-                              </Link>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <ul>
-                                {details.billingIssues.map((issue, index) => (
-                                  <li key={index}>{issue}</li>
-                                ))}
-                              </ul>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                         <Dialog open={isStatementOpen && statementStudentId === details.studentId} onOpenChange={onStatementOpenChange}>
-                            <DialogTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => router.push(`/billing?statementStudentId=${details.studentId}`)}>View Statement</Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-                                <DialogHeader>
-                                    <DialogTitle>Statement for {details.studentName}</DialogTitle>
-                                </DialogHeader>
-                                <div className="overflow-y-auto -mx-6 px-6">
-                                    {statementStudentId && dateRange && <StudentStatement studentId={statementStudentId} dateRange={dateRange} />}
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-
-                         <Link href={`/students?id=${details.studentId}`} passHref>
-                           <Button variant="ghost" size="icon">
-                             <User className="h-4 w-4" />
-                           </Button>
-                         </Link>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              ) : (
+          <ScrollArea className="w-full whitespace-nowrap rounded-md border">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
-                    No student activity in this period.
-                  </TableCell>
+                  <TableHead>Student</TableHead>
+                  <TableHead className="text-right">Billed</TableHead>
+                  <TableHead className="text-right">Paid</TableHead>
+                  <TableHead className="text-right">Balance</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-16 float-right" /></TableCell>
+                      <TableCell className="text-center"><Skeleton className="h-6 w-20 mx-auto" /></TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  ))
+                ) : summary?.studentDetails && summary.studentDetails.length > 0 ? (
+                  summary.studentDetails.map((details) => {
+                    const status = getPaymentStatus(details);
+                    const currentCurrencySymbol = getCurrencySymbol(details.currencyCode);
+                    return (
+                      <TableRow key={details.studentId}>
+                        <TableCell className="font-medium">{details.studentName}</TableCell>
+                        <TableCell className="text-right font-semibold">{currentCurrencySymbol}{details.totalBilled.toFixed(2)}</TableCell>
+                        <TableCell className="text-right text-green-600">{currentCurrencySymbol}{details.totalPaid.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-semibold">{currentCurrencySymbol}{details.balance.toFixed(2)}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={status.variant}>{status.text}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {details.billingIssues.length > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Link href={`/students?id=${details.studentId}&tab=fees`}>
+                                  <Button variant="destructive" size="sm">
+                                    <AlertCircle className="mr-2 h-4 w-4" />
+                                    Fix Fee
+                                  </Button>
+                                </Link>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <ul>
+                                  {details.billingIssues.map((issue, index) => (
+                                    <li key={index}>{issue}</li>
+                                  ))}
+                                </ul>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          <Dialog open={isStatementOpen && statementStudentId === details.studentId} onOpenChange={onStatementOpenChange}>
+                              <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm" onClick={() => router.push(`/billing?statementStudentId=${details.studentId}`)}>View Statement</Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                                  <DialogHeader>
+                                      <DialogTitle>Statement for {details.studentName}</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="overflow-y-auto -mx-6 px-6">
+                                      {statementStudentId && dateRange && <StudentStatement studentId={statementStudentId} dateRange={dateRange} />}
+                                  </div>
+                              </DialogContent>
+                          </Dialog>
+
+                          <Link href={`/students?id=${details.studentId}`} passHref>
+                            <Button variant="ghost" size="icon">
+                              <User className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                      No student activity in this period.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </ScrollArea>
           </TooltipProvider>
         </CardContent>
       </Card>
