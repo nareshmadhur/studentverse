@@ -56,35 +56,44 @@ export function ClassCalendar({ classes, students, selectedDate, onDateSelect }:
     return eventMap;
   }, [classes]);
   
-  const DayWithEvents = (props: DayProps) => {
-    const { date } = props;
-    const dayKey = format(date, "yyyy-MM-dd");
-    const dayEvents = events.get(dayKey) || [];
+  const modifiers = {
+    hasEvents: (date: Date) => {
+        const dayKey = format(date, "yyyy-MM-dd");
+        return events.has(dayKey) && events.get(dayKey)!.length > 0;
+    }
+  }
 
-    return (
-        <div className="relative">
-            <DayContent {...props} />
-             {dayEvents.length > 0 && (
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                    {dayEvents.slice(0, 3).map((event, i) => (
-                        <div key={i} className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-  };
+  const modifiersClassNames = {
+    hasEvents: 'has-events',
+  }
+  
 
   return (
+    <>
+    <style>{`
+        .rdp-day_has-events {
+            position: relative;
+        }
+        .rdp-day_has-events::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background-color: hsl(var(--primary));
+        }
+    `}</style>
     <Calendar
       mode="single"
       selected={selectedDate}
       onSelect={onDateSelect}
       className="p-4"
-      components={{
-        Day: DayWithEvents,
-        DayContent: DayContent,
-      }}
+      modifiers={modifiers}
+      modifiersClassNames={modifiersClassNames}
     />
+    </>
   );
 }
