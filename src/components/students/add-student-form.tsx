@@ -38,9 +38,9 @@ type StudentFormValues = z.infer<typeof studentSchema>;
 
 export default function AddStudentForm({ onFinish }: { onFinish: (action: 'cancel' | 'addFee', studentId?: string) => void }) {
   const { toast } = useToast();
-  const router = useRouter();
   const [countrySearchOpen, setCountrySearchOpen] = useState(false);
   const [currencySearchOpen, setCurrencySearchOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
@@ -54,6 +54,8 @@ export default function AddStudentForm({ onFinish }: { onFinish: (action: 'cance
   });
 
   const onSubmit = async (data: StudentFormValues) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const docRef = await addDoc(collection(db, "students"), {
         ...data,
@@ -63,7 +65,7 @@ export default function AddStudentForm({ onFinish }: { onFinish: (action: 'cance
       });
       toast({
         title: "Student Added",
-        description: `${data.name} has been successfully added. Now, let's add a fee.`,
+        description: `${data.name} has been successfully added. Now, let's add their first fee.`,
       });
       onFinish('addFee', docRef.id);
 
@@ -74,6 +76,7 @@ export default function AddStudentForm({ onFinish }: { onFinish: (action: 'cance
         description: "There was an error adding the student. Please try again.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
     }
   };
 
@@ -218,11 +221,13 @@ export default function AddStudentForm({ onFinish }: { onFinish: (action: 'cance
           <Button type="button" variant="outline" onClick={() => onFinish('cancel')}>
             Cancel
           </Button>
-          <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Adding...' : 'Add Student and Continue'}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Adding...' : 'Add Student and Continue'}
             </Button>
         </div>
       </form>
     </Form>
   );
 }
+
+    

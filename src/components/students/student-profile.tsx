@@ -162,7 +162,7 @@ export default function StudentProfile({ id }: { id: string }) {
                 </Button>
                  <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                        <Button variant="destructive"><Trash2 className="mr-2 h-4 w-4"/>Delete Student</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
@@ -365,3 +365,5 @@ export default function StudentProfile({ id }: { id: string }) {
     </div>
   );
 }
+
+    

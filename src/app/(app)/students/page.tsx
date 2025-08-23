@@ -75,6 +75,7 @@ function StudentListPage() {
       unsubscribeStudents();
       unsubscribeClasses();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
   useEffect(() => {
@@ -163,6 +164,16 @@ function StudentListPage() {
             setStudentForFee(newStudent);
             setView('addFee');
             router.push(`/students?id=${newStudentId}`, { scroll: false });
+        } else {
+            // Edge case: student list hasn't updated yet. Wait and retry.
+            setTimeout(() => {
+                 const newStudent = students.find(s => s.id === newStudentId);
+                 if (newStudent) {
+                    setStudentForFee(newStudent);
+                    setView('addFee');
+                    router.push(`/students?id=${newStudentId}`, { scroll: false });
+                 }
+            }, 1000);
         }
     }
   }
@@ -228,6 +239,15 @@ function StudentListPage() {
             if (selectedStudentId) {
                 return <StudentProfile id={selectedStudentId} />;
             }
+            if (!loading && students.length === 0) {
+              return (
+                 <div className="flex items-center justify-center h-full rounded-lg bg-muted/50">
+                    <div className="text-center text-muted-foreground">
+                        <p>No students found. Add one to get started.</p>
+                    </div>
+                </div>
+              )
+            }
             return (
                 <div className="flex items-center justify-center h-full rounded-lg bg-muted/50">
                     <div className="text-center text-muted-foreground">
@@ -240,7 +260,7 @@ function StudentListPage() {
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 h-[calc(100vh-10rem)]">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 h-[calc(100vh-8rem)]">
         {/* Left Column: Student List */}
         <div className="md:col-span-1 lg:col-span-1 flex flex-col gap-4">
             <div className="flex items-center justify-between">
@@ -257,48 +277,46 @@ function StudentListPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Card className="flex-1 flex flex-col">
-                <CardHeader className="p-2">
-                     <Tabs defaultValue="all">
-                        <TabsList className="grid w-full grid-cols-3 h-auto">
-                            <TabsTrigger value="all" className="flex gap-2"><Users className="h-4 w-4" /> All</TabsTrigger>
-                            <TabsTrigger value="active" className="flex gap-2"><User className="h-4 w-4" /> Active</TabsTrigger>
-                            <TabsTrigger value="inactive" className="flex gap-2"><UserX className="h-4 w-4" /> Inactive</TabsTrigger>
-                        </TabsList>
-                        <CardContent className="p-2 mt-2 flex-1 overflow-y-auto">
-                            <div className="space-y-2">
-                               {loading ? (
-                                    Array.from({ length: 5 }).map((_, i) => (
-                                        <div key={i} className="flex items-center gap-4 p-2">
-                                            <Skeleton className="h-10 w-10 rounded-full" />
-                                            <div className="space-y-2 flex-1">
-                                                <Skeleton className="h-4 w-3/4" />
-                                                <Skeleton className="h-3 w-full" />
-                                            </div>
-                                        </div>
-                                    ))
-                               ) : (
-                                <>
-                                 <TabsContent value="all">
-                                    {filteredStudents.map(s => <StudentListItem key={s.id} student={s} />)}
-                                </TabsContent>
-                                <TabsContent value="active">
-                                    {filteredActiveStudents.map(s => <StudentListItem key={s.id} student={s} />)}
-                                </TabsContent>
-                                <TabsContent value="inactive">
-                                    {filteredInactiveStudents.map(s => <StudentListItem key={s.id} student={s} />)}
-                                </TabsContent>
-                                </>
-                               )}
-                            </div>
-                        </CardContent>
-                    </Tabs>
-                </CardHeader>
+            <Card className="flex-1 flex flex-col overflow-hidden">
+                <Tabs defaultValue="all" className="flex flex-col h-full">
+                  <TabsList className="grid w-full grid-cols-3 shrink-0 m-2">
+                      <TabsTrigger value="all" className="flex gap-2"><Users className="h-4 w-4" /> All</TabsTrigger>
+                      <TabsTrigger value="active" className="flex gap-2"><User className="h-4 w-4" /> Active</TabsTrigger>
+                      <TabsTrigger value="inactive" className="flex gap-2"><UserX className="h-4 w-4" /> Inactive</TabsTrigger>
+                  </TabsList>
+                  <CardContent className="p-2 flex-1 overflow-y-auto">
+                      <div className="space-y-2">
+                         {loading ? (
+                              Array.from({ length: 5 }).map((_, i) => (
+                                  <div key={i} className="flex items-center gap-4 p-2">
+                                      <Skeleton className="h-10 w-10 rounded-full" />
+                                      <div className="space-y-2 flex-1">
+                                          <Skeleton className="h-4 w-3/4" />
+                                          <Skeleton className="h-3 w-full" />
+                                      </div>
+                                  </div>
+                              ))
+                         ) : (
+                          <>
+                           <TabsContent value="all">
+                              {filteredStudents.map(s => <StudentListItem key={s.id} student={s} />)}
+                          </TabsContent>
+                          <TabsContent value="active">
+                              {filteredActiveStudents.map(s => <StudentListItem key={s.id} student={s} />)}
+                          </TabsContent>
+                          <TabsContent value="inactive">
+                              {filteredInactiveStudents.map(s => <StudentListItem key={s.id} student={s} />)}
+                          </TabsContent>
+                          </>
+                         )}
+                      </div>
+                  </CardContent>
+                </Tabs>
             </Card>
         </div>
 
         {/* Right Column: Student Profile or Add Form */}
-        <div className="md:col-span-2 lg:col-span-3 overflow-y-auto">
+        <div className="md:col-span-2 lg:col-span-3 overflow-y-auto h-full">
            {renderRightPanel()}
         </div>
     </div>
@@ -312,3 +330,5 @@ export default function StudentsPage() {
         </Suspense>
     )
 }
+
+    
