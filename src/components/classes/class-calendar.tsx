@@ -28,23 +28,6 @@ export function ClassCalendar({ classes, selectedDate, onDateSelect }: ClassCale
     [classes]
   );
 
-  const modifiers = {
-    oneOnOne: oneOnOneDays,
-    group: groupDays,
-  };
-
-  const modifiersStyles = {
-    oneOnOne: {
-      // Using a pseudo-element for the dot to avoid interfering with clicks
-      position: "relative",
-      '--dot-color': "hsl(var(--primary))",
-    } as React.CSSProperties,
-    group: {
-      position: "relative",
-      '--dot-color-group': "hsl(var(--accent))",
-    } as React.CSSProperties,
-  };
-  
   const DayContentWithDots: React.FC<React.PropsWithChildren<{ date: Date }>> = ({ date, children }) => {
     const isOneOnOne = oneOnOneDays.some(d => d.toDateString() === date.toDateString());
     const isGroup = groupDays.some(d => d.toDateString() === date.toDateString());
