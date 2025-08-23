@@ -3,15 +3,14 @@
 
 import * as React from "react";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Class } from "@/lib/definitions";
-import { DayContent, DayProps, DayPicker } from "react-day-picker";
+import { Calendar as ShadCalendar } from "@/components/ui/calendar";
+import { Class, Student } from "@/lib/definitions";
+import { DayProps, DayContent } from "react-day-picker";
 import { cn } from "@/lib/utils";
 
 
 interface ClassCalendarProps {
   classes: Class[];
-  students: Student[];
   selectedDate: Date | undefined;
   onDateSelect: (date: Date | undefined) => void;
 }
@@ -46,7 +45,7 @@ export function ClassCalendar({ classes, selectedDate, onDateSelect }: ClassCale
     const eventInfo = events.get(dayKey);
 
     return (
-      <div className="relative">
+      <div className="relative h-full w-full flex items-center justify-center">
         <DayContent {...props} />
         {eventInfo && (
           <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
@@ -59,7 +58,7 @@ export function ClassCalendar({ classes, selectedDate, onDateSelect }: ClassCale
   }
 
   return (
-    <Calendar
+    <ShadCalendar
       mode="single"
       selected={selectedDate}
       onSelect={onDateSelect}
