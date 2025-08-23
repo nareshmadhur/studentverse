@@ -11,7 +11,7 @@ export default function AuthLayout({
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
               <GraduationCap className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-headline font-semibold">StudentVerse</h1>
+              <h1 className="text-3xl font-headline font-semibold">Tutoraid</h1>
           </div>
         {children}
       </div>

@@ -59,7 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Button variant="ghost" size="icon" className="h-10 w-10 text-primary">
               <GraduationCap className="h-6 w-6" />
             </Button>
-            <h1 className="text-xl font-headline font-semibold">StudentVerse</h1>
+            <h1 className="text-xl font-headline font-semibold">Tutoraid</h1>
           </div>
         </SidebarHeader>
         <SidebarContent>

@@ -1,8 +1,8 @@
-# StudentVerse - Your Personal Student Management System
+# Tutoraid - Your Personal Student Management System
 
-StudentVerse is a modern, easy-to-use web application designed to help independent tutors and small educational institutions manage their students, classes, fees, and payments efficiently. Built with a professional tech stack, it provides a solid foundation that you can customize and expand.
+Tutoraid is a modern, easy-to-use web application designed to help independent tutors and small educational institutions manage their students, classes, fees, and payments efficiently. Built with a professional tech stack, it provides a solid foundation that you can customize and expand.
 
-## What Can You Do with StudentVerse?
+## What Can You Do with Tutoraid?
 
 - **Manage Students**: Keep a detailed record of all your students, including their contact information and preferred currency for billing.
 - **Schedule Classes**: Organize your teaching schedule by creating and managing classes. You can specify the discipline (e.g., "Guitar," "Piano"), session type (1-on-1 or group), and assign students to each class.
