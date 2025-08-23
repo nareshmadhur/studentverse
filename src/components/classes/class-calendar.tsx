@@ -30,7 +30,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
-import { DayProps } from "react-day-picker";
+import { DayPicker, DayProps } from "react-day-picker";
 
 interface ClassCalendarProps {
   classes: Class[];
@@ -77,26 +77,27 @@ export function ClassCalendar({ classes, students }: ClassCalendarProps) {
     }
   };
 
-  const DayWithEvents = (props: DayProps) => {
-    const { date, ...buttonProps } = props;
+  const DayWithEvents = ({ date, children, ...props }: DayProps) => {
     const dayKey = format(date, "yyyy-MM-dd");
     const dayEvents = events.get(dayKey) || [];
 
+    const defaultButton = DayPicker.defaultProps.components?.Day?.({ date, children, ...props});
+
     if (dayEvents.length === 0) {
-      return <button {...buttonProps} />;
+      return defaultButton;
     }
 
     return (
       <Popover>
         <PopoverTrigger asChild>
-            <button {...buttonProps} className="relative">
-                {props.children}
+            <div role="button" className="relative">
+                {defaultButton}
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
                     {dayEvents.slice(0, 3).map((event, i) => (
                         <div key={i} className="h-1.5 w-1.5 rounded-full bg-primary" />
                     ))}
                 </div>
-            </button>
+            </div>
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0">
           <div className="p-4">
