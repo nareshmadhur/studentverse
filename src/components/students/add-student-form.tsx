@@ -36,7 +36,7 @@ const studentSchema = z.object({
 
 type StudentFormValues = z.infer<typeof studentSchema>;
 
-export default function AddStudentForm({ onFinish }: { onFinish: (newStudentId?: string) => void }) {
+export default function AddStudentForm({ onFinish }: { onFinish: (action: 'cancel' | 'addFee', studentId?: string) => void }) {
   const { toast } = useToast();
   const router = useRouter();
   const [countrySearchOpen, setCountrySearchOpen] = useState(false);
@@ -63,14 +63,9 @@ export default function AddStudentForm({ onFinish }: { onFinish: (newStudentId?:
       });
       toast({
         title: "Student Added",
-        description: `${data.name} has been successfully added.`,
-        action: (
-          <Button asChild>
-            <Link href={`/students?id=${docRef.id}&action=addFee`}>Add Fee</Link>
-          </Button>
-        )
+        description: `${data.name} has been successfully added. Now, let's add a fee.`,
       });
-      onFinish(docRef.id);
+      onFinish('addFee', docRef.id);
 
     } catch (error) {
       console.error("Error adding document: ", error);
@@ -220,10 +215,10 @@ export default function AddStudentForm({ onFinish }: { onFinish: (newStudentId?:
             />
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => onFinish()}>
+          <Button type="button" variant="outline" onClick={() => onFinish('cancel')}>
             Cancel
           </Button>
-          <Button type="submit">Add Student</Button>
+          <Button type="submit">Add Student and Continue</Button>
         </div>
       </form>
     </Form>

@@ -8,7 +8,7 @@ import { Student, Class, Fee, Payment, Discipline } from "@/lib/definitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Pencil, Save, X, Trash2, AlertTriangle, Calendar, DollarSign, CreditCard } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { currencies } from "@/lib/data/form-data";
 import { getCurrencySymbol } from "@/lib/utils";
@@ -27,7 +27,6 @@ import EditFeeForm from "../fees/edit-fee-form";
 
 export default function StudentProfile({ id }: { id: string }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [student, setStudent] = useState<Student | null>(null);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -39,14 +38,6 @@ export default function StudentProfile({ id }: { id: string }) {
   const [feeToEdit, setFeeToEdit] = useState<Fee | null>(null);
   const [isAddFeeOpen, setAddFeeOpen] = useState(false);
   const [isEditFeeOpen, setEditFeeOpen] = useState(false);
-
-  useEffect(() => {
-    if (searchParams.get('action') === 'addFee') {
-      setAddFeeOpen(true);
-      // Clean up URL
-      router.replace(`/students?id=${id}`, { scroll: false });
-    }
-  }, [searchParams, id, router]);
 
   useEffect(() => {
     if (!id) return;
