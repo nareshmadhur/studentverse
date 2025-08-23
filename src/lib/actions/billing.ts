@@ -38,6 +38,38 @@ export interface BillingSummary {
   }[];
 }
 
+
+const findBestFee = (classItem: Class, studentFees: Fee[]): Fee | null => {
+    const classDate = new Date(classItem.scheduledDate);
+
+    const applicableFees = studentFees.filter(fee => {
+        const sessionMatch = fee.sessionType === classItem.sessionType;
+        const disciplineMatch = fee.discipline === classItem.discipline || fee.discipline === '';
+        const dateMatch = new Date(fee.effectiveDate) <= classDate;
+        const feeTypeMatch = fee.feeType === 'hourly';
+        return sessionMatch && disciplineMatch && dateMatch && feeTypeMatch;
+    });
+
+    if (applicableFees.length === 0) {
+        return null;
+    }
+
+    // Sort to find the best match
+    applicableFees.sort((a, b) => {
+        // Rule 1: Specific discipline is better than generic ('')
+        const aIsSpecific = a.discipline === classItem.discipline;
+        const bIsSpecific = b.discipline === classItem.discipline;
+        if (aIsSpecific && !bIsSpecific) return -1;
+        if (!aIsSpecific && bIsSpecific) return 1;
+
+        // Rule 2: Most recent effective date is better
+        return new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime();
+    });
+
+    return applicableFees[0];
+};
+
+
 export async function getBillingSummary(dateRange: DateRange): Promise<BillingSummary> {
   if (!dateRange.from || !dateRange.to) {
     throw new Error("Date range is required.");
@@ -87,7 +119,7 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
     } as Payment;
   });
 
-  const fees: Fee[] = feesSnapshot.docs.map(doc => {
+  const allFees: Fee[] = feesSnapshot.docs.map(doc => {
        const data = doc.data();
       return {
         id: doc.id,
@@ -125,29 +157,10 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
   // 2. Calculate charges for each class and aggregate by student
   classes.forEach(classItem => {
     classItem.students.forEach(studentId => {
-      // Ensure the student exists in details (they should, because we initialized from classes)
       if (!studentDetails[studentId]) return;
 
-      const studentFees = fees.filter(f => f.studentId === studentId && f.feeType === 'hourly');
-      
-      const applicableFees = studentFees.filter(fee => {
-        const sessionMatch = fee.sessionType === classItem.sessionType;
-        const disciplineMatch = fee.discipline === classItem.discipline || fee.discipline === '';
-        const dateMatch = new Date(fee.effectiveDate) <= new Date(classItem.scheduledDate);
-        return sessionMatch && disciplineMatch && dateMatch;
-      });
-
-      let bestFee: Fee | null = null;
-      if (applicableFees.length > 0) {
-        applicableFees.sort((a, b) => {
-          // Rule 1: Specific discipline is better than generic
-          if (a.discipline && !b.discipline) return -1;
-          if (!a.discipline && b.discipline) return 1;
-          // Rule 2: Most recent effective date is better
-          return new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime();
-        });
-        bestFee = applicableFees[0];
-      }
+      const studentFees = allFees.filter(f => f.studentId === studentId);
+      const bestFee = findBestFee(classItem, studentFees);
       
       if (bestFee) {
         const amount = bestFee.amount || 0;
@@ -243,7 +256,7 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
     where("deleted", "==", false)
   );
   const feesSnapshot = await getDocs(feesQuery);
-  const fees: Fee[] = feesSnapshot.docs.map(doc => {
+  const studentFees: Fee[] = feesSnapshot.docs.map(doc => {
        const data = doc.data();
       return {
         id: doc.id,
@@ -278,24 +291,7 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
   // 5. Calculate charge for each class
   const statementItems: StatementItem[] = classes
     .map(classItem => {
-      const applicableFees = fees.filter(fee => {
-        const isHourly = fee.feeType === 'hourly';
-        const sessionMatch = fee.sessionType === classItem.sessionType;
-        const disciplineMatch = fee.discipline === classItem.discipline || fee.discipline === '';
-        const dateMatch = new Date(fee.effectiveDate) <= new Date(classItem.scheduledDate);
-        return isHourly && sessionMatch && disciplineMatch && dateMatch;
-      });
-
-      let bestFee: Fee | null = null;
-      if (applicableFees.length > 0) {
-        applicableFees.sort((a, b) => {
-          if (a.discipline && !b.discipline) return -1;
-          if (!a.discipline && b.discipline) return 1;
-          return new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime();
-        });
-        bestFee = applicableFees[0];
-      }
-
+      const bestFee = findBestFee(classItem, studentFees);
       return {
         class: classItem,
         fee: bestFee,

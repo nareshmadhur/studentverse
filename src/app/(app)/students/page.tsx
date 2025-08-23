@@ -52,9 +52,6 @@ function StudentListPage() {
         };
       });
       setStudents(studentData);
-      if (view === 'profile' && !selectedStudentId && studentData.length > 0) {
-        router.replace(`/students?id=${studentData[0].id}`, { scroll: false });
-      }
       setLoading(false);
     });
 
@@ -75,6 +72,19 @@ function StudentListPage() {
       unsubscribeClasses();
     };
   }, []);
+
+   useEffect(() => {
+    // This effect ensures the view is correct when the user navigates back/forward
+    // or when the page loads with a student ID in the URL.
+    if (selectedStudentId && students.length > 0 && !students.find(s => s.id === selectedStudentId)) {
+        // If the selected student is not in the list (e.g., deleted), go back to the default state.
+        router.replace('/students', { scroll: false });
+    } else if (!selectedStudentId && students.length > 0 && view !== 'addStudent') {
+        // If no student is selected, select the first one.
+        router.replace(`/students?id=${students[0].id}`, { scroll: false });
+    }
+  }, [selectedStudentId, students, router, view]);
+
 
   const studentClassMap = useMemo(() => {
     const map = new Map<string, Date>();
@@ -144,6 +154,7 @@ function StudentListPage() {
 
   const handleFinishAddingStudent = (newStudentId?: string) => {
     if (newStudentId) {
+        setIsAddingFeeForNewStudent(true);
         setView('profile');
         router.push(`/students?id=${newStudentId}&tab=fees`, { scroll: false });
     } else {
@@ -203,7 +214,7 @@ function StudentListPage() {
         case 'profile':
         default:
             if (selectedStudentId) {
-                return <StudentProfile id={selectedStudentId} />;
+                return <StudentProfile id={selectedStudentId} isAddingFeeForNewStudent={isAddingFeeForNewStudent} onFeeAdded={() => setIsAddingFeeForNewStudent(false)} />;
             }
             if (!loading && students.length === 0) {
               return (

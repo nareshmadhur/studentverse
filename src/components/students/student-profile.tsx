@@ -20,12 +20,11 @@ import { Badge } from "../ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import EditFeeForm from "../fees/edit-fee-form";
 import AddFeeTableRow from "../fees/add-fee-table-row";
+import EditFeeTableRow from "../fees/edit-fee-form";
 
 
-function StudentProfileContent({ id }: { id: string; }) {
+function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { id: string; isAddingFeeForNewStudent: boolean, onFeeAdded: () => void; }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -36,19 +35,14 @@ function StudentProfileContent({ id }: { id: string; }) {
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [feeToEdit, setFeeToEdit] = useState<Fee | null>(null);
-  const [isEditFeeOpen, setEditFeeOpen] = useState(false);
+  const [editingFeeId, setEditingFeeId] = useState<string | null>(null);
 
   const activeTab = searchParams.get('tab') || 'classes';
-  const [isAddingFee, setIsAddingFee] = useState(activeTab === 'fees');
+  const [isAddingFee, setIsAddingFee] = useState(isAddingFeeForNewStudent);
 
   useEffect(() => {
-    if (activeTab === 'fees' && !isAddingFee) {
-        // This can be used to trigger adding a fee if the tab is selected,
-        // for instance, after a redirect. Let's keep it simple for now.
-        // setIsAddingFee(true); // Uncomment to automatically open add row on tab select
-    }
-  }, [activeTab]);
+    setIsAddingFee(isAddingFeeForNewStudent);
+  }, [isAddingFeeForNewStudent]);
 
 
   useEffect(() => {
@@ -79,7 +73,7 @@ function StudentProfileContent({ id }: { id: string; }) {
         setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), scheduledDate: (doc.data().scheduledDate as Timestamp).toDate().toISOString() } as Class)));
     });
 
-    const feesQuery = query(collection(db, "fees"), where("studentId", "==", id), where("deleted", "==", false));
+    const feesQuery = query(collection(db, "fees"), where("studentId", "==", id), where("deleted", "==", false), where("feeType", "==", "hourly"));
     const unsubscribeFees = onSnapshot(feesQuery, snapshot => {
         setFees(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp).toDate().toISOString() } as Fee)));
     });
@@ -136,9 +130,9 @@ function StudentProfileContent({ id }: { id: string; }) {
   };
 
 
-  const handleEditFee = (fee: Fee) => {
-    setFeeToEdit(fee);
-    setEditFeeOpen(true);
+  const handleFeeAdded = () => {
+    setIsAddingFee(false);
+    onFeeAdded();
   }
 
   if (loading) {
@@ -269,7 +263,7 @@ function StudentProfileContent({ id }: { id: string; }) {
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                         <CardTitle>Fee Structure</CardTitle>
-                        <CardDescription>Billing rates for this student.</CardDescription>
+                        <CardDescription>Hourly rates for this student.</CardDescription>
                     </div>
                     <Button size="sm" onClick={() => setIsAddingFee(true)}><PlusCircle className="mr-2 h-4 w-4"/> Add Fee</Button>
                 </CardHeader>
@@ -289,17 +283,24 @@ function StudentProfileContent({ id }: { id: string; }) {
                           <AddFeeTableRow
                             student={student}
                             disciplines={disciplines}
-                            onFinish={() => setIsAddingFee(false)}
+                            onFinish={handleFeeAdded}
                           />
                         )}
-                        {fees.map(f => (
+                        {fees.map(f => editingFeeId === f.id ? (
+                            <EditFeeTableRow
+                                key={f.id}
+                                fee={f}
+                                disciplines={disciplines}
+                                onFinish={() => setEditingFeeId(null)}
+                            />
+                        ) : (
                            <TableRow key={f.id}>
                                <TableCell>{f.discipline || 'Any (Default)'}</TableCell>
                                <TableCell><Badge variant={f.sessionType === '1-1' ? 'secondary' : 'default'}>{f.sessionType}</Badge></TableCell>
                                <TableCell>{getCurrencySymbol(f.currencyCode)}{f.amount.toFixed(2)}</TableCell>
                                <TableCell>{format(new Date(f.effectiveDate), 'PPP')}</TableCell>
                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon" onClick={() => handleEditFee(f)}><Pencil className="h-4 w-4"/></Button>
+                                    <Button variant="ghost" size="icon" onClick={() => setEditingFeeId(f.id)}><Pencil className="h-4 w-4"/></Button>
                                     <AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4"/></Button></AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will delete the fee record.</AlertDialogDescription></AlertDialogHeader>
@@ -364,31 +365,15 @@ function StudentProfileContent({ id }: { id: string; }) {
             </Card>
         </TabsContent>
       </Tabs>
-
-      <Dialog open={isEditFeeOpen} onOpenChange={setEditFeeOpen}>
-        <DialogContent>
-            <DialogHeader><DialogTitle>Edit Fee for {student.name}</DialogTitle></DialogHeader>
-            {feeToEdit && (
-                <EditFeeForm
-                    fee={feeToEdit}
-                    disciplines={disciplines}
-                    onFinish={() => {
-                        setEditFeeOpen(false);
-                        setFeeToEdit(null);
-                    }}
-                />
-            )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
 
 
-export default function StudentProfile({ id }: { id: string; }) {
+export default function StudentProfile({ id, isAddingFeeForNewStudent = false, onFeeAdded = () => {} }: { id: string; isAddingFeeForNewStudent?: boolean, onFeeAdded?: () => void }) {
     return (
         <Suspense fallback={<Skeleton className="h-full w-full" />}>
-            <StudentProfileContent id={id} />
+            <StudentProfileContent id={id} isAddingFeeForNewStudent={isAddingFeeForNewStudent} onFeeAdded={onFeeAdded} />
         </Suspense>
     )
 }
