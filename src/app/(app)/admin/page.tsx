@@ -46,24 +46,24 @@ export default function AdminPage() {
             onSnapshot(disciplinesQuery, snapshot => {
                 setDisciplines(snapshot.docs.map(doc => {
                     const data = doc.data();
-                    return { id: doc.id, ...data, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() } as Discipline
+                    return { id: doc.id, ...data, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString() } as Discipline
                 }));
                 handleLoad();
             }, console.error),
             onSnapshot(studentsQuery, snapshot => {
-                setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: (doc.data().createdAt as Timestamp)?.toDate().toISOString() } as Student)));
+                setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: (doc.data().createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString() } as Student)));
                 handleLoad();
             }, console.error),
             onSnapshot(classesQuery, snapshot => {
-                setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), scheduledDate: (doc.data().scheduledDate as Timestamp)?.toDate().toISOString() } as Class)));
+                setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), scheduledDate: (doc.data().scheduledDate as Timestamp)?.toDate().toISOString() || new Date().toISOString() } as Class)));
                 handleLoad();
             }, console.error),
             onSnapshot(feesQuery, snapshot => {
-                setFees(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp)?.toDate().toISOString() } as Fee)));
+                setFees(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp)?.toDate().toISOString() || new Date().toISOString() } as Fee)));
                 handleLoad();
             }, console.error),
             onSnapshot(paymentsQuery, snapshot => {
-                setPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), transactionDate: (doc.data().transactionDate as Timestamp)?.toDate().toISOString() } as Payment)));
+                setPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), transactionDate: (doc.data().transactionDate as Timestamp)?.toDate().toISOString() || new Date().toISOString() } as Payment)));
                 handleLoad();
             }, console.error),
         ];
