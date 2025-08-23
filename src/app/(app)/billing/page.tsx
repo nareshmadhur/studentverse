@@ -192,7 +192,12 @@ function BillingPageContent() {
                                 <Button variant="outline" size="sm" onClick={() => router.push(`/billing?statementStudentId=${details.studentId}`)}>View Statement</Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-                                {statementStudentId && dateRange && <StudentStatement studentId={statementStudentId} dateRange={dateRange} />}
+                                <DialogHeader>
+                                    <DialogTitle>Statement for {details.studentName}</DialogTitle>
+                                </DialogHeader>
+                                <div className="overflow-y-auto -mx-6 px-6">
+                                    {statementStudentId && dateRange && <StudentStatement studentId={statementStudentId} dateRange={dateRange} />}
+                                </div>
                             </DialogContent>
                         </Dialog>
 

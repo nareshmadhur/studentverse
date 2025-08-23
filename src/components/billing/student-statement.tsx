@@ -92,9 +92,8 @@ export default function StudentStatement({ studentId, dateRange }: { studentId: 
   }
   
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle>Statement for {statement.student.name}</CardTitle>
+    <Card className="mt-0 border-0 shadow-none">
+      <CardHeader className="pt-0">
         <CardDescription>
           For the period from {format(statement.dateRange.from, 'PPP')} to {format(statement.dateRange.to, 'PPP')}
         </CardDescription>
@@ -162,7 +161,7 @@ export default function StudentStatement({ studentId, dateRange }: { studentId: 
           </TableBody>
         </Table>
       </CardContent>
-      <CardFooter className="flex justify-end bg-muted/50 p-6">
+      <CardFooter className="flex justify-end bg-muted/50 p-6 mt-6">
         <div className="grid grid-cols-1 gap-y-2 text-right">
             <div className="flex justify-between items-center gap-4">
                 <span className="text-muted-foreground">Total Charges:</span>
