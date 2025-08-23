@@ -108,6 +108,18 @@ export default function StudentProfile({ id }: { id: string }) {
     }
   };
 
+  const handleDeleteStudent = async () => {
+    if (!student) return;
+    try {
+        await updateDoc(doc(db, 'students', student.id), { deleted: true, updatedAt: serverTimestamp() });
+        toast({ title: 'Student Deleted', description: `${student.name} has been deleted.` });
+        router.push('/students');
+    } catch (error) {
+        toast({ title: 'Error', description: 'Could not delete student.', variant: 'destructive' });
+    }
+  };
+
+
   const handleEditFee = (fee: Fee) => {
     setFeeToEdit(fee);
     setEditFeeOpen(true);
@@ -148,12 +160,21 @@ export default function StudentProfile({ id }: { id: string }) {
                     {isEditing ? <X className="mr-2 h-4 w-4" /> : <Pencil className="mr-2 h-4 w-4" />}
                     {isEditing ? 'Cancel' : 'Edit'}
                 </Button>
-              <Button className="bg-accent text-accent-foreground hover:bg-accent/90" asChild>
-                <Link href={`/classes/new?studentId=${id}`}>
-                    <PlusCircle className="mr-2 h-5 w-5" />
-                    New Class
-                </Link>
-              </Button>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>This action cannot be undone. This will permanently delete {student.name} and all associated data.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteStudent}>Continue</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
           </div>
         </CardHeader>
@@ -187,7 +208,14 @@ export default function StudentProfile({ id }: { id: string }) {
         </TabsList>
         <TabsContent value="classes">
             <Card>
-                <CardHeader><CardTitle>Classes</CardTitle></CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Classes</CardTitle>
+                    <Button asChild size="sm">
+                        <Link href={`/classes/new?studentId=${id}`}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Class
+                        </Link>
+                    </Button>
+                </CardHeader>
                 <CardContent>
                     <h3 className="font-semibold text-muted-foreground mb-2">Upcoming Classes</h3>
                     {upcomingClasses.length > 0 ? (
@@ -223,7 +251,10 @@ export default function StudentProfile({ id }: { id: string }) {
         <TabsContent value="fees">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Fee Structure</CardTitle>
+                    <div>
+                        <CardTitle>Fee Structure</CardTitle>
+                        <CardDescription>Billing rates for this student.</CardDescription>
+                    </div>
                     <Dialog open={isAddFeeOpen} onOpenChange={setAddFeeOpen}>
                         <DialogTrigger asChild>
                             <Button size="sm"><PlusCircle className="mr-2 h-4 w-4"/> Add Fee</Button>
@@ -260,6 +291,11 @@ export default function StudentProfile({ id }: { id: string }) {
                                </TableCell>
                            </TableRow>
                         ))}
+                         {fees.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center text-muted-foreground h-24">No fees defined for this student.</TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                    </Table>
                 </CardContent>
@@ -268,7 +304,10 @@ export default function StudentProfile({ id }: { id: string }) {
         <TabsContent value="payments">
              <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Payments</CardTitle>
+                     <div>
+                        <CardTitle>Payments</CardTitle>
+                        <CardDescription>History of payments received from this student.</CardDescription>
+                    </div>
                     <Button size="sm" asChild>
                         <Link href={`/payments/new?studentId=${id}`}>
                             <PlusCircle className="mr-2 h-4 w-4"/> Add Payment
@@ -296,6 +335,11 @@ export default function StudentProfile({ id }: { id: string }) {
                                </TableCell>
                            </TableRow>
                         ))}
+                         {payments.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center text-muted-foreground h-24">No payments recorded for this student.</TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                    </Table>
                 </CardContent>

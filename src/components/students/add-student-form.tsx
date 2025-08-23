@@ -218,7 +218,9 @@ export default function AddStudentForm({ onFinish }: { onFinish: (action: 'cance
           <Button type="button" variant="outline" onClick={() => onFinish('cancel')}>
             Cancel
           </Button>
-          <Button type="submit">Add Student and Continue</Button>
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? 'Adding...' : 'Add Student and Continue'}
+            </Button>
         </div>
       </form>
     </Form>
