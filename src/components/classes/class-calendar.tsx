@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { Calendar as ShadCalendar } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import { Class } from "@/lib/definitions";
 
 interface ClassCalendarProps {
@@ -28,30 +28,14 @@ export function ClassCalendar({ classes, selectedDate, onDateSelect }: ClassCale
     [classes]
   );
 
-  const DayContentWithDots: React.FC<React.PropsWithChildren<{ date: Date }>> = ({ date, children }) => {
-    const isOneOnOne = oneOnOneDays.some(d => d.toDateString() === date.toDateString());
-    const isGroup = groupDays.some(d => d.toDateString() === date.toDateString());
-
-    return (
-      <div className="relative w-full h-full flex items-center justify-center">
-        {children}
-        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-          {isOneOnOne && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
-          {isGroup && <div className="h-1.5 w-1.5 rounded-full bg-accent" />}
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <ShadCalendar
+    <Calendar
       mode="single"
       selected={selectedDate}
       onSelect={onDateSelect}
       className="p-4"
-      components={{
-        DayContent: DayContentWithDots
-      }}
+      oneOnOneDays={oneOnOneDays}
+      groupDays={groupDays}
     />
   );
 }

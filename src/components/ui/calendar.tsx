@@ -1,18 +1,45 @@
+
 "use client"
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker } from "react-day-picker"
+import { DayPicker, DayProps } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>
+export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
+  oneOnOneDays?: Date[];
+  groupDays?: Date[];
+};
+
+function DayContentWithDots(props: DayProps) {
+  const { date, displayMonth } = props;
+  const { oneOnOneDays, groupDays } = useDayPicker();
+
+  const isOneOnOne = oneOnOneDays?.some(d => d.toDateString() === date.toDateString());
+  const isGroup = groupDays?.some(d => d.toDateString() === date.toDateString());
+
+  return (
+    <div className="relative w-full h-full flex items-center justify-center">
+      <span>{date.getDate()}</span>
+      {(isOneOnOne || isGroup) && (
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+          {isOneOnOne && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+          {isGroup && <div className="h-1.5 w-1.5 rounded-full bg-accent" />}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  oneOnOneDays,
+  groupDays,
   ...props
 }: CalendarProps) {
   return (
@@ -46,7 +73,7 @@ function Calendar({
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-accent text-accent-foreground",
         day_outside:
-          "day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
+          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
@@ -54,6 +81,7 @@ function Calendar({
         ...classNames,
       }}
       components={{
+        DayContent: DayContentWithDots,
         IconLeft: ({ className, ...props }) => (
           <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
         ),
@@ -61,10 +89,21 @@ function Calendar({
           <ChevronRight className={cn("h-4 w-4", className)} {...props} />
         ),
       }}
+      oneOnOneDays={oneOnOneDays}
+      groupDays={groupDays}
       {...props}
     />
   )
 }
 Calendar.displayName = "Calendar"
+
+// A helper hook to get the custom props from the DayPicker context
+function useDayPicker() {
+  const context = (DayPicker as any).useDayPicker?.();
+  if (!context) {
+    throw new Error('useDayPicker must be used within a DayPicker provider.');
+  }
+  return context;
+}
 
 export { Calendar }
