@@ -2,17 +2,20 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Calendar, List } from "lucide-react";
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Class, Student } from "@/lib/definitions";
 import ClassesTable from "@/components/classes/classes-table";
 import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { ClassCalendar } from "@/components/classes/class-calendar";
 
 export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
   useEffect(() => {
     const q = query(collection(db, "classes"), where("deleted", "==", false));
@@ -66,14 +69,40 @@ export default function ClassesPage() {
         <h1 className="text-3xl font-headline font-bold text-foreground">
           Classes
         </h1>
-        <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <Link href="/classes/new">
-            <PlusCircle className="mr-2 h-5 w-5" />
-            Add Class
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+           <Button 
+                variant={viewMode === 'calendar' ? 'secondary' : 'outline'} 
+                size="icon" 
+                onClick={() => setViewMode('calendar')}
+                aria-label="Calendar View"
+            >
+              <Calendar className="h-4 w-4" />
+            </Button>
+            <Button 
+                variant={viewMode === 'list' ? 'secondary' : 'outline'} 
+                size="icon" 
+                onClick={() => setViewMode('list')}
+                aria-label="List View"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Link href="/classes/new">
+                <PlusCircle className="mr-2 h-5 w-5" />
+                Add Class
+              </Link>
+            </Button>
+        </div>
       </div>
-      <ClassesTable classes={classes} students={students} />
+      <Card>
+        <CardContent className="p-0">
+            {viewMode === 'list' ? (
+                <ClassesTable classes={classes} students={students} />
+            ) : (
+                <ClassCalendar classes={classes} students={students} />
+            )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

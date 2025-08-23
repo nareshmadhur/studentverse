@@ -38,11 +38,12 @@ type StudentFormValues = z.infer<typeof studentSchema>;
 
 export default function EditStudentForm({
   student,
+  onSave,
 }: {
   student: Student;
+  onSave: () => void;
 }) {
   const { toast } = useToast();
-  const router = useRouter();
   const [countrySearchOpen, setCountrySearchOpen] = useState(false);
   const [currencySearchOpen, setCurrencySearchOpen] = useState(false);
 
@@ -68,7 +69,7 @@ export default function EditStudentForm({
         title: "Student Updated",
         description: `${data.name} has been successfully updated.`,
       });
-      router.push(`/students/${student.id}`);
+      onSave();
     } catch (error) {
       console.error("Error updating document: ", error);
       toast({
@@ -216,9 +217,6 @@ export default function EditStudentForm({
             />
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
-            Cancel
-          </Button>
           <Button type="submit">Save Changes</Button>
         </div>
       </form>
