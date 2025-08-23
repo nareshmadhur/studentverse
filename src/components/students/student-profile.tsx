@@ -21,11 +21,10 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import AddFeeForm from "../fees/add-fee-form";
 import EditFeeForm from "../fees/edit-fee-form";
 
 
-export default function StudentProfile({ id }: { id: string }) {
+export default function StudentProfile({ id, onAddFeeClick }: { id: string, onAddFeeClick: (student: Student) => void }) {
   const router = useRouter();
   const { toast } = useToast();
   const [student, setStudent] = useState<Student | null>(null);
@@ -36,7 +35,6 @@ export default function StudentProfile({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [feeToEdit, setFeeToEdit] = useState<Fee | null>(null);
-  const [isAddFeeOpen, setAddFeeOpen] = useState(false);
   const [isEditFeeOpen, setEditFeeOpen] = useState(false);
 
   useEffect(() => {
@@ -255,20 +253,7 @@ export default function StudentProfile({ id }: { id: string }) {
                         <CardTitle>Fee Structure</CardTitle>
                         <CardDescription>Billing rates for this student.</CardDescription>
                     </div>
-                    <Dialog open={isAddFeeOpen} onOpenChange={setAddFeeOpen}>
-                        <DialogTrigger asChild>
-                            <Button size="sm"><PlusCircle className="mr-2 h-4 w-4"/> Add Fee</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader><DialogTitle>Add New Fee for {student.name}</DialogTitle></DialogHeader>
-                            <AddFeeForm 
-                                studentId={student.id} 
-                                currencyCode={student.currencyCode} 
-                                disciplines={disciplines}
-                                onFinish={() => setAddFeeOpen(false)} 
-                            />
-                        </DialogContent>
-                    </Dialog>
+                    <Button size="sm" onClick={() => onAddFeeClick(student)}><PlusCircle className="mr-2 h-4 w-4"/> Add Fee</Button>
                 </CardHeader>
                 <CardContent>
                    <Table>
@@ -365,5 +350,3 @@ export default function StudentProfile({ id }: { id: string }) {
     </div>
   );
 }
-
-    

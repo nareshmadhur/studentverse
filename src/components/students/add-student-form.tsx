@@ -17,14 +17,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { countries, currencies } from "@/lib/data/form-data";
-import Link from "next/link";
 
 const studentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -229,5 +227,3 @@ export default function AddStudentForm({ onFinish }: { onFinish: (action: 'cance
     </Form>
   );
 }
-
-    

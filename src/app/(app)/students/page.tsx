@@ -76,7 +76,7 @@ function StudentListPage() {
       unsubscribeClasses();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view]);
+  }, []);
 
   useEffect(() => {
     // If a student is selected, but not in the list (e.g. deep link to deleted student), redirect
@@ -159,28 +159,24 @@ function StudentListPage() {
             router.push(`/students?id=${selectedStudentId || students[0].id}`, { scroll: false });
         }
     } else if (action === 'addFee' && newStudentId) {
-        const newStudent = students.find(s => s.id === newStudentId);
-        if (newStudent) {
-            setStudentForFee(newStudent);
-            setView('addFee');
-            router.push(`/students?id=${newStudentId}`, { scroll: false });
-        } else {
-            // Edge case: student list hasn't updated yet. Wait and retry.
-            setTimeout(() => {
-                 const newStudent = students.find(s => s.id === newStudentId);
-                 if (newStudent) {
-                    setStudentForFee(newStudent);
-                    setView('addFee');
-                    router.push(`/students?id=${newStudentId}`, { scroll: false });
-                 }
-            }, 1000);
-        }
+        // Need to find the student, but the `students` state might not be updated yet.
+        // We'll rely on a snapshot listener to eventually give us the student.
+        const unSub = onSnapshot(doc(db, "students", newStudentId), (doc) => {
+            if (doc.exists()) {
+                const newStudent = { id: doc.id, ...doc.data() } as Student;
+                setStudentForFee(newStudent);
+                setView('addFee');
+                router.push(`/students?id=${newStudentId}`, { scroll: false });
+                unSub(); // Unsubscribe after we get the data.
+            }
+        });
     }
   }
 
   const handleFinishAddingFee = () => {
     setView('profile');
     setStudentForFee(null);
+    // The router should already have the correct student id in the URL
   }
 
   const StudentListItem = ({ student }: { student: Student }) => (
@@ -237,7 +233,7 @@ function StudentListPage() {
         case 'profile':
         default:
             if (selectedStudentId) {
-                return <StudentProfile id={selectedStudentId} />;
+                return <StudentProfile id={selectedStudentId} onAddFeeClick={(student) => { setStudentForFee(student); setView('addFee'); }} />;
             }
             if (!loading && students.length === 0) {
               return (
@@ -330,5 +326,3 @@ export default function StudentsPage() {
         </Suspense>
     )
 }
-
-    
