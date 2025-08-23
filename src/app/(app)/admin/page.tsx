@@ -82,7 +82,7 @@ export default function AdminPage() {
                     <CardDescription>View and manage all records in the database.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                   <Tabs defaultValue="disciplines">
+                   <Tabs defaultValue="disciplines" className="w-full">
                     <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="disciplines"><BookUser className="mr-2 h-4 w-4"/>Disciplines ({disciplines.length})</TabsTrigger>
                         <TabsTrigger value="students"><GraduationCap className="mr-2 h-4 w-4"/>Students ({students.length})</TabsTrigger>
