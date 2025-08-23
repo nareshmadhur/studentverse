@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -90,10 +90,22 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
+      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      if (!userCredential.user.emailVerified) {
+        await signOut(auth);
+        throw { code: 'auth/email-not-verified' };
+      }
       handleAuthSuccess();
     } catch (error: any) {
-      handleAuthError(error)
+      if (error.code === 'auth/email-not-verified') {
+        toast({
+            title: "Email Not Verified",
+            description: "Please check your inbox to verify your email before logging in.",
+            variant: "destructive",
+        });
+      } else {
+        handleAuthError(error)
+      }
     } finally {
       setLoading(false);
     }

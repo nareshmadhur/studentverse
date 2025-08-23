@@ -16,12 +16,21 @@ export default function AppLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+
+    if (!user) {
       router.push('/login');
+      return;
     }
+    
+    // For email/password providers, require email verification.
+    if (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
+       router.push('/login');
+    }
+
   }, [user, loading, router]);
 
-  if (loading || !user) {
+  if (loading || !user || (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified)) {
     return (
        <div className="flex items-center justify-center h-screen">
         <div className="flex flex-col items-center gap-4">
