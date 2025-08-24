@@ -184,8 +184,8 @@ function StudentListPage() {
   const handleFinishAddingStudent = (newStudentId?: string) => {
     if (newStudentId) {
         setIsAddingFeeForNewStudent(true);
-        setView('profile');
         router.push(`/students?id=${newStudentId}&tab=fees`, { scroll: false });
+        setView('profile');
     } else {
         setView('profile');
         if (students.length > 0 && !selectedStudentId) {
