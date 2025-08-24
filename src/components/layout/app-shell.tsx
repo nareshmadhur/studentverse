@@ -22,8 +22,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, className }: { children: React.ReactNode, className?: string }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const router = useRouter();
@@ -52,6 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
+    <div className={cn("flex h-screen", className)}>
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
@@ -144,7 +146,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
         </SidebarFooter>
       </Sidebar>
-      <div className="flex flex-col flex-1 h-screen">
+      <div className="flex flex-col flex-1">
         <header className="flex h-14 items-center gap-4 border-b bg-card px-4 shrink-0 lg:h-[60px] lg:px-6">
           <SidebarTrigger className="md:hidden" />
           <div className="flex-1">
@@ -158,5 +160,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </SidebarProvider>
+    </div>
   );
 }

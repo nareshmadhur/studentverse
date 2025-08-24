@@ -291,7 +291,7 @@ function StudentListPage() {
             </Card>
         </div>
 
-        <div className="md:col-span-2 lg:col-span-3">
+        <div className="md:col-span-2 lg:col-span-3 h-full overflow-y-auto">
            {renderRightPanel()}
         </div>
     </div>

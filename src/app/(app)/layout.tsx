@@ -74,5 +74,5 @@ export default function AppLayout({
     return <>{children}</>;
   }
 
-  return <AppShell>{children}</AppShell>;
+  return <AppShell className="h-full">{children}</AppShell>;
 }
