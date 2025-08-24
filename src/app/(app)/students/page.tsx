@@ -54,6 +54,7 @@ function StudentListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState<'profile' | 'addStudent'>('profile');
   const [isAddingFeeForNewStudent, setIsAddingFeeForNewStudent] = useState(false);
+  const [newlyCreatedStudentId, setNewlyCreatedStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -98,21 +99,30 @@ function StudentListPage() {
   }, [environment]);
 
    useEffect(() => {
-    if (loading) return;
+    if (loading || students.length === 0) return;
 
-    if (students.length === 0) {
-      if (view !== 'addStudent') {
-        setView('profile'); // This will trigger the welcome guide
-      }
+    // This effect ensures the correct student is selected and the URL is right.
+    // Priority:
+    // 1. A newly created student.
+    // 2. A student ID from the URL.
+    // 3. The first student in the list.
+
+    if (newlyCreatedStudentId) {
+      // If we just created a student, we don't want to do anything here,
+      // as the `handleFinishAddingStudent` function has already handled the navigation.
+      // We just reset the state after the component has re-rendered.
+      setNewlyCreatedStudentId(null);
       return;
     }
 
     if (selectedStudentId && !students.find(s => s.id === selectedStudentId)) {
+        // If the selected student is not in the list (e.g., deleted), go back to a neutral state.
         router.replace('/students', { scroll: false });
-    } else if (!selectedStudentId && students.length > 0 && view !== 'addStudent') {
+    } else if (!selectedStudentId && view !== 'addStudent') {
+        // If no student is selected and we're not in the "add" view, select the first one.
         router.replace(`/students?id=${students[0].id}`, { scroll: false });
     }
-  }, [selectedStudentId, students, router, view, loading]);
+  }, [selectedStudentId, students, router, view, loading, newlyCreatedStudentId]);
 
 
   const studentClassMap = useMemo(() => {
@@ -183,13 +193,16 @@ function StudentListPage() {
 
   const handleFinishAddingStudent = (newStudentId?: string) => {
     if (newStudentId) {
+        setNewlyCreatedStudentId(newStudentId); // Track the new student
         setIsAddingFeeForNewStudent(true);
         router.push(`/students?id=${newStudentId}&tab=fees`, { scroll: false });
         setView('profile');
     } else {
         setView('profile');
-        if (students.length > 0 && !selectedStudentId) {
-            router.push(`/students?id=${students[0].id}`, { scroll: false });
+        // If canceling, and a student was selected before, re-select them.
+        // The useEffect will handle selecting the first student if none were selected.
+        if (selectedStudentId) {
+           router.push(`/students?id=${selectedStudentId}`, { scroll: false });
         }
     }
   }
