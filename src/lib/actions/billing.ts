@@ -89,7 +89,7 @@ export async function getBillingSummary(dateRange: DateRange, environment: Envir
   // 1. Fetch all data concurrently
   const [studentsSnapshot, classesSnapshot, paymentsSnapshot, feesSnapshot] = await Promise.all([
     getDocs(query(collection(db, studentsCollection), where("deleted", "==", false))),
-    getDocs(query(collection(db, classesCollection), where("scheduledDate", ">=", startDate), where("scheduledDate", "<=", endDate), where("deleted", "==", false))),
+    getDocs(query(collection(db, classesCollection), where("scheduledDate", ">=", startDate), where("scheduledDate", "<=", endDate))),
     getDocs(query(collection(db, paymentsCollection), where("transactionDate", ">=", startDate), where("transactionDate", "<=", endDate), where("deleted", "==", false))),
     getDocs(query(collection(db, feesCollection), where("deleted", "==", false))),
   ]);
@@ -105,7 +105,8 @@ export async function getBillingSummary(dateRange: DateRange, environment: Envir
     } as Student
   });
 
-  const classes: Class[] = classesSnapshot.docs.map(doc => {
+  const classes: Class[] = classesSnapshot.docs
+    .map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -114,7 +115,9 @@ export async function getBillingSummary(dateRange: DateRange, environment: Envir
         createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
         updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
       } as Class
-  });
+    })
+    .filter(c => !c.deleted);
+
 
   const payments: Payment[] = paymentsSnapshot.docs.map(doc => {
     const data = doc.data();
