@@ -22,9 +22,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 
-export function AppShell({ children, className }: { children: React.ReactNode, className?: string }) {
+export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const router = useRouter();
@@ -53,7 +52,6 @@ export function AppShell({ children, className }: { children: React.ReactNode, c
   };
 
   return (
-    <div className={cn("flex h-screen", className)}>
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
@@ -146,20 +144,19 @@ export function AppShell({ children, className }: { children: React.ReactNode, c
             </div>
         </SidebarFooter>
       </Sidebar>
-      <div className="flex flex-col flex-1">
-        <header className="flex h-14 items-center gap-4 border-b bg-card px-4 shrink-0 lg:h-[60px] lg:px-6">
+      <main className="flex-1">
+        <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
           <SidebarTrigger className="md:hidden" />
           <div className="flex-1">
             {/* You can add header content here if needed, like a search bar */}
           </div>
         </header>
-        <main className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-screen-2xl h-full">
+        <div className="p-4 sm:p-6 lg:p-8">
+            <div className="mx-auto max-w-screen-2xl">
               {children}
             </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </SidebarProvider>
-    </div>
   );
 }

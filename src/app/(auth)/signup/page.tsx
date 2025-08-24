@@ -16,19 +16,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createUserWithEmailAndPassword, sendEmailVerification, signInWithPopup, GoogleAuthProvider, updateProfile } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, sendEmailVerification, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["teacher", "student"], { required_error: "You must select a role." }),
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
@@ -53,11 +50,10 @@ export default function SignupPage() {
     defaultValues: {
       email: "",
       password: "",
-      role: "teacher",
     },
   });
 
-  const handleAuthError = (error: any, isStudentSignup = false) => {
+  const handleAuthError = (error: any) => {
     console.error("Authentication error:", error);
     let description = "An unexpected error occurred. Please try again.";
      switch (error.code) {
@@ -81,16 +77,6 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupFormValues) => {
     setLoading(true);
     try {
-      if (data.role === 'student') {
-        const studentQuery = query(collection(db, 'dev_students'), where('email', '==', data.email));
-        const studentDocs = await getDocs(studentQuery);
-        if (studentDocs.empty) {
-          toast({ title: 'Sign-up Failed', description: 'This email is not registered as a student. Please contact your teacher.', variant: 'destructive' });
-          setLoading(false);
-          return;
-        }
-      }
-
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       await sendEmailVerification(userCredential.user);
       
@@ -101,7 +87,7 @@ export default function SignupPage() {
       router.push("/login");
 
     } catch (error: any) {
-      handleAuthError(error, data.role === 'student');
+      handleAuthError(error);
     } finally {
         setLoading(false);
     }
@@ -131,36 +117,6 @@ export default function SignupPage() {
         <CardContent>
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                 <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>I am a...</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex space-x-4"
-                        >
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="teacher" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Teacher</FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="student" />
-                            </FormControl>
-                            <FormLabel className="font-normal">Student</FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                 control={form.control}
                 name="email"
@@ -205,7 +161,7 @@ export default function SignupPage() {
             </div>
             
             <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
-                {googleLoading ? "Signing up..." : <><GoogleIcon className="mr-2" /> Sign Up with Google (Teachers)</>}
+                {googleLoading ? "Signing up..." : <><GoogleIcon className="mr-2" /> Sign Up with Google</>}
             </Button>
 
 

@@ -194,7 +194,7 @@ function StudentListPage() {
     switch (view) {
         case 'addStudent':
             return (
-                <Card className="h-full">
+                <Card>
                     <CardHeader>
                     <div className="flex justify-between items-center">
                         <div>
@@ -218,27 +218,27 @@ function StudentListPage() {
             }
             if (!loading && students.length === 0) {
               return (
-                 <div className="flex flex-col items-center justify-center h-full rounded-lg bg-muted/50">
+                 <Card className="flex items-center justify-center h-full">
                     <div className="text-center text-muted-foreground">
                         <p>No students found. Add one to get started.</p>
                     </div>
-                </div>
+                </Card>
               )
             }
             return (
-                <div className="flex flex-col items-center justify-center h-full rounded-lg bg-muted/50">
+                <Card className="flex items-center justify-center h-full">
                     <div className="text-center text-muted-foreground">
                         {loading ? <p>Loading students...</p> : <p>Select a student to view their profile.</p>}
                     </div>
-                </div>
+                </Card>
             );
     }
   }
 
 
   return (
-    <div className="flex gap-6 h-full">
-        <div className="w-full max-w-xs flex flex-col gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 h-full">
+        <div className="md:col-span-1 lg:col-span-1 xl:col-span-1 flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-headline font-bold text-foreground">
                     Students
@@ -253,14 +253,14 @@ function StudentListPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Card className="flex-1 flex flex-col overflow-hidden">
-                <Tabs defaultValue="all" className="flex flex-col h-full">
-                  <TabsList className="grid w-full grid-cols-3 shrink-0 m-2">
+            <Card className="flex-1">
+                <Tabs defaultValue="all">
+                  <TabsList className="grid w-full grid-cols-3 m-2">
                       <TabsTrigger value="all" className="flex gap-2"><Users className="h-4 w-4" /> All</TabsTrigger>
                       <TabsTrigger value="active" className="flex gap-2"><User className="h-4 w-4" /> Active</TabsTrigger>
                       <TabsTrigger value="inactive" className="flex gap-2"><UserX className="h-4 w-4" /> Inactive</TabsTrigger>
                   </TabsList>
-                  <CardContent className="p-2 flex-1 overflow-y-auto">
+                  <CardContent className="p-2">
                       <div className="space-y-2">
                          {loading ? (
                               Array.from({ length: 5 }).map((_, i) => (
@@ -291,7 +291,7 @@ function StudentListPage() {
             </Card>
         </div>
 
-        <div className="flex-1 h-full overflow-y-auto">
+        <div className="md:col-span-1 lg:col-span-2 xl:col-span-3">
            {renderRightPanel()}
         </div>
     </div>
