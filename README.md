@@ -1,3 +1,4 @@
+
 # Tutoraid - Your Personal Student Management System
 
 Tutoraid is a modern, easy-to-use web application designed to help independent tutors and small educational institutions manage their students, classes, fees, and payments efficiently. Built with a professional tech stack, it provides a solid foundation that you can customize and expand.
@@ -9,7 +10,8 @@ Tutoraid is a modern, easy-to-use web application designed to help independent t
 - **Define Fee Structures**: Set up flexible fee structures for each student. You can define default hourly rates or create student-specific fees for different disciplines and session types.
 - **Track Payments**: Log every payment received from students, making it easy to keep track of who has paid and when.
 - **Generate Billing Statements**: Quickly generate professional billing statements for any student over any date range. The system automatically calculates charges based on attended classes and logs payments received.
-- **Secure Access**: The application uses Firebase Authentication, ensuring that only you can access your data.
+- **Secure Access**: The application uses Firebase Authentication, ensuring that only you can access your data. Email verification is required for all new accounts.
+- **Multi-Environment Data**: Manage separate data for `development`, `pre-prod`, and `production` environments within a single Firebase project, switchable from the Admin panel.
 
 ## Tech Stack
 
@@ -43,11 +45,31 @@ npm run dev
 
 The application will now be running and accessible at [http://localhost:9002](http://localhost:9002).
 
-### 3. Secure Your Database (Crucial Step!)
+### 3. Configure Email Templates in Firebase
+
+For new user sign-ups, the application will send a verification email. To ensure these emails are sent correctly and don't end up in spam folders, you should customize the email template in Firebase:
+1.  Go to your project in the **Firebase Console**.
+2.  Navigate to **Authentication** > **Templates** tab.
+3.  Click on **Email verification** and customize the sender name and content.
+4.  Click **Save**.
+
+### 4. Understand the Multi-Environment Setup
+
+The application is configured to support multiple data environments (`development`, `pre-prod`, `production`) within a single Firebase project. This is achieved by prefixing your Firestore collection names.
+-   **Development data**: uses collections like `dev_students`, `dev_classes`, etc.
+-   **Pre-Prod data**: uses collections like `pre-prod_students`, etc.
+-   **Production data**: uses collections like `prod_students`, etc.
+
+You can switch between these environments using the dropdown menu on the **Admin** page in the application.
+
+#### **IMPORTANT: Data Migration Required**
+If you have existing data in Firestore from before this multi-environment setup was added, that data will be in unprefixed collections (e.g., `students`). The app will no longer see this data.
+
+You must migrate your data to the new prefixed collections. For example, to see your existing students in the development environment, you will need to copy or rename your `students` collection to `dev_students`. This is a one-time setup task.
+
+### 5. Secure Your Database (Crucial Step!)
 
 By default, your database is open to prevent lock-out during initial setup. You **must** secure it to protect your data.
-
-**How to Secure It:**
 
 A file named `firestore.rules` has been created in your project. This file contains rules that ensure only logged-in users can read or write data. You need to deploy these rules to Firebase.
 
