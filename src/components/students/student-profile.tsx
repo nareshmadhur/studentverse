@@ -40,10 +40,14 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
   const [editingFeeId, setEditingFeeId] = useState<string | null>(null);
 
   const activeTab = searchParams.get('tab') || 'classes';
-  const [isAddingFee, setIsAddingFee] = useState(isAddingFeeForNewStudent);
+  const [isAddingFee, setIsAddingFee] = useState(false);
 
   useEffect(() => {
-    setIsAddingFee(isAddingFeeForNewStudent);
+    // This effect specifically handles the "is adding fee for new student" case.
+    // It triggers when the prop changes to true.
+    if (isAddingFeeForNewStudent) {
+      setIsAddingFee(true);
+    }
   }, [isAddingFeeForNewStudent]);
 
 
@@ -382,3 +386,5 @@ export default function StudentProfile({ id, isAddingFeeForNewStudent = false, o
       </Suspense>
     )
 }
+
+    
