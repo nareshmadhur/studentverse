@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { useState, useContext, useEffect } from "react";
 import { countries, currencies } from "@/lib/data/form-data";
 import { AppContext } from "@/app/(app)/layout";
+import { useRouter } from "next/navigation";
 
 const studentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -35,8 +36,9 @@ const studentSchema = z.object({
 
 type StudentFormValues = z.infer<typeof studentSchema>;
 
-export default function AddStudentForm({ onFinish }: { onFinish: (studentId?: string) => void }) {
+export default function AddStudentForm() {
   const { toast } = useToast();
+  const router = useRouter();
   const [countrySearchOpen, setCountrySearchOpen] = useState(false);
   const [currencySearchOpen, setCurrencySearchOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,7 +80,7 @@ export default function AddStudentForm({ onFinish }: { onFinish: (studentId?: st
         title: "Student Added",
         description: `${data.name} has been successfully added.`,
       });
-      onFinish(docRef.id);
+      router.push(`/students?id=${docRef.id}&tab=fees&isAddingFeeForNewStudent=true`);
 
     } catch (error) {
       console.error("Error adding document: ", error);
@@ -229,11 +231,11 @@ export default function AddStudentForm({ onFinish }: { onFinish: (studentId?: st
             />
         </div>
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => onFinish()}>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Adding...' : 'Add Student'}
+            {isSubmitting ? 'Adding...' : 'Add Student & Set Fee'}
             </Button>
         </div>
       </form>

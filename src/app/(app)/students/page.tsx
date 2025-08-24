@@ -6,7 +6,7 @@ import { collection, onSnapshot, query, where, Timestamp, orderBy } from "fireba
 import { db, getCollectionName } from "@/lib/firebase";
 import { Student, Class } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, User, Users, UserX, X, School } from "lucide-react";
+import { PlusCircle, User, Users, UserX, School } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,10 +16,10 @@ import { addMonths, startOfDay } from "date-fns";
 import StudentProfile from "@/components/students/student-profile";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import AddStudentForm from "@/components/students/add-student-form";
+import Link from "next/link";
 import { AppContext } from "../layout";
 
-function WelcomeGuide({ onAddStudentClick }: { onAddStudentClick: () => void }) {
+function WelcomeGuide() {
   return (
     <Card className="flex-1 flex items-center justify-center p-6">
       <div className="text-center max-w-lg">
@@ -33,9 +33,11 @@ function WelcomeGuide({ onAddStudentClick }: { onAddStudentClick: () => void }) 
         <p className="mt-2 text-muted-foreground">
           Once you have students, you can schedule classes, define fee structures, and track payments.
         </p>
-        <Button onClick={onAddStudentClick} className="mt-6">
-          <PlusCircle className="mr-2 h-5 w-5" />
-          Add Your First Student
+        <Button asChild className="mt-6">
+            <Link href="/students/new">
+                <PlusCircle className="mr-2 h-5 w-5" />
+                Add Your First Student
+            </Link>
         </Button>
       </div>
     </Card>
@@ -52,8 +54,6 @@ function StudentListPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [view, setView] = useState<'profile' | 'addStudent'>('profile');
-  const [pendingStudentId, setPendingStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -99,21 +99,12 @@ function StudentListPage() {
 
   // This hook handles the case where no student is selected, defaulting to the first.
   useEffect(() => {
-    if (loading || students.length === 0 || selectedStudentId || view === 'addStudent' || pendingStudentId) {
+    if (loading || students.length === 0 || selectedStudentId) {
       return;
     }
     // If we have students but none is selected, select the first one.
     router.replace(`/students?id=${students[0].id}`, { scroll: false });
-  }, [loading, students, selectedStudentId, view, router, pendingStudentId]);
-
-  // This hook handles navigating to the new student after they are created and loaded.
-  useEffect(() => {
-    if (pendingStudentId && students.find(s => s.id === pendingStudentId)) {
-        router.push(`/students?id=${pendingStudentId}&tab=fees&isAddingFeeForNewStudent=true`, { scroll: false });
-        setView('profile');
-        setPendingStudentId(null); // Reset after navigation
-    }
-  }, [pendingStudentId, students, router]);
+  }, [loading, students, selectedStudentId, router]);
 
 
   const studentClassMap = useMemo(() => {
@@ -169,25 +160,10 @@ function StudentListPage() {
 
 
   const handleStudentSelect = (id: string | null) => {
-    setView('profile');
     const newPath = id ? `/students?id=${id}` : '/students';
     router.push(newPath, { scroll: false });
   };
   
-  const handleAddClick = () => {
-    setView('addStudent');
-    if (selectedStudentId) {
-      router.push('/students', { scroll: false });
-    }
-  };
-
-  const handleFinishAddingStudent = (newStudentId?: string) => {
-    if (newStudentId) {
-        setPendingStudentId(newStudentId);
-    } else {
-        setView('profile');
-    }
-  }
 
   const StudentListItem = ({ student }: { student: Student }) => (
     <div
@@ -197,17 +173,17 @@ function StudentListPage() {
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleStudentSelect(student.id); }}
         className={cn(
             "flex items-center gap-4 p-2 rounded-lg cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-ring",
-            view === 'profile' && selectedStudentId === student.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+            selectedStudentId === student.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
         )}
     >
         <Avatar>
-            <AvatarFallback className={cn(view === 'profile' && selectedStudentId === student.id ? "bg-primary-foreground text-primary" : "")}>
+            <AvatarFallback className={cn(selectedStudentId === student.id ? "bg-primary-foreground text-primary" : "")}>
                 {student.name.charAt(0).toUpperCase()}
             </AvatarFallback>
         </Avatar>
         <div className="flex-1 overflow-hidden">
             <p className="font-semibold truncate">{student.name}</p>
-            <p className={cn("text-xs truncate", view === 'profile' && selectedStudentId === student.id ? "text-primary-foreground/80" : "text-muted-foreground")}>
+            <p className={cn("text-xs truncate", selectedStudentId === student.id ? "text-primary-foreground/80" : "text-muted-foreground")}>
                 {student.email}
             </p>
         </div>
@@ -225,43 +201,20 @@ function StudentListPage() {
       );
     }
     
-    if (students.length === 0 && view !== 'addStudent') {
-       return <WelcomeGuide onAddStudentClick={handleAddClick} />;
+    if (students.length === 0) {
+       return <WelcomeGuide />;
     }
 
-    switch (view) {
-        case 'addStudent':
-            return (
-                <Card className="flex-1">
-                    <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <div>
-                        <CardTitle>Add New Student</CardTitle>
-                        <CardDescription>Enter the details for the new student.</CardDescription>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleFinishAddingStudent()}>
-                        <X className="h-5 w-5" />
-                        </Button>
-                    </div>
-                    </CardHeader>
-                    <CardContent>
-                        <AddStudentForm onFinish={handleFinishAddingStudent} />
-                    </CardContent>
-              </Card>
-            );
-        case 'profile':
-        default:
-            if (selectedStudentId) {
-                return <div className="flex-1"><StudentProfile id={selectedStudentId} /></div>;
-            }
-            return (
-                <Card className="flex-1 flex items-center justify-center">
-                    <div className="text-center text-muted-foreground">
-                        <p>Select a student to view their profile.</p>
-                    </div>
-                </Card>
-            );
+    if (selectedStudentId) {
+        return <div className="flex-1"><StudentProfile id={selectedStudentId} /></div>;
     }
+    return (
+        <Card className="flex-1 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+                <p>Select a student to view their profile.</p>
+            </div>
+        </Card>
+    );
   }
 
 
@@ -273,9 +226,11 @@ function StudentListPage() {
                     Students
                 </h1>
                  {students.length > 0 && (
-                    <Button onClick={handleAddClick} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add
+                    <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                        <Link href="/students/new">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add
+                        </Link>
                     </Button>
                  )}
             </div>
@@ -322,9 +277,11 @@ function StudentListPage() {
                          ) : (
                            <div className="text-center text-muted-foreground p-8">
                              <p>No students yet.</p>
-                              <Button onClick={handleAddClick} size="sm" className="mt-4">
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add one
+                             <Button asChild size="sm" className="mt-4">
+                                <Link href="/students/new">
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Add one
+                                </Link>
                               </Button>
                            </div>
                          )}
@@ -348,5 +305,3 @@ export default function StudentsPage() {
         </Suspense>
     )
 }
-
-    
