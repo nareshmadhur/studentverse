@@ -372,8 +372,6 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
 
 export default function StudentProfile({ id, isAddingFeeForNewStudent = false, onFeeAdded = () => {} }: { id: string; isAddingFeeForNewStudent?: boolean, onFeeAdded?: () => void }) {
     return (
-        <Suspense fallback={<Skeleton className="h-full w-full" />}>
-            <StudentProfileContent id={id} isAddingFeeForNewStudent={isAddingFeeForNewStudent} onFeeAdded={onFeeAdded} />
-        </Suspense>
+        <StudentProfileContent id={id} isAddingFeeForNewStudent={isAddingFeeForNewStudent} onFeeAdded={onFeeAdded} />
     )
 }

@@ -144,19 +144,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
         </SidebarFooter>
       </Sidebar>
-      <main className="flex-1 flex flex-col h-screen">
+      <div className="flex flex-col flex-1 h-screen">
         <header className="flex h-14 items-center gap-4 border-b bg-card px-4 shrink-0 lg:h-[60px] lg:px-6">
           <SidebarTrigger className="md:hidden" />
           <div className="flex-1">
             {/* You can add header content here if needed, like a search bar */}
           </div>
         </header>
-        <div className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto">
+        <main className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto">
             <div className="mx-auto max-w-screen-2xl h-full">
               {children}
             </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </SidebarProvider>
   );
 }
