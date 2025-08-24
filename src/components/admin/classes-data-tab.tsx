@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { doc, writeBatch } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 
 export default function ClassesDataTab({ classes, students }: { classes: Class[], students: Student[] }) {
     const [searchTerm, setSearchTerm] = useState("");
@@ -62,7 +62,7 @@ export default function ClassesDataTab({ classes, students }: { classes: Class[]
         if (selectedClassIds.length === 0) return;
         const batch = writeBatch(db);
         selectedClassIds.forEach(id => {
-            const docRef = doc(db, "classes", id);
+            const docRef = doc(db, getCollectionName("classes"), id);
             batch.delete(docRef);
         });
         try {
@@ -138,7 +138,7 @@ export default function ClassesDataTab({ classes, students }: { classes: Class[]
                                     <p className="text-xs text-muted-foreground">{c.discipline}</p>
                                 </TableCell>
                                 <TableCell>{c.studentNames}</TableCell>
-                                <TableCell>{format(new Date(c.scheduledDate), "PPP p")}</TableCell>
+                                <TableCell>{c.scheduledDate ? format(new Date(c.scheduledDate), "PPP p") : 'N/A'}</TableCell>
                                 <TableCell>
                                     {c.deleted ? (
                                         <Badge variant="destructive">Deleted</Badge>

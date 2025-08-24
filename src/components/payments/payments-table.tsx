@@ -22,7 +22,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { format } from "date-fns";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -55,7 +55,7 @@ export default function PaymentsTable({
 
   const handleDelete = async (paymentId: string) => {
     try {
-      const paymentDocRef = doc(db, "payments", paymentId);
+      const paymentDocRef = doc(db, getCollectionName("payments"), paymentId);
       await updateDoc(paymentDocRef, {
         deleted: true,
         updatedAt: serverTimestamp(),

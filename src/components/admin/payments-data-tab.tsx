@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { doc, writeBatch } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { getCurrencySymbol } from "@/lib/utils";
 
 export default function PaymentsDataTab({ payments, students }: { payments: Payment[], students: Student[] }) {
@@ -63,7 +63,7 @@ export default function PaymentsDataTab({ payments, students }: { payments: Paym
         if (selectedPaymentIds.length === 0) return;
         const batch = writeBatch(db);
         selectedPaymentIds.forEach(id => {
-            const docRef = doc(db, "payments", id);
+            const docRef = doc(db, getCollectionName("payments"), id);
             batch.delete(docRef);
         });
         try {

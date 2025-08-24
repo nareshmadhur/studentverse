@@ -2,7 +2,7 @@
 "use client";
 
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import type { Discipline } from "@/lib/definitions";
 import { Trash2 } from "lucide-react";
@@ -33,7 +33,7 @@ export default function DisciplinesTable({ disciplines }: { disciplines: Discipl
 
   const handleDelete = async (id: string) => {
     try {
-      const docRef = doc(db, "disciplines", id);
+      const docRef = doc(db, getCollectionName("disciplines"), id);
       await updateDoc(docRef, {
         deleted: true,
         updatedAt: serverTimestamp(),
@@ -73,7 +73,7 @@ export default function DisciplinesTable({ disciplines }: { disciplines: Discipl
                 {disciplines.map((discipline) => (
                 <TableRow key={discipline.id}>
                     <TableCell className="font-medium">{discipline.name}</TableCell>
-                    <TableCell>{format(new Date(discipline.createdAt), "PPP")}</TableCell>
+                    <TableCell>{discipline.createdAt ? format(new Date(discipline.createdAt), "PPP") : 'N/A'}</TableCell>
                     <TableCell className="text-right">
                     <AlertDialog>
                         <AlertDialogTrigger asChild>

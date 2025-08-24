@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Payment, Student } from "@/lib/definitions";
 import { useEffect } from "react";
 import { Input } from "../ui/input";
@@ -71,7 +71,7 @@ export default function EditPaymentForm({
 
   const onSubmit = async (data: PaymentFormValues) => {
     try {
-      const paymentDocRef = doc(db, "payments", payment.id);
+      const paymentDocRef = doc(db, getCollectionName("payments"), payment.id);
       await updateDoc(paymentDocRef, {
         ...data,
         updatedAt: serverTimestamp(),

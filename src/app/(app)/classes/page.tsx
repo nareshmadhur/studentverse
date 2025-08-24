@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Calendar, List, Pencil, Trash2 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp, doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Class, Student } from "@/lib/definitions";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,7 +26,7 @@ export default function ClassesPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const q = query(collection(db, "classes"), where("deleted", "==", false));
+    const q = query(collection(db, getCollectionName("classes")), where("deleted", "==", false));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const classData: Class[] = snapshot.docs.map((doc) => {
         const data = doc.data();
@@ -40,7 +40,7 @@ export default function ClassesPage() {
     });
 
     const fetchStudents = async () => {
-      const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
+      const studentQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false));
       const studentSnapshot = await getDocs(studentQuery);
       const studentData: Student[] = studentSnapshot.docs.map(doc => {
         const data = doc.data();
@@ -78,7 +78,7 @@ export default function ClassesPage() {
   
   const handleDelete = async (classId: string) => {
     try {
-      await updateDoc(doc(db, "classes", classId), { deleted: true, updatedAt: serverTimestamp() });
+      await updateDoc(doc(db, getCollectionName("classes"), classId), { deleted: true, updatedAt: serverTimestamp() });
       toast({ title: "Class Deleted", description: "The class has been marked as deleted." });
     } catch (error) {
        toast({ title: "Error", description: "Could not delete the class.", variant: "destructive" });
@@ -157,7 +157,6 @@ export default function ClassesPage() {
           <Card>
             <ClassCalendar 
               classes={classes} 
-              students={students}
               selectedDate={selectedDate}
               onDateSelect={(date) => {
                 setSelectedDate(date);

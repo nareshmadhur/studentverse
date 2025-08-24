@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { collection, onSnapshot, query, where, Timestamp, orderBy, doc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Student, Class } from "@/lib/definitions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -33,8 +33,8 @@ function StudentListPage() {
 
   useEffect(() => {
     setLoading(true);
-    const studentsQuery = query(collection(db, "students"), where("deleted", "==", false), orderBy("name"));
-    const classesQuery = query(collection(db, "classes"), where("deleted", "==", false), orderBy("scheduledDate", "desc"));
+    const studentsQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false), orderBy("name"));
+    const classesQuery = query(collection(db, getCollectionName("classes")), where("deleted", "==", false), orderBy("scheduledDate", "desc"));
 
     const unsubscribeStudents = onSnapshot(studentsQuery, (snapshot) => {
       const studentData: Student[] = snapshot.docs.map(doc => {

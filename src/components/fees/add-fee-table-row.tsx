@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Student, Discipline } from "@/lib/definitions";
 import { Input } from "../ui/input";
 import { DatePicker } from "../ui/date-picker";
@@ -61,7 +61,7 @@ export default function AddFeeTableRow({
 
   const onSubmit = async (data: FeeFormValues) => {
     try {
-      await addDoc(collection(db, "fees"), {
+      await addDoc(collection(db, getCollectionName("fees")), {
         ...data,
         studentId: student.id,
         currencyCode: student.currencyCode,

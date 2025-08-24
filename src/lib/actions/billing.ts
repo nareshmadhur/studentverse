@@ -2,7 +2,7 @@
 'use server';
 
 import { collection, doc, getDoc, getDocs, query, where, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName, getEnvironment } from "@/lib/firebase";
 import { Student, Class, Fee, Payment } from "@/lib/definitions";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
@@ -75,16 +75,23 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
   if (!dateRange.from || !dateRange.to) {
     throw new Error("Date range is required.");
   }
+  
+  const env = getEnvironment();
+  const studentsCollection = getCollectionName("students");
+  const classesCollection = getCollectionName("classes");
+  const paymentsCollection = getCollectionName("payments");
+  const feesCollection = getCollectionName("fees");
+
 
   const startDate = Timestamp.fromDate(dateRange.from);
   const endDate = Timestamp.fromDate(dateRange.to);
 
   // 1. Fetch all data concurrently
   const [studentsSnapshot, classesSnapshot, paymentsSnapshot, feesSnapshot] = await Promise.all([
-    getDocs(query(collection(db, "students"), where("deleted", "==", false))),
-    getDocs(query(collection(db, "classes"), where("scheduledDate", ">=", startDate), where("scheduledDate", "<=", endDate), where("deleted", "==", false))),
-    getDocs(query(collection(db, "payments"), where("transactionDate", ">=", startDate), where("transactionDate", "<=", endDate), where("deleted", "==", false))),
-    getDocs(query(collection(db, "fees"), where("deleted", "==", false))),
+    getDocs(query(collection(db, studentsCollection), where("deleted", "==", false))),
+    getDocs(query(collection(db, classesCollection), where("scheduledDate", ">=", startDate), where("scheduledDate", "<=", endDate), where("deleted", "==", false))),
+    getDocs(query(collection(db, paymentsCollection), where("transactionDate", ">=", startDate), where("transactionDate", "<=", endDate), where("deleted", "==", false))),
+    getDocs(query(collection(db, feesCollection), where("deleted", "==", false))),
   ]);
 
   const students: Record<string, Student> = {};
@@ -218,8 +225,13 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
     throw new Error("Date range is required.");
   }
 
+  const studentsCollection = getCollectionName("students");
+  const classesCollection = getCollectionName("classes");
+  const paymentsCollection = getCollectionName("payments");
+  const feesCollection = getCollectionName("fees");
+
   // 1. Fetch student details
-  const studentDoc = await getDoc(doc(db, "students", studentId));
+  const studentDoc = await getDoc(doc(db, studentsCollection, studentId));
   if (!studentDoc.exists()) {
     throw new Error("Student not found.");
   }
@@ -233,7 +245,7 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
 
   // 2. Fetch all classes for the student within the date range
   const classesQuery = query(
-    collection(db, "classes"),
+    collection(db, classesCollection),
     where("students", "array-contains", studentId),
     where("scheduledDate", ">=", Timestamp.fromDate(dateRange.from)),
     where("scheduledDate", "<=", Timestamp.fromDate(dateRange.to)),
@@ -253,7 +265,7 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
 
   // 3. Fetch all fees for the student
   const feesQuery = query(
-    collection(db, "fees"),
+    collection(db, feesCollection),
     where("studentId", "==", studentId),
     where("deleted", "==", false)
   );
@@ -272,7 +284,7 @@ export async function getStatementData(studentId: string, dateRange: DateRange):
   
   // 4. Fetch all payments for the student within the date range
   const paymentsQuery = query(
-    collection(db, "payments"),
+    collection(db, paymentsCollection),
     where("studentId", "==", studentId),
     where("transactionDate", ">=", Timestamp.fromDate(dateRange.from)),
     where("transactionDate", "<=", Timestamp.fromDate(dateRange.to)),

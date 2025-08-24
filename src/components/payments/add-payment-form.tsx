@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Student } from "@/lib/definitions";
 import { useEffect } from "react";
 import { Input } from "../ui/input";
@@ -73,7 +73,7 @@ export default function AddPaymentForm({
 
   const onSubmit = async (data: PaymentFormValues) => {
     try {
-      await addDoc(collection(db, "payments"), {
+      await addDoc(collection(db, getCollectionName("payments")), {
         ...data,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

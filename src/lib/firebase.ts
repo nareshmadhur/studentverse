@@ -1,43 +1,39 @@
 
-import { initializeApp, getApps, getApp, deleteApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { firebaseConfigs, type Environment } from './firebase-config';
 
-let app;
-let auth;
-let db;
+export type Environment = 'development' | 'pre-prod' | 'production';
+
+const firebaseConfig = {
+    apiKey: "AIzaSyC2uRlKpLaJtOweEgAKq-h2iuXf-WKPHeY",
+    authDomain: "studentverse-hgt33.firebaseapp.com",
+    projectId: "studentverse-hgt33",
+    storageBucket: "studentverse-hgt33.firebasestorage.app",
+    messagingSenderId: "251333761093",
+    appId: "1:251333761093:web:03ffbabfd62e9c55d32b2c"
+};
+
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 const getEnvironment = (): Environment => {
     if (typeof window !== 'undefined') {
-        return (localStorage.getItem('tutoraid-env') as Environment) || 'development';
+        const storedEnv = localStorage.getItem('tutoraid-env');
+        if (storedEnv && ['development', 'pre-prod', 'production'].includes(storedEnv)) {
+            return storedEnv as Environment;
+        }
     }
     return 'development';
 }
 
-const initializeFirebase = (env: Environment) => {
-    const config = firebaseConfigs[env];
-    const appName = `tutoraid-${env}`;
-
-    // Check if the app for the current environment is already initialized
-    const existingApp = getApps().find(app => app.name === appName);
-
-    if (existingApp) {
-        app = existingApp;
-    } else {
-        // To avoid re-initializing on hot reloads, we check if an app with this name exists
-        try {
-            app = getApp(appName);
-        } catch (e) {
-            app = initializeApp(config, appName);
-        }
+const getCollectionName = (baseName: string): string => {
+    const env = getEnvironment();
+    if (env === 'development') {
+        return baseName;
     }
-    
-    auth = getAuth(app);
-    db = getFirestore(app);
-};
+    return `${env}_${baseName}`;
+}
 
-// Initialize with the default/stored environment
-initializeFirebase(getEnvironment());
-
-export { db, auth, getEnvironment, initializeFirebase, type Environment };
+export { db, auth, getEnvironment, getCollectionName };

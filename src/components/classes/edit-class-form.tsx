@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp, updateDoc, getDocs, query, where, collection, Timestamp, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Class, Student, Fee, Discipline } from "@/lib/definitions";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -82,7 +82,7 @@ export default function EditClassForm({
   const watchedScheduledDate = watch("scheduledDate");
 
   useEffect(() => {
-    const q = query(collection(db, "disciplines"), where("deleted", "==", false));
+    const q = query(collection(db, getCollectionName("disciplines")), where("deleted", "==", false));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const disciplineData: Discipline[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline));
         setDisciplines(disciplineData);
@@ -102,7 +102,7 @@ export default function EditClassForm({
       if (!student) return null;
   
       const feeQuery = query(
-        collection(db, "fees"),
+        collection(db, getCollectionName("fees")),
         where("studentId", "==", studentId),
         where("sessionType", "==", watchedSessionType),
         where("feeType", "==", "hourly"),
@@ -139,7 +139,7 @@ export default function EditClassForm({
 
   const onSubmit = async (data: ClassFormValues) => {
     try {
-      const classDocRef = doc(db, "classes", classItem.id);
+      const classDocRef = doc(db, getCollectionName("classes"), classItem.id);
       await updateDoc(classDocRef, {
         ...data,
         updatedAt: serverTimestamp(),

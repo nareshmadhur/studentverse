@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 
 const disciplineSchema = z.object({
   name: z.string().min(1, "Discipline name is required"),
@@ -35,7 +35,7 @@ export default function AddDisciplineForm() {
 
   const onSubmit = async (data: DisciplineFormValues) => {
     try {
-      await addDoc(collection(db, "disciplines"), {
+      await addDoc(collection(db, getCollectionName("disciplines")), {
         name: data.name,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

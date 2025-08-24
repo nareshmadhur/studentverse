@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { doc, onSnapshot, Timestamp, updateDoc, serverTimestamp, getDocs, collection, query, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Student, Class, Fee, Payment, Discipline } from "@/lib/definitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,7 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
     if (!id) return;
     
     setLoading(true);
-    const docRef = doc(db, "students", id);
+    const docRef = doc(db, getCollectionName("students"), id);
     const unsubscribeStudent = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -68,22 +68,22 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
         setLoading(false);
     });
 
-    const classesQuery = query(collection(db, "classes"), where("students", "array-contains", id), where("deleted", "==", false));
+    const classesQuery = query(collection(db, getCollectionName("classes")), where("students", "array-contains", id), where("deleted", "==", false));
     const unsubscribeClasses = onSnapshot(classesQuery, snapshot => {
         setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), scheduledDate: (doc.data().scheduledDate as Timestamp).toDate().toISOString() } as Class)));
     });
 
-    const feesQuery = query(collection(db, "fees"), where("studentId", "==", id), where("deleted", "==", false), where("feeType", "==", "hourly"));
+    const feesQuery = query(collection(db, getCollectionName("fees")), where("studentId", "==", id), where("deleted", "==", false), where("feeType", "==", "hourly"));
     const unsubscribeFees = onSnapshot(feesQuery, snapshot => {
         setFees(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp).toDate().toISOString() } as Fee)));
     });
 
-    const paymentsQuery = query(collection(db, "payments"), where("studentId", "==", id), where("deleted", "==", false));
+    const paymentsQuery = query(collection(db, getCollectionName("payments")), where("studentId", "==", id), where("deleted", "==", false));
     const unsubscribePayments = onSnapshot(paymentsQuery, snapshot => {
         setPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), transactionDate: (doc.data().transactionDate as Timestamp).toDate().toISOString() } as Payment)));
     });
 
-    const disciplinesQuery = query(collection(db, "disciplines"), where("deleted", "==", false));
+    const disciplinesQuery = query(collection(db, getCollectionName("disciplines")), where("deleted", "==", false));
     const unsubscribeDisciplines = onSnapshot(disciplinesQuery, snapshot => {
         setDisciplines(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline)));
     });
@@ -111,7 +111,7 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
 
   const handleDelete = async (collectionName: string, docId: string) => {
     try {
-      await updateDoc(doc(db, collectionName, docId), { deleted: true, updatedAt: serverTimestamp() });
+      await updateDoc(doc(db, getCollectionName(collectionName), docId), { deleted: true, updatedAt: serverTimestamp() });
       toast({ title: `${collectionName.slice(0, -1)} deleted`, description: `The item has been successfully marked as deleted.` });
     } catch (error) {
       toast({ title: 'Error', description: 'Could not delete item.', variant: 'destructive' });
@@ -121,7 +121,7 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
   const handleDeleteStudent = async () => {
     if (!student) return;
     try {
-        await updateDoc(doc(db, 'students', student.id), { deleted: true, updatedAt: serverTimestamp() });
+        await updateDoc(doc(db, getCollectionName('students'), student.id), { deleted: true, updatedAt: serverTimestamp() });
         toast({ title: 'Student Deleted', description: `${student.name} has been deleted.` });
         router.push('/students');
     } catch (error) {

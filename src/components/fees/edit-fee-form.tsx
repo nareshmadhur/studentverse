@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Fee, Discipline } from "@/lib/definitions";
 import { Input } from "../ui/input";
 import { DatePicker } from "../ui/date-picker";
@@ -61,7 +61,7 @@ export default function EditFeeTableRow({
 
   const onSubmit = async (data: FeeFormValues) => {
     try {
-      const feeDocRef = doc(db, "fees", fee.id);
+      const feeDocRef = doc(db, getCollectionName("fees"), fee.id);
       await updateDoc(feeDocRef, {
         ...data,
         discipline: data.discipline === "__any__" ? "" : data.discipline,

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, query, Timestamp } from "firebase/firestore";
-import { db, getEnvironment, initializeFirebase, type Environment } from "@/lib/firebase";
+import { db, getEnvironment, getCollectionName, type Environment } from "@/lib/firebase";
 import { Discipline, Student, Class, Fee, Payment } from "@/lib/definitions";
 import AddDisciplineForm from "@/components/admin/add-discipline-form";
 import DisciplinesTable from "@/components/admin/disciplines-table";
@@ -18,14 +18,9 @@ import PaymentsDataTab from "@/components/admin/payments-data-tab";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
-import { firebaseConfigs } from "@/lib/firebase-config";
 import { cn } from "@/lib/utils";
 
-const disciplinesQuery = query(collection(db, "disciplines"));
-const studentsQuery = query(collection(db, "students"));
-const classesQuery = query(collection(db, "classes"));
-const feesQuery = query(collection(db, "fees"));
-const paymentsQuery = query(collection(db, "payments"));
+const ENVIRONMENTS: Environment[] = ['development', 'pre-prod', 'production'];
 
 
 export default function AdminPage() {
@@ -44,7 +39,7 @@ export default function AdminPage() {
 
     const handleEnvChange = (env: Environment) => {
         localStorage.setItem('tutoraid-env', env);
-        window.location.reload(); // Reload to re-initialize firebase and fetch new data
+        window.location.reload(); // Reload to fetch new data
     }
 
 
@@ -58,6 +53,12 @@ export default function AdminPage() {
                 setLoading(false);
             }
         };
+
+        const disciplinesQuery = query(collection(db, getCollectionName("disciplines")));
+        const studentsQuery = query(collection(db, getCollectionName("students")));
+        const classesQuery = query(collection(db, getCollectionName("classes")));
+        const feesQuery = query(collection(db, getCollectionName("fees")));
+        const paymentsQuery = query(collection(db, getCollectionName("payments")));
 
         const unsubscribes = [
             onSnapshot(disciplinesQuery, snapshot => {
@@ -104,7 +105,7 @@ export default function AdminPage() {
                     <PopoverContent className="w-[200px] p-0">
                         <Command>
                             <CommandGroup>
-                                {Object.keys(firebaseConfigs).map((env) => (
+                                {ENVIRONMENTS.map((env) => (
                                     <CommandItem
                                         key={env}
                                         value={env}

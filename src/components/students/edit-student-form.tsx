@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Student } from "@/lib/definitions";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
@@ -60,7 +60,7 @@ export default function EditStudentForm({
 
   const onSubmit = async (data: StudentFormValues) => {
     try {
-      const studentDocRef = doc(db, "students", student.id);
+      const studentDocRef = doc(db, getCollectionName("students"), student.id);
       await updateDoc(studentDocRef, {
         ...data,
         updatedAt: serverTimestamp(),

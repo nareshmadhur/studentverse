@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Suspense, useEffect, useState } from "react";
 import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -21,7 +21,7 @@ function NewClassPageContent() {
 
     useEffect(() => {
         const fetchStudents = async () => {
-          const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
+          const studentQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false));
           const studentSnapshot = await getDocs(studentQuery);
           const studentData: Student[] = studentSnapshot.docs.map(doc => {
             const data = doc.data();

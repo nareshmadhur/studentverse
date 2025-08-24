@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { doc, writeBatch } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 
 export default function StudentsDataTab({ students }: { students: Student[] }) {
     const [searchTerm, setSearchTerm] = useState("");
@@ -51,7 +51,7 @@ export default function StudentsDataTab({ students }: { students: Student[] }) {
         if (selectedStudentIds.length === 0) return;
         const batch = writeBatch(db);
         selectedStudentIds.forEach(id => {
-            const docRef = doc(db, "students", id);
+            const docRef = doc(db, getCollectionName("students"), id);
             batch.delete(docRef);
         });
         try {

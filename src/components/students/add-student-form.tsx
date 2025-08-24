@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
@@ -55,7 +55,7 @@ export default function AddStudentForm({ onFinish }: { onFinish: (studentId?: st
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const docRef = await addDoc(collection(db, "students"), {
+      const docRef = await addDoc(collection(db, getCollectionName("students")), {
         ...data,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

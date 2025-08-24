@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { doc, getDoc, getDocs, collection, query, where, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Payment, Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 import EditPaymentForm from "@/components/payments/edit-payment-form";
@@ -20,7 +20,7 @@ export default function EditPaymentFormLoader({ paymentId }: { paymentId: string
         const fetchPaymentAndStudents = async () => {
             setLoading(true);
             try {
-                const paymentDocRef = doc(db, "payments", paymentId);
+                const paymentDocRef = doc(db, getCollectionName("payments"), paymentId);
                 const paymentDocSnap = await getDoc(paymentDocRef);
                 
                 if (paymentDocSnap.exists()) {
@@ -34,7 +34,7 @@ export default function EditPaymentFormLoader({ paymentId }: { paymentId: string
                     } as Payment);
                 }
 
-                const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
+                const studentQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false));
                 const studentSnapshot = await getDocs(studentQuery);
                 const studentData: Student[] = studentSnapshot.docs.map(doc => {
                     const data = doc.data();

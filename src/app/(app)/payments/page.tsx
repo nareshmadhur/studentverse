@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, getCollectionName } from "@/lib/firebase";
 import { Payment, Student } from "@/lib/definitions";
 import PaymentsTable from "@/components/payments/payments-table";
 import Link from "next/link";
@@ -15,7 +15,7 @@ export default function PaymentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
-    const q = query(collection(db, "payments"), where("deleted", "==", false));
+    const q = query(collection(db, getCollectionName("payments")), where("deleted", "==", false));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const paymentData: Payment[] = [];
       snapshot.forEach((doc) => {
@@ -37,7 +37,7 @@ export default function PaymentsPage() {
     });
 
     const fetchStudents = async () => {
-      const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
+      const studentQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false));
       const studentSnapshot = await getDocs(studentQuery);
       const studentData: Student[] = studentSnapshot.docs.map(doc => {
         const data = doc.data();
