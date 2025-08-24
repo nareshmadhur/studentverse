@@ -23,6 +23,32 @@ This application is built with modern, industry-standard technologies to ensure 
 - **Authentication**: Firebase Authentication for secure user sign-in.
 - **Deployment**: Ready to be deployed on Firebase App Hosting.
 
+## Data Schema
+
+The application uses five main collections in Firestore to store its data. The collections are prefixed based on the selected environment (e.g., `dev_students`, `prod_students`).
+
+- **`students`**: This is the core collection. Each document represents a single student.
+  - **Key Fields**: `name`, `email`, `phone`, `country`, `currencyCode`.
+  - **Relations**: This collection is the "parent" of many others. The `studentId` in other collections links back to a document's ID here.
+
+- **`disciplines`**: Stores the subjects or skills you teach.
+  - **Key Fields**: `name` (e.g., "Piano", "Guitar", "Mathematics").
+  - **Relations**: The `discipline` field in the `classes` and `fees` collections refers to a name from this collection.
+
+- **`classes`**: Contains all the scheduled teaching sessions.
+  - **Key Fields**: `title`, `discipline`, `sessionType` ('1-1' or 'group'), `scheduledDate`, `students` (an array of student IDs).
+  - **Relations**: The `students` array contains IDs from the `students` collection, linking the class to its attendees.
+
+- **`fees`**: Defines the billing rates for students. This is a powerful feature that allows for default rates and specific overrides.
+  - **Key Fields**: `studentId`, `discipline`, `sessionType`, `feeType` ('hourly'), `amount`, `effectiveDate`.
+  - **Relations**: Each fee is linked to a `studentId`. When calculating charges for a `class`, the system looks for the most specific matching `fee` for that student, discipline, and session type. A fee with a blank `discipline` acts as a default for that student.
+
+- **`payments`**: A simple log of all payments received from students.
+  - **Key Fields**: `studentId`, `amount`, `transactionDate`, `paymentMethod`.
+  - **Relations**: Each payment is linked to a `studentId`.
+
+This structure allows for a flexible system where each student can have unique billing rates for different subjects and session types, providing accurate financial tracking.
+
 ## Getting Started: A Step-by-Step Guide
 
 Follow these steps to get the application running on your local machine for development and testing.
