@@ -194,7 +194,7 @@ function StudentListPage() {
     switch (view) {
         case 'addStudent':
             return (
-                <Card>
+                <Card className="h-full">
                     <CardHeader>
                     <div className="flex justify-between items-center">
                         <div>
@@ -218,7 +218,7 @@ function StudentListPage() {
             }
             if (!loading && students.length === 0) {
               return (
-                 <div className="flex items-center justify-center h-full rounded-lg bg-muted/50">
+                 <div className="flex flex-col items-center justify-center h-full rounded-lg bg-muted/50">
                     <div className="text-center text-muted-foreground">
                         <p>No students found. Add one to get started.</p>
                     </div>
@@ -226,7 +226,7 @@ function StudentListPage() {
               )
             }
             return (
-                <div className="flex items-center justify-center h-full rounded-lg bg-muted/50">
+                <div className="flex flex-col items-center justify-center h-full rounded-lg bg-muted/50">
                     <div className="text-center text-muted-foreground">
                         {loading ? <p>Loading students...</p> : <p>Select a student to view their profile.</p>}
                     </div>
@@ -237,8 +237,8 @@ function StudentListPage() {
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 h-full">
-        <div className="md:col-span-1 lg:col-span-1 flex flex-col gap-4">
+    <div className="flex gap-6 h-full">
+        <div className="w-full max-w-xs flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-headline font-bold text-foreground">
                     Students
@@ -291,7 +291,7 @@ function StudentListPage() {
             </Card>
         </div>
 
-        <div className="md:col-span-2 lg:col-span-3 h-full overflow-y-auto">
+        <div className="flex-1 h-full overflow-y-auto">
            {renderRightPanel()}
         </div>
     </div>
