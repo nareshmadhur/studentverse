@@ -61,6 +61,13 @@ function NewClassPageContent() {
                            <Skeleton className="h-20 w-full" />
                            <Skeleton className="h-10 w-full" />
                         </div>
+                    ) : allStudents.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-12">
+                            <p>You must add a student before you can create a class.</p>
+                            <Button asChild className="mt-4">
+                                <a href="/students">Add Student</a>
+                            </Button>
+                        </div>
                     ) : (
                         <AddClassForm allStudents={allStudents} preselectedStudentId={preselectedStudentId} />
                     )}

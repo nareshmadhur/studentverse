@@ -330,7 +330,7 @@ export default function AddClassForm({
                       variant="outline"
                       role="combobox"
                       className="w-full justify-between"
-                      disabled={(watchedSessionType === '1-1' && !!preselectedStudentId)}
+                      disabled={!watchedDiscipline || !watchedSessionType || (watchedSessionType === '1-1' && !!preselectedStudentId)}
                     >
                       {selectedStudentIds.length > 0
                         ? `${selectedStudentIds.length} student(s) selected`

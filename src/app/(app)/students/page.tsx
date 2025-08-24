@@ -2,12 +2,11 @@
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { collection, onSnapshot, query, where, Timestamp, orderBy, doc } from "firebase/firestore";
+import { collection, onSnapshot, query, where, Timestamp, orderBy } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { Student, Class } from "@/lib/definitions";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, User, Users, UserX, X } from "lucide-react";
+import { PlusCircle, User, Users, UserX, X, School } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,6 +17,29 @@ import StudentProfile from "@/components/students/student-profile";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import AddStudentForm from "@/components/students/add-student-form";
+
+function WelcomeGuide({ onAddStudentClick }: { onAddStudentClick: () => void }) {
+  return (
+    <Card className="flex-1 flex items-center justify-center p-6">
+      <div className="text-center max-w-lg">
+        <School className="mx-auto h-16 w-16 text-primary" />
+        <h2 className="mt-6 text-2xl font-headline font-bold text-foreground">
+          Welcome to Tutoraid!
+        </h2>
+        <p className="mt-4 text-muted-foreground">
+          It looks like you're just getting started. The first step to managing your tutoring business is to add your students.
+        </p>
+        <p className="mt-2 text-muted-foreground">
+          Once you have students, you can schedule classes, define fee structures, and track payments.
+        </p>
+        <Button onClick={onAddStudentClick} className="mt-6">
+          <PlusCircle className="mr-2 h-5 w-5" />
+          Add Your First Student
+        </Button>
+      </div>
+    </Card>
+  )
+}
 
 function StudentListPage() {
   const router = useRouter();
@@ -74,16 +96,21 @@ function StudentListPage() {
   }, []);
 
    useEffect(() => {
-    // This effect ensures the view is correct when the user navigates back/forward
-    // or when the page loads with a student ID in the URL.
-    if (selectedStudentId && students.length > 0 && !students.find(s => s.id === selectedStudentId)) {
-        // If the selected student is not in the list (e.g., deleted), go back to the default state.
+    if (loading) return;
+
+    if (students.length === 0) {
+      if (view !== 'addStudent') {
+        setView('profile'); // This will trigger the welcome guide
+      }
+      return;
+    }
+
+    if (selectedStudentId && !students.find(s => s.id === selectedStudentId)) {
         router.replace('/students', { scroll: false });
     } else if (!selectedStudentId && students.length > 0 && view !== 'addStudent') {
-        // If no student is selected, select the first one.
         router.replace(`/students?id=${students[0].id}`, { scroll: false });
     }
-  }, [selectedStudentId, students, router, view]);
+  }, [selectedStudentId, students, router, view, loading]);
 
 
   const studentClassMap = useMemo(() => {
@@ -191,10 +218,24 @@ function StudentListPage() {
   );
 
   const renderRightPanel = () => {
+    if (loading) {
+      return (
+          <Card className="flex-1 flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                  <p>Loading students...</p>
+              </div>
+          </Card>
+      );
+    }
+    
+    if (students.length === 0 && view !== 'addStudent') {
+       return <WelcomeGuide onAddStudentClick={handleAddClick} />;
+    }
+
     switch (view) {
         case 'addStudent':
             return (
-                <Card>
+                <Card className="flex-1">
                     <CardHeader>
                     <div className="flex justify-between items-center">
                         <div>
@@ -214,21 +255,12 @@ function StudentListPage() {
         case 'profile':
         default:
             if (selectedStudentId) {
-                return <StudentProfile id={selectedStudentId} isAddingFeeForNewStudent={isAddingFeeForNewStudent} onFeeAdded={() => setIsAddingFeeForNewStudent(false)} />;
-            }
-            if (!loading && students.length === 0) {
-              return (
-                 <Card className="flex items-center justify-center h-full">
-                    <div className="text-center text-muted-foreground">
-                        <p>No students found. Add one to get started.</p>
-                    </div>
-                </Card>
-              )
+                return <div className="flex-1"><StudentProfile id={selectedStudentId} isAddingFeeForNewStudent={isAddingFeeForNewStudent} onFeeAdded={() => setIsAddingFeeForNewStudent(false)} /></div>;
             }
             return (
-                <Card className="flex items-center justify-center h-full">
+                <Card className="flex-1 flex items-center justify-center">
                     <div className="text-center text-muted-foreground">
-                        {loading ? <p>Loading students...</p> : <p>Select a student to view their profile.</p>}
+                        <p>Select a student to view their profile.</p>
                     </div>
                 </Card>
             );
@@ -237,24 +269,28 @@ function StudentListPage() {
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 h-full">
-        <div className="md:col-span-1 lg:col-span-1 xl:col-span-1 flex flex-col gap-4">
+    <div className="flex flex-col md:flex-row gap-6 h-full">
+        <div className="w-full md:w-1/3 lg:w-1/4 flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-headline font-bold text-foreground">
                     Students
                 </h1>
-                <Button onClick={handleAddClick} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add
-                </Button>
+                 {students.length > 0 && (
+                    <Button onClick={handleAddClick} size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add
+                    </Button>
+                 )}
             </div>
-            <Input 
-                placeholder="Search students..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            {students.length > 0 && (
+                <Input 
+                    placeholder="Search students..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            )}
             <Card className="flex-1">
-                <Tabs defaultValue="all">
+                <Tabs defaultValue="all" className="flex flex-col h-full">
                   <CardHeader className="p-2 pb-0">
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="all" className="flex gap-2"><Users className="h-4 w-4" /> All</TabsTrigger>
@@ -262,7 +298,7 @@ function StudentListPage() {
                         <TabsTrigger value="inactive" className="flex gap-2"><UserX className="h-4 w-4" /> Inactive</TabsTrigger>
                     </TabsList>
                   </CardHeader>
-                  <CardContent className="p-2">
+                  <CardContent className="p-2 flex-1 overflow-y-auto">
                       <div className="space-y-2">
                          {loading ? (
                               Array.from({ length: 5 }).map((_, i) => (
@@ -274,7 +310,7 @@ function StudentListPage() {
                                       </div>
                                   </div>
                               ))
-                         ) : (
+                         ) : students.length > 0 ? (
                           <>
                            <TabsContent value="all">
                               {filteredStudents.map(s => <StudentListItem key={s.id} student={s} />)}
@@ -286,6 +322,14 @@ function StudentListPage() {
                               {filteredInactiveStudents.map(s => <StudentListItem key={s.id} student={s} />)}
                           </TabsContent>
                           </>
+                         ) : (
+                           <div className="text-center text-muted-foreground p-8">
+                             <p>No students yet.</p>
+                              <Button onClick={handleAddClick} size="sm" className="mt-4">
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Add one
+                              </Button>
+                           </div>
                          )}
                       </div>
                   </CardContent>
@@ -293,7 +337,7 @@ function StudentListPage() {
             </Card>
         </div>
 
-        <div className="md:col-span-1 lg:col-span-2 xl:col-span-3">
+        <div className="flex-1 flex flex-col">
            {renderRightPanel()}
         </div>
     </div>
