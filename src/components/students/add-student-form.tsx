@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
 import { cn } from "@/lib/utils";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { countries, currencies } from "@/lib/data/form-data";
 import { AppContext } from "@/app/(app)/layout";
 
@@ -52,6 +52,17 @@ export default function AddStudentForm({ onFinish }: { onFinish: (studentId?: st
       currencyCode: "",
     },
   });
+
+  const watchedCountry = form.watch("country");
+
+  useEffect(() => {
+    if (watchedCountry) {
+        const countryData = countries.find(c => c.name === watchedCountry);
+        if (countryData && countryData.currencyCode) {
+            form.setValue("currencyCode", countryData.currencyCode);
+        }
+    }
+  }, [watchedCountry, form]);
 
   const onSubmit = async (data: StudentFormValues) => {
     if (isSubmitting) return;
