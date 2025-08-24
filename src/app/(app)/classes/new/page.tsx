@@ -11,6 +11,7 @@ import { collection, getDocs, query, where, Timestamp } from "firebase/firestore
 import { db, getCollectionName } from "@/lib/firebase";
 import { Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 function NewClassPageContent() {
     const router = useRouter();
@@ -65,7 +66,7 @@ function NewClassPageContent() {
                         <div className="text-center text-muted-foreground py-12">
                             <p>You must add a student before you can create a class.</p>
                             <Button asChild className="mt-4">
-                                <a href="/students">Add Student</a>
+                                <Link href="/students">Add Student</Link>
                             </Button>
                         </div>
                     ) : (

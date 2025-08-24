@@ -138,7 +138,7 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="space-y-6">
+        <div className="space-y-6 w-full">
           <Card><CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader><CardContent><Skeleton className="h-24 w-full" /></CardContent></Card>
           <Card><CardHeader><Skeleton className="h-8 w-1/3" /></CardHeader><CardContent><Skeleton className="h-32 w-full" /></CardContent></Card>
         </div>
@@ -373,7 +373,10 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
 
 
 export default function StudentProfile({ id, isAddingFeeForNewStudent = false, onFeeAdded = () => {} }: { id: string; isAddingFeeForNewStudent?: boolean, onFeeAdded?: () => void }) {
+    // The Suspense Boundary is necessary because the profile uses `useSearchParams`
     return (
+      <Suspense fallback={<Skeleton className="h-[600px] w-full" />}>
         <StudentProfileContent id={id} isAddingFeeForNewStudent={isAddingFeeForNewStudent} onFeeAdded={onFeeAdded} />
+      </Suspense>
     )
 }

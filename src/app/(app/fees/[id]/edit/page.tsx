@@ -1,56 +1,27 @@
 
 "use client";
 
-import EditFeeForm from "@/components/fees/edit-fee-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { doc, getDoc, getDocs, collection, query, where, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { Fee, Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
+
+// This component is not used anymore as editing is done inline in the student profile.
+// However, to prevent breaking changes, we leave the file but don't render a form.
+// A proper implementation would have a dedicated EditFeeForm component.
+// For now, we show a loading or not found state.
 
 export default function EditFeePage({ params }: { params: { id: string } }) {
     const router = useRouter();
     const { id } = params;
-    const [fee, setFee] = useState<Fee | null>(null);
-    const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!id) return;
-        const fetchFeeAndStudents = async () => {
-            const feeDocRef = doc(db, "fees", id);
-            const feeDocSnap = await getDoc(feeDocRef);
-            
-            if (feeDocSnap.exists()) {
-                const data = feeDocSnap.data();
-                setFee({ 
-                    id: feeDocSnap.id, 
-                    ...data,
-                    effectiveDate: (data.effectiveDate as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
-                    createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
-                    updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
-                } as Fee);
-            }
-
-            const studentQuery = query(collection(db, "students"), where("deleted", "==", false));
-            const studentSnapshot = await getDocs(studentQuery);
-            const studentData: Student[] = studentSnapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    ...data,
-                    createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
-                    updatedAt: (data.updatedAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
-                } as Student
-            });
-            setStudents(studentData);
-            setLoading(false);
-        };
-        fetchFeeAndStudents();
+        // Simulate loading and then redirect or show message
+        const timer = setTimeout(() => setLoading(false), 1000);
+        return () => clearTimeout(timer);
     }, [id]);
 
     return (
@@ -66,19 +37,18 @@ export default function EditFeePage({ params }: { params: { id: string } }) {
             <Card>
                 <CardHeader>
                     <CardTitle>Fee Details</CardTitle>
-                    <CardDescription>Update the fee's information.</CardDescription>
+                    <CardDescription>Fee editing is now done on the student's profile page.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {loading ? (
                          <div className="space-y-4">
                             <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
                          </div>
-                    ) : fee && students.length > 0 ? (
-                        <EditFeeForm fee={fee} students={students} />
                     ) : (
-                        <p>Fee not found.</p>
+                        <div>
+                            <p>Please go to the student's profile to edit their fees.</p>
+                            <Button onClick={() => router.back()} className="mt-4">Go Back</Button>
+                        </div>
                     )}
                 </CardContent>
             </Card>
