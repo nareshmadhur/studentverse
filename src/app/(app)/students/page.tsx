@@ -58,7 +58,7 @@ function StudentListPage() {
   useEffect(() => {
     setLoading(true);
     const studentsQuery = query(collection(db, getCollectionName("students", environment)), where("deleted", "==", false), orderBy("name"));
-    const classesQuery = query(collection(db, getCollectionName("classes", environment)), where("deleted", "==", false), orderBy("scheduledDate", "desc"));
+    const classesQuery = query(collection(db, getCollectionName("classes", environment)), where("deleted", "==", false));
 
     const unsubscribeStudents = onSnapshot(studentsQuery, (snapshot) => {
       const studentData: Student[] = snapshot.docs.map(doc => {
@@ -87,7 +87,7 @@ function StudentListPage() {
           ...data,
           scheduledDate: (data.scheduledDate as Timestamp).toDate().toISOString(),
         } as Class;
-      });
+      }).sort((a,b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
       setClasses(classData);
     });
 
@@ -271,8 +271,8 @@ function StudentListPage() {
 
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh_-_100px)]">
-        <div className="w-full md:w-1/3 lg:w-1/4 flex flex-col gap-4">
+    <div className="grid md:grid-cols-[300px_1fr] gap-6 h-[calc(100vh_-_100px)] items-start">
+        <div className="flex flex-col gap-4 h-full">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-headline font-bold text-foreground">
                     Students
@@ -339,7 +339,7 @@ function StudentListPage() {
             </Card>
         </div>
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col h-full overflow-y-auto">
            {renderRightPanel()}
         </div>
     </div>

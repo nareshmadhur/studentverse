@@ -208,9 +208,9 @@ export default function AddStudentForm({ onFinish }: { onFinish: (studentId?: st
                             {currencies.map((currency) => (
                               <CommandItem
                                 key={currency.code}
-                                value={currency.code}
-                                onSelect={(currentValue) => {
-                                  form.setValue("currencyCode", currentValue === field.value ? "" : currentValue);
+                                value={`${currency.name} ${currency.code}`}
+                                onSelect={() => {
+                                  form.setValue("currencyCode", currency.code);
                                   setCurrencySearchOpen(false);
                                 }}
                               >
