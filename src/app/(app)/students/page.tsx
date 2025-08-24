@@ -255,11 +255,13 @@ function StudentListPage() {
             />
             <Card className="flex-1">
                 <Tabs defaultValue="all">
-                  <TabsList className="grid w-full grid-cols-3 m-2">
-                      <TabsTrigger value="all" className="flex gap-2"><Users className="h-4 w-4" /> All</TabsTrigger>
-                      <TabsTrigger value="active" className="flex gap-2"><User className="h-4 w-4" /> Active</TabsTrigger>
-                      <TabsTrigger value="inactive" className="flex gap-2"><UserX className="h-4 w-4" /> Inactive</TabsTrigger>
-                  </TabsList>
+                  <CardHeader className="p-2 pb-0">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="all" className="flex gap-2"><Users className="h-4 w-4" /> All</TabsTrigger>
+                        <TabsTrigger value="active" className="flex gap-2"><User className="h-4 w-4" /> Active</TabsTrigger>
+                        <TabsTrigger value="inactive" className="flex gap-2"><UserX className="h-4 w-4" /> Inactive</TabsTrigger>
+                    </TabsList>
+                  </CardHeader>
                   <CardContent className="p-2">
                       <div className="space-y-2">
                          {loading ? (
