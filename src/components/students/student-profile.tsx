@@ -220,7 +220,7 @@ function StudentProfileContent({ id }: { id: string; }) {
         </CardContent>
       </Card>
       
-       <Tabs defaultValue={activeTab} onValueChange={handleTabChange}>
+       <Tabs defaultValue={activeTab} onValueChange={handleTabChange} value={activeTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="classes"><Calendar className="mr-2 h-4 w-4"/>Classes ({classes.length})</TabsTrigger>
           <TabsTrigger value="fees"><DollarSign className="mr-2 h-4 w-4" />Fee Structure ({fees.length})</TabsTrigger>
@@ -388,5 +388,3 @@ export default function StudentProfile({ id }: { id: string; }) {
       </Suspense>
     )
 }
-
-    

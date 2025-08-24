@@ -47,13 +47,13 @@ function StudentListPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedStudentId = searchParams.get('id');
+  const view = searchParams.get('view');
   const { environment } = useContext(AppContext);
 
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [view, setView] = useState<'profile' | 'add'>('profile');
 
   useEffect(() => {
     setLoading(true);
@@ -159,19 +159,20 @@ function StudentListPage() {
 
 
   const handleStudentSelect = (id: string | null) => {
-    setView('profile');
     const newPath = id ? `/students?id=${id}` : '/students';
     router.push(newPath, { scroll: false });
   };
   
   const handleAddStudentClick = () => {
-    setView('add');
-    router.push('/students', { scroll: false }); // Clear student selection
+    router.push('/students?view=add', { scroll: false }); // Clear student selection
   }
 
   const handleFinishAdding = (newStudentId: string) => {
      router.push(`/students?id=${newStudentId}&tab=fees&isAddingFeeForNewStudent=true`);
-     setView('profile');
+  }
+  
+  const handleCancelAdding = () => {
+    router.push('/students');
   }
 
   const StudentListItem = ({ student }: { student: Student }) => (
@@ -182,17 +183,17 @@ function StudentListPage() {
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleStudentSelect(student.id); }}
         className={cn(
             "flex items-center gap-4 p-2 rounded-lg cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-ring",
-            selectedStudentId === student.id && view === 'profile' ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+            selectedStudentId === student.id && !view ? "bg-primary text-primary-foreground" : "hover:bg-muted"
         )}
     >
         <Avatar>
-            <AvatarFallback className={cn(selectedStudentId === student.id && view === 'profile' ? "bg-primary-foreground text-primary" : "")}>
+            <AvatarFallback className={cn(selectedStudentId === student.id && !view ? "bg-primary-foreground text-primary" : "")}>
                 {student.name.charAt(0).toUpperCase()}
             </AvatarFallback>
         </Avatar>
         <div className="flex-1 overflow-hidden">
             <p className="font-semibold truncate">{student.name}</p>
-            <p className={cn("text-xs truncate", selectedStudentId === student.id && view === 'profile' ? "text-primary-foreground/80" : "text-muted-foreground")}>
+            <p className={cn("text-xs truncate", selectedStudentId === student.id && !view ? "text-primary-foreground/80" : "text-muted-foreground")}>
                 {student.email}
             </p>
         </div>
@@ -209,7 +210,7 @@ function StudentListPage() {
           </Card>
       );
     }
-
+    
     if (view === 'add') {
       return (
         <Card>
@@ -218,7 +219,7 @@ function StudentListPage() {
               <CardDescription>Enter the details for the new student.</CardDescription>
           </CardHeader>
           <CardContent>
-              <AddStudentForm onFinish={handleFinishAdding} onCancel={() => setView('profile')} />
+              <AddStudentForm onFinish={handleFinishAdding} onCancel={handleCancelAdding} />
           </CardContent>
         </Card>
       )
