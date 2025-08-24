@@ -17,15 +17,18 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { doc, getDoc } from "firebase/firestore";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["teacher", "student"], { required_error: "You must select a role." }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -39,7 +42,6 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-
 export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -51,15 +53,20 @@ export default function LoginPage() {
     defaultValues: {
       email: "",
       password: "",
+      role: "teacher",
     },
   });
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = (role: 'teacher' | 'student') => {
      toast({
         title: "Login Successful",
         description: "Welcome back!",
       });
-      router.push("/students");
+      if (role === 'student') {
+        router.push("/student/dashboard");
+      } else {
+        router.push("/students");
+      }
   }
 
   const handleAuthError = (error: any) => {
@@ -89,6 +96,24 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      
+      const studentDocRef = doc(db, "dev_students", userCredential.user.uid);
+      const studentDocSnap = await getDoc(studentDocRef);
+
+      if (data.role === 'student' && !studentDocSnap.exists()) {
+        await signOut(auth);
+        toast({ title: "Access Denied", description: "This account does not have student privileges.", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      if (data.role === 'teacher' && studentDocSnap.exists()) {
+        await signOut(auth);
+        toast({ title: "Access Denied", description: "This account does not have teacher privileges.", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+      
       if (!userCredential.user.emailVerified) {
         await signOut(auth);
         toast({
@@ -97,7 +122,7 @@ export default function LoginPage() {
             variant: "destructive",
         });
       } else {
-        handleAuthSuccess();
+        handleAuthSuccess(data.role);
       }
     } catch (error: any) {
         handleAuthError(error);
@@ -111,7 +136,9 @@ export default function LoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      handleAuthSuccess();
+      // NOTE: Google Sign-In is assumed for teachers only in this simplified setup.
+      // A more robust solution would handle role selection post-Google sign-in.
+      handleAuthSuccess('teacher');
     } catch (error) {
       handleAuthError(error);
     } finally {
@@ -129,6 +156,36 @@ export default function LoginPage() {
         <CardContent>
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                 <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>I am a...</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="teacher" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Teacher</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="student" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Student</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                 control={form.control}
                 name="email"
@@ -173,7 +230,7 @@ export default function LoginPage() {
             </div>
             
             <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading || googleLoading}>
-                {googleLoading ? "Signing in..." : <><GoogleIcon className="mr-2" /> Google</>}
+                {googleLoading ? "Signing in..." : <><GoogleIcon className="mr-2" /> Google (Teachers)</>}
             </Button>
 
             <p className="mt-4 text-center text-sm text-muted-foreground">
