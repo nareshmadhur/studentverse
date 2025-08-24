@@ -70,6 +70,7 @@ export default function ClassesPage() {
   }, [classes, selectedDate]);
   
   const getStudentNames = (studentIds: string[]) => {
+    if (!studentIds) return '';
     return studentIds.map(id => students.find(s => s.id === id)?.name || 'Unknown').join(', ');
   }
 
