@@ -53,7 +53,7 @@ function StudentListPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState<'profile' | 'addStudent'>('profile');
-  const [isAddingFeeForNewStudent, setIsAddingFeeForNewStudent] = useState(false);
+  const [pendingStudentId, setPendingStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -99,12 +99,21 @@ function StudentListPage() {
 
   // This hook handles the case where no student is selected, defaulting to the first.
   useEffect(() => {
-    if (loading || students.length === 0 || selectedStudentId || view === 'addStudent') {
+    if (loading || students.length === 0 || selectedStudentId || view === 'addStudent' || pendingStudentId) {
       return;
     }
     // If we have students but none is selected, select the first one.
     router.replace(`/students?id=${students[0].id}`, { scroll: false });
-  }, [loading, students, selectedStudentId, view, router]);
+  }, [loading, students, selectedStudentId, view, router, pendingStudentId]);
+
+  // This hook handles navigating to the new student after they are created and loaded.
+  useEffect(() => {
+    if (pendingStudentId && students.find(s => s.id === pendingStudentId)) {
+        router.push(`/students?id=${pendingStudentId}&tab=fees&isAddingFeeForNewStudent=true`, { scroll: false });
+        setView('profile');
+        setPendingStudentId(null); // Reset after navigation
+    }
+  }, [pendingStudentId, students, router]);
 
 
   const studentClassMap = useMemo(() => {
@@ -161,7 +170,6 @@ function StudentListPage() {
 
   const handleStudentSelect = (id: string | null) => {
     setView('profile');
-    setIsAddingFeeForNewStudent(false);
     const newPath = id ? `/students?id=${id}` : '/students';
     router.push(newPath, { scroll: false });
   };
@@ -175,10 +183,10 @@ function StudentListPage() {
 
   const handleFinishAddingStudent = (newStudentId?: string) => {
     if (newStudentId) {
-        setIsAddingFeeForNewStudent(true);
-        router.push(`/students?id=${newStudentId}&tab=fees`, { scroll: false });
+        setPendingStudentId(newStudentId);
+    } else {
+        setView('profile');
     }
-    setView('profile');
   }
 
   const StudentListItem = ({ student }: { student: Student }) => (
@@ -244,7 +252,7 @@ function StudentListPage() {
         case 'profile':
         default:
             if (selectedStudentId) {
-                return <div className="flex-1"><StudentProfile id={selectedStudentId} isAddingFeeForNewStudent={isAddingFeeForNewStudent} onFeeAdded={() => setIsAddingFeeForNewStudent(false)} /></div>;
+                return <div className="flex-1"><StudentProfile id={selectedStudentId} /></div>;
             }
             return (
                 <Card className="flex-1 flex items-center justify-center">

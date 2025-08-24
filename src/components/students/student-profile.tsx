@@ -25,7 +25,7 @@ import EditFeeTableRow from "../fees/edit-fee-form";
 import { AppContext } from "@/app/(app)/layout";
 
 
-function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { id: string; isAddingFeeForNewStudent: boolean, onFeeAdded: () => void; }) {
+function StudentProfileContent({ id }: { id: string; }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -38,13 +38,14 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editingFeeId, setEditingFeeId] = useState<string | null>(null);
-
+  
   const activeTab = searchParams.get('tab') || 'classes';
-  const [isAddingFee, setIsAddingFee] = useState(false);
+  const isAddingFeeForNewStudent = searchParams.get('isAddingFeeForNewStudent') === 'true';
+
+  const [isAddingFee, setIsAddingFee] = useState(isAddingFeeForNewStudent);
 
   useEffect(() => {
     // This effect specifically handles the "is adding fee for new student" case.
-    // It triggers when the prop changes to true.
     if (isAddingFeeForNewStudent) {
       setIsAddingFee(true);
     }
@@ -138,7 +139,8 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
 
   const handleFeeAdded = () => {
     setIsAddingFee(false);
-    onFeeAdded();
+    // clean up the URL parameter
+    router.replace(`/students?id=${id}&tab=fees`, { scroll: false });
   }
 
   if (loading) {
@@ -378,11 +380,11 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
 }
 
 
-export default function StudentProfile({ id, isAddingFeeForNewStudent = false, onFeeAdded = () => {} }: { id: string; isAddingFeeForNewStudent?: boolean, onFeeAdded?: () => void }) {
+export default function StudentProfile({ id }: { id: string; }) {
     // The Suspense Boundary is necessary because the profile uses `useSearchParams`
     return (
       <Suspense fallback={<Skeleton className="h-[600px] w-full" />}>
-        <StudentProfileContent id={id} isAddingFeeForNewStudent={isAddingFeeForNewStudent} onFeeAdded={onFeeAdded} />
+        <StudentProfileContent id={id} />
       </Suspense>
     )
 }
