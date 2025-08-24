@@ -95,33 +95,35 @@ export default function AdminPage() {
                 <h1 className="text-3xl font-headline font-bold text-foreground">
                     Data Manager
                 </h1>
-                 <Popover open={openEnvSelector} onOpenChange={setOpenEnvSelector}>
-                    <PopoverTrigger asChild>
-                        <Button variant="outline" role="combobox" aria-expanded={openEnvSelector} className="w-[200px] justify-between">
-                           Environment: <span className="font-bold capitalize">{currentEnv}</span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                            <CommandGroup>
-                                {ENVIRONMENTS.map((env) => (
-                                    <CommandItem
-                                        key={env}
-                                        value={env}
-                                        onSelect={(currentValue) => {
-                                            handleEnvChange(currentValue as Environment)
-                                            setOpenEnvSelector(false)
-                                        }}
-                                    >
-                                        <Check className={cn("mr-2 h-4 w-4", currentEnv === env ? "opacity-100" : "opacity-0")} />
-                                        <span className="capitalize">{env}</span>
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </Command>
-                    </PopoverContent>
-                </Popover>
+                {currentEnv !== 'production' && (
+                    <Popover open={openEnvSelector} onOpenChange={setOpenEnvSelector}>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" role="combobox" aria-expanded={openEnvSelector} className="w-[200px] justify-between">
+                            Environment: <span className="font-bold capitalize">{currentEnv}</span>
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[200px] p-0">
+                            <Command>
+                                <CommandGroup>
+                                    {ENVIRONMENTS.map((env) => (
+                                        <CommandItem
+                                            key={env}
+                                            value={env}
+                                            onSelect={(currentValue) => {
+                                                handleEnvChange(currentValue as Environment)
+                                                setOpenEnvSelector(false)
+                                            }}
+                                        >
+                                            <Check className={cn("mr-2 h-4 w-4", currentEnv === env ? "opacity-100" : "opacity-0")} />
+                                            <span className="capitalize">{env}</span>
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                )}
             </div>
             <Card>
                 <CardHeader>
