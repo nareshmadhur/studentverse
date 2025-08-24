@@ -30,10 +30,8 @@ const getEnvironment = (): Environment => {
 
 const getCollectionName = (baseName: string): string => {
     const env = getEnvironment();
-    if (env === 'development') {
-        return baseName;
-    }
-    return `${env}_${baseName}`;
+    const prefix = env === 'development' ? 'dev' : env;
+    return `${prefix}_${baseName}`;
 }
 
 export { db, auth, getEnvironment, getCollectionName };
