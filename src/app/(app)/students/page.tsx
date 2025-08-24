@@ -237,7 +237,7 @@ function StudentListPage() {
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 h-full md:h-[calc(100vh-8rem)]">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 h-full md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Student List */}
         <div className="md:col-span-1 lg:col-span-1 flex flex-col gap-4">
             <div className="flex items-center justify-between">
@@ -293,7 +293,7 @@ function StudentListPage() {
         </div>
 
         {/* Right Column: Student Profile or Add Form */}
-        <div className="md:col-span-2 lg:col-span-3 overflow-y-auto h-full">
+        <div className="md:col-span-2 lg:col-span-3 overflow-y-auto">
            {renderRightPanel()}
         </div>
     </div>
