@@ -6,12 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useContext } from "react";
 import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { AppContext } from "../../layout";
 
 function NewClassPageContent() {
     const router = useRouter();
@@ -19,10 +20,11 @@ function NewClassPageContent() {
     const [allStudents, setAllStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const preselectedStudentId = searchParams.get('studentId');
+    const { environment } = useContext(AppContext);
 
     useEffect(() => {
         const fetchStudents = async () => {
-          const studentQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false));
+          const studentQuery = query(collection(db, getCollectionName("students", environment)), where("deleted", "==", false));
           const studentSnapshot = await getDocs(studentQuery);
           const studentData: Student[] = studentSnapshot.docs.map(doc => {
             const data = doc.data();
@@ -37,7 +39,7 @@ function NewClassPageContent() {
           setLoading(false);
         }
         fetchStudents();
-    }, []);
+    }, [environment]);
 
     return (
         <div className="flex flex-col gap-6">

@@ -1,18 +1,20 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { doc, getDoc, getDocs, collection, query, where, Timestamp } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { Payment, Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 import EditPaymentForm from "@/components/payments/edit-payment-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AppContext } from "@/app/(app)/layout";
 
 export default function EditPaymentFormLoader({ paymentId }: { paymentId: string }) {
     const [payment, setPayment] = useState<Payment | null>(null);
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
+    const { environment } = useContext(AppContext);
 
     useEffect(() => {
         if (!paymentId) return;
@@ -20,7 +22,7 @@ export default function EditPaymentFormLoader({ paymentId }: { paymentId: string
         const fetchPaymentAndStudents = async () => {
             setLoading(true);
             try {
-                const paymentDocRef = doc(db, getCollectionName("payments"), paymentId);
+                const paymentDocRef = doc(db, getCollectionName("payments", environment), paymentId);
                 const paymentDocSnap = await getDoc(paymentDocRef);
                 
                 if (paymentDocSnap.exists()) {
@@ -34,7 +36,7 @@ export default function EditPaymentFormLoader({ paymentId }: { paymentId: string
                     } as Payment);
                 }
 
-                const studentQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false));
+                const studentQuery = query(collection(db, getCollectionName("students", environment)), where("deleted", "==", false));
                 const studentSnapshot = await getDocs(studentQuery);
                 const studentData: Student[] = studentSnapshot.docs.map(doc => {
                     const data = doc.data();
@@ -54,7 +56,7 @@ export default function EditPaymentFormLoader({ paymentId }: { paymentId: string
         };
 
         fetchPaymentAndStudents();
-    }, [paymentId]);
+    }, [paymentId, environment]);
 
     return (
         <Card>

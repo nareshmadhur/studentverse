@@ -6,11 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { doc, getDoc, getDocs, collection, query, where, Timestamp } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { Class, Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AppContext } from "@/app/(app)/layout";
 
 
 export default function EditClassPage({ params }: { params: { id: string } }) {
@@ -19,11 +20,12 @@ export default function EditClassPage({ params }: { params: { id: string } }) {
     const [classItem, setClassItem] = useState<Class | null>(null);
     const [allStudents, setAllStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
+    const { environment } = useContext(AppContext);
 
     useEffect(() => {
         if (!id) return;
         const fetchClassAndStudents = async () => {
-            const classDocRef = doc(db, getCollectionName("classes"), id);
+            const classDocRef = doc(db, getCollectionName("classes", environment), id);
             const classDocSnap = await getDoc(classDocRef);
             
             if (classDocSnap.exists()) {
@@ -37,7 +39,7 @@ export default function EditClassPage({ params }: { params: { id: string } }) {
                 } as Class);
             }
 
-            const studentQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false));
+            const studentQuery = query(collection(db, getCollectionName("students", environment)), where("deleted", "==", false));
             const studentSnapshot = await getDocs(studentQuery);
             const studentData: Student[] = studentSnapshot.docs.map(doc => {
                 const data = doc.data();
@@ -52,7 +54,7 @@ export default function EditClassPage({ params }: { params: { id: string } }) {
             setLoading(false);
         };
         fetchClassAndStudents();
-    }, [id]);
+    }, [id, environment]);
 
 
     return (

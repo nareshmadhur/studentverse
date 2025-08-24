@@ -43,6 +43,8 @@ import {
 } from "@/components/ui/tooltip";
 import { getCurrencySymbol } from "@/lib/utils";
 import Link from "next/link";
+import { useContext } from "react";
+import { AppContext } from "@/app/(app)/layout";
 
 export default function PaymentsTable({ 
   payments,
@@ -52,10 +54,11 @@ export default function PaymentsTable({
   students: Student[]
 }) {
   const { toast } = useToast();
+  const { environment } = useContext(AppContext);
 
   const handleDelete = async (paymentId: string) => {
     try {
-      const paymentDocRef = doc(db, getCollectionName("payments"), paymentId);
+      const paymentDocRef = doc(db, getCollectionName("payments", environment), paymentId);
       await updateDoc(paymentDocRef, {
         deleted: true,
         updatedAt: serverTimestamp(),

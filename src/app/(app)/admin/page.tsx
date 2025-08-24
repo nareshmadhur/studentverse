@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { collection, onSnapshot, query, Timestamp } from "firebase/firestore";
-import { db, getEnvironment, getCollectionName, type Environment } from "@/lib/firebase";
+import { db, getCollectionName, type Environment } from "@/lib/firebase";
 import { Discipline, Student, Class, Fee, Payment } from "@/lib/definitions";
 import AddDisciplineForm from "@/components/admin/add-discipline-form";
 import DisciplinesTable from "@/components/admin/disciplines-table";
@@ -19,75 +19,70 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { AppContext } from "../layout";
 
 const ENVIRONMENTS: Environment[] = ['development', 'pre-prod', 'production'];
 
 
 export default function AdminPage() {
+    const { environment, setEnvironment } = useContext(AppContext);
     const [disciplines, setDisciplines] = useState<Discipline[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
     const [classes, setClasses] = useState<Class[]>([]);
     const [fees, setFees] = useState<Fee[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
-    const [currentEnv, setCurrentEnv] = useState<Environment>('development');
     const [openEnvSelector, setOpenEnvSelector] = useState(false);
 
-    useEffect(() => {
-        setCurrentEnv(getEnvironment());
-    }, []);
-
     const handleEnvChange = (env: Environment) => {
+        setEnvironment(env);
         localStorage.setItem('tutoraid-env', env);
-        window.location.reload(); // Reload to fetch new data
+        window.location.reload(); // Reload to fetch new data from the correct collections
     }
 
 
     useEffect(() => {
-        let loadedCount = 0;
-        const totalQueries = 5;
+        setLoading(true);
+        const disciplinesCol = getCollectionName("disciplines", environment);
+        const studentsCol = getCollectionName("students", environment);
+        const classesCol = getCollectionName("classes", environment);
+        const feesCol = getCollectionName("fees", environment);
+        const paymentsCol = getCollectionName("payments", environment);
 
-        const handleLoad = () => {
-            loadedCount++;
-            if (loadedCount === totalQueries) {
-                setLoading(false);
-            }
-        };
-
-        const disciplinesQuery = query(collection(db, getCollectionName("disciplines")));
-        const studentsQuery = query(collection(db, getCollectionName("students")));
-        const classesQuery = query(collection(db, getCollectionName("classes")));
-        const feesQuery = query(collection(db, getCollectionName("fees")));
-        const paymentsQuery = query(collection(db, getCollectionName("payments")));
-
-        const unsubscribes = [
-            onSnapshot(disciplinesQuery, snapshot => {
+        const queries = [
+            onSnapshot(query(collection(db, disciplinesCol)), snapshot => {
                 setDisciplines(snapshot.docs.map(doc => {
                     const data = doc.data();
                     return { id: doc.id, ...data, createdAt: (data.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString() } as Discipline
                 }));
-                handleLoad();
             }, console.error),
-            onSnapshot(studentsQuery, snapshot => {
+            onSnapshot(query(collection(db, studentsCol)), snapshot => {
                 setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: (doc.data().createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString() } as Student)));
-                handleLoad();
             }, console.error),
-            onSnapshot(classesQuery, snapshot => {
+            onSnapshot(query(collection(db, classesCol)), snapshot => {
                 setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), scheduledDate: (doc.data().scheduledDate as Timestamp)?.toDate().toISOString() || new Date().toISOString() } as Class)));
-                handleLoad();
             }, console.error),
-            onSnapshot(feesQuery, snapshot => {
+            onSnapshot(query(collection(db, feesCol)), snapshot => {
                 setFees(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp)?.toDate().toISOString() || new Date().toISOString() } as Fee)));
-                handleLoad();
             }, console.error),
-            onSnapshot(paymentsQuery, snapshot => {
+            onSnapshot(query(collection(db, paymentsCol)), snapshot => {
                 setPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), transactionDate: (doc.data().transactionDate as Timestamp)?.toDate().toISOString() || new Date().toISOString() } as Payment)));
-                handleLoad();
             }, console.error),
         ];
 
-        return () => unsubscribes.forEach(unsub => unsub());
-    }, []);
+        // A simple way to track loading state for all queries
+        const allQueriesPromise = Promise.all(queries.map(unsub => new Promise(resolve => {
+            const unsubAndResolve = (...args: any[]) => {
+                unsub(...args);
+                resolve(true);
+            };
+            return unsubAndResolve;
+        })));
+        
+        allQueriesPromise.finally(() => setLoading(false));
+
+        return () => queries.forEach(unsub => unsub());
+    }, [environment]);
 
     return (
         <div className="flex flex-col gap-6">
@@ -98,7 +93,7 @@ export default function AdminPage() {
                 <Popover open={openEnvSelector} onOpenChange={setOpenEnvSelector}>
                     <PopoverTrigger asChild>
                         <Button variant="outline" role="combobox" aria-expanded={openEnvSelector} className="w-[200px] justify-between">
-                        Environment: <span className="font-bold capitalize">{currentEnv}</span>
+                        Environment: <span className="font-bold capitalize">{environment}</span>
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                     </PopoverTrigger>
@@ -114,7 +109,7 @@ export default function AdminPage() {
                                             setOpenEnvSelector(false)
                                         }}
                                     >
-                                        <Check className={cn("mr-2 h-4 w-4", currentEnv === env ? "opacity-100" : "opacity-0")} />
+                                        <Check className={cn("mr-2 h-4 w-4", environment === env ? "opacity-100" : "opacity-0")} />
                                         <span className="capitalize">{env}</span>
                                     </CommandItem>
                                 ))}
@@ -126,7 +121,7 @@ export default function AdminPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Database Records</CardTitle>
-                    <CardDescription>View and manage all records in the <span className="font-bold capitalize">{currentEnv}</span> database.</CardDescription>
+                    <CardDescription>View and manage all records in the <span className="font-bold capitalize">{environment}</span> database.</CardDescription>
                 </CardHeader>
                 <CardContent>
                    <Tabs defaultValue="disciplines" className="w-full">

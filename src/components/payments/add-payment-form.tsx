@@ -24,11 +24,12 @@ import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { Student } from "@/lib/definitions";
-import { useEffect } from "react";
+import { useEffect, useContext } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { DatePicker } from "../ui/date-picker";
 import { useRouter } from "next/navigation";
+import { AppContext } from "@/app/(app)/layout";
 
 const paymentSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
@@ -48,6 +49,7 @@ export default function AddPaymentForm({
 }) {
   const { toast } = useToast();
   const router = useRouter();
+  const { environment } = useContext(AppContext);
   
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
@@ -73,7 +75,7 @@ export default function AddPaymentForm({
 
   const onSubmit = async (data: PaymentFormValues) => {
     try {
-      await addDoc(collection(db, getCollectionName("payments")), {
+      await addDoc(collection(db, getCollectionName("payments", environment)), {
         ...data,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

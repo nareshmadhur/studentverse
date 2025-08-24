@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Calendar, List, Pencil, Trash2 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import { collection, onSnapshot, getDocs, query, where, Timestamp, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { Class, Student } from "@/lib/definitions";
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import EditClassFormLoader from "@/components/classes/edit-class-form-loader";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { AppContext } from "../layout";
 
 
 export default function ClassesPage() {
@@ -24,9 +25,10 @@ export default function ClassesPage() {
   const [view, setView] = useState<'list' | 'edit'>('list');
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { environment } = useContext(AppContext);
 
   useEffect(() => {
-    const q = query(collection(db, getCollectionName("classes")), where("deleted", "==", false));
+    const q = query(collection(db, getCollectionName("classes", environment)), where("deleted", "==", false));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const classData: Class[] = snapshot.docs.map((doc) => {
         const data = doc.data();
@@ -40,7 +42,7 @@ export default function ClassesPage() {
     });
 
     const fetchStudents = async () => {
-      const studentQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false));
+      const studentQuery = query(collection(db, getCollectionName("students", environment)), where("deleted", "==", false));
       const studentSnapshot = await getDocs(studentQuery);
       const studentData: Student[] = studentSnapshot.docs.map(doc => {
         const data = doc.data();
@@ -57,7 +59,7 @@ export default function ClassesPage() {
     fetchStudents();
 
     return () => unsubscribe();
-  }, []);
+  }, [environment]);
 
   const filteredClasses = useMemo(() => {
     if (!selectedDate) {
@@ -78,7 +80,7 @@ export default function ClassesPage() {
   
   const handleDelete = async (classId: string) => {
     try {
-      await updateDoc(doc(db, getCollectionName("classes"), classId), { deleted: true, updatedAt: serverTimestamp() });
+      await updateDoc(doc(db, getCollectionName("classes", environment), classId), { deleted: true, updatedAt: serverTimestamp() });
       toast({ title: "Class Deleted", description: "The class has been marked as deleted." });
     } catch (error) {
        toast({ title: "Error", description: "Could not delete the class.", variant: "destructive" });

@@ -2,10 +2,11 @@
 'use server';
 
 import { collection, doc, getDoc, getDocs, query, where, Timestamp } from "firebase/firestore";
-import { db, getCollectionName, getEnvironment } from "@/lib/firebase";
+import { db, getCollectionName, type Environment } from "@/lib/firebase";
 import { Student, Class, Fee, Payment } from "@/lib/definitions";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
+import { headers } from "next/headers";
 
 export interface StatementItem {
   class: Class;
@@ -31,7 +32,7 @@ export interface BillingSummary {
     billedOneOnOneAmount: number;
     billedOneOnOneCount: number;
     billedGroupAmount: number;
-    billedGroupCount: number;
+billedGroupCount: number;
     totalBilled: number;
     totalPaid: number;
     balance: number;
@@ -71,16 +72,15 @@ const findBestFee = (classItem: Class, studentFees: Fee[]): Fee | null => {
 };
 
 
-export async function getBillingSummary(dateRange: DateRange): Promise<BillingSummary> {
+export async function getBillingSummary(dateRange: DateRange, environment: Environment): Promise<BillingSummary> {
   if (!dateRange.from || !dateRange.to) {
     throw new Error("Date range is required.");
   }
   
-  const env = getEnvironment();
-  const studentsCollection = getCollectionName("students");
-  const classesCollection = getCollectionName("classes");
-  const paymentsCollection = getCollectionName("payments");
-  const feesCollection = getCollectionName("fees");
+  const studentsCollection = getCollectionName("students", environment);
+  const classesCollection = getCollectionName("classes", environment);
+  const paymentsCollection = getCollectionName("payments", environment);
+  const feesCollection = getCollectionName("fees", environment);
 
 
   const startDate = Timestamp.fromDate(dateRange.from);
@@ -220,15 +220,15 @@ export async function getBillingSummary(dateRange: DateRange): Promise<BillingSu
   };
 }
 
-export async function getStatementData(studentId: string, dateRange: DateRange): Promise<Statement> {
+export async function getStatementData(studentId: string, dateRange: DateRange, environment: Environment): Promise<Statement> {
   if (!dateRange.from || !dateRange.to) {
     throw new Error("Date range is required.");
   }
 
-  const studentsCollection = getCollectionName("students");
-  const classesCollection = getCollectionName("classes");
-  const paymentsCollection = getCollectionName("payments");
-  const feesCollection = getCollectionName("fees");
+  const studentsCollection = getCollectionName("students", environment);
+  const classesCollection = getCollectionName("classes", environment);
+  const paymentsCollection = getCollectionName("payments", environment);
+  const feesCollection = getCollectionName("fees", environment);
 
   // 1. Fetch student details
   const studentDoc = await getDoc(doc(db, studentsCollection, studentId));

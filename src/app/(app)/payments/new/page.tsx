@@ -6,20 +6,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { Student } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AppContext } from "../../layout";
 
 export default function NewPaymentPage() {
     const router = useRouter();
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
+    const { environment } = useContext(AppContext);
 
     useEffect(() => {
         const fetchStudents = async () => {
-          const studentQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false));
+          const studentQuery = query(collection(db, getCollectionName("students", environment)), where("deleted", "==", false));
           const studentSnapshot = await getDocs(studentQuery);
           const studentData: Student[] = studentSnapshot.docs.map(doc => {
             const data = doc.data();
@@ -34,7 +36,7 @@ export default function NewPaymentPage() {
           setLoading(false);
         }
         fetchStudents();
-    }, []);
+    }, [environment]);
 
     return (
         <div className="flex flex-col gap-6">

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense, useContext } from "react";
 import { collection, onSnapshot, query, where, Timestamp, orderBy } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { Student, Class } from "@/lib/definitions";
@@ -17,6 +17,7 @@ import StudentProfile from "@/components/students/student-profile";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import AddStudentForm from "@/components/students/add-student-form";
+import { AppContext } from "../layout";
 
 function WelcomeGuide({ onAddStudentClick }: { onAddStudentClick: () => void }) {
   return (
@@ -45,6 +46,7 @@ function StudentListPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedStudentId = searchParams.get('id');
+  const { environment } = useContext(AppContext);
 
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -55,8 +57,8 @@ function StudentListPage() {
 
   useEffect(() => {
     setLoading(true);
-    const studentsQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false), orderBy("name"));
-    const classesQuery = query(collection(db, getCollectionName("classes")), where("deleted", "==", false), orderBy("scheduledDate", "desc"));
+    const studentsQuery = query(collection(db, getCollectionName("students", environment)), where("deleted", "==", false), orderBy("name"));
+    const classesQuery = query(collection(db, getCollectionName("classes", environment)), where("deleted", "==", false), orderBy("scheduledDate", "desc"));
 
     const unsubscribeStudents = onSnapshot(studentsQuery, (snapshot) => {
       const studentData: Student[] = snapshot.docs.map(doc => {
@@ -93,7 +95,7 @@ function StudentListPage() {
       unsubscribeStudents();
       unsubscribeClasses();
     };
-  }, []);
+  }, [environment]);
 
    useEffect(() => {
     if (loading) return;
@@ -269,7 +271,7 @@ function StudentListPage() {
 
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 h-full">
+    <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh_-_100px)]">
         <div className="w-full md:w-1/3 lg:w-1/4 flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-headline font-bold text-foreground">
@@ -289,7 +291,7 @@ function StudentListPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
             )}
-            <Card className="flex-1">
+            <Card className="flex-1 flex flex-col">
                 <Tabs defaultValue="all" className="flex flex-col h-full">
                   <CardHeader className="p-2 pb-0">
                     <TabsList className="grid w-full grid-cols-3">

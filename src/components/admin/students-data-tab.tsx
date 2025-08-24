@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext } from "react";
 import { Student } from "@/lib/definitions";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,11 +24,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { doc, writeBatch } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
+import { AppContext } from "@/app/(app)/layout";
 
 export default function StudentsDataTab({ students }: { students: Student[] }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
     const { toast } = useToast();
+    const { environment } = useContext(AppContext);
 
     const filteredStudents = useMemo(() => {
         return students.filter(student => 
@@ -51,7 +53,7 @@ export default function StudentsDataTab({ students }: { students: Student[] }) {
         if (selectedStudentIds.length === 0) return;
         const batch = writeBatch(db);
         selectedStudentIds.forEach(id => {
-            const docRef = doc(db, getCollectionName("students"), id);
+            const docRef = doc(db, getCollectionName("students", environment), id);
             batch.delete(docRef);
         });
         try {

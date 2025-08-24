@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DateRangePickerWithPresets } from "@/components/ui/date-range-picker-with-presets";
@@ -25,6 +25,7 @@ import {
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AppContext } from "../layout";
 
 function BillingPageContent() {
   const router = useRouter();
@@ -35,6 +36,7 @@ function BillingPageContent() {
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
   });
+  const { environment } = useContext(AppContext);
 
   const statementStudentId = searchParams.get('statementStudentId');
   const [isStatementOpen, setStatementOpen] = useState(!!statementStudentId);
@@ -54,7 +56,7 @@ function BillingPageContent() {
     if (!range?.from || !range?.to) return;
     setLoading(true);
     try {
-      const summaryData = await getBillingSummary(range);
+      const summaryData = await getBillingSummary(range, environment);
       setSummary(summaryData);
     } catch (error) {
       console.error("Failed to fetch billing summary:", error);
@@ -65,7 +67,7 @@ function BillingPageContent() {
 
   useEffect(() => {
     fetchSummary(dateRange);
-  }, [dateRange]);
+  }, [dateRange, environment]);
 
   const getPaymentStatus = (details: BillingSummary['studentDetails'][0]): { text: string; variant: "default" | "secondary" | "destructive" | "outline" } => {
     if (details.totalBilled <= 0) return { text: "No Charges", variant: "outline" };

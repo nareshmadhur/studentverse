@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { doc, getDoc, getDocs, collection, query, where, Timestamp } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { Class, Student } from "@/lib/definitions";
@@ -10,11 +10,13 @@ import EditClassForm from "@/components/classes/edit-class-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
+import { AppContext } from "@/app/(app)/layout";
 
 export default function EditClassFormLoader({ classId, onFinished }: { classId: string, onFinished: () => void }) {
     const [classItem, setClassItem] = useState<Class | null>(null);
     const [allStudents, setAllStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
+    const { environment } = useContext(AppContext);
 
     useEffect(() => {
         if (!classId) return;
@@ -22,7 +24,7 @@ export default function EditClassFormLoader({ classId, onFinished }: { classId: 
         const fetchClassAndStudents = async () => {
             setLoading(true);
             try {
-                const classDocRef = doc(db, getCollectionName("classes"), classId);
+                const classDocRef = doc(db, getCollectionName("classes", environment), classId);
                 const classDocSnap = await getDoc(classDocRef);
                 
                 if (classDocSnap.exists()) {
@@ -36,7 +38,7 @@ export default function EditClassFormLoader({ classId, onFinished }: { classId: 
                     } as Class);
                 }
 
-                const studentQuery = query(collection(db, getCollectionName("students")), where("deleted", "==", false));
+                const studentQuery = query(collection(db, getCollectionName("students", environment)), where("deleted", "==", false));
                 const studentSnapshot = await getDocs(studentQuery);
                 const studentData: Student[] = studentSnapshot.docs.map(doc => {
                     const data = doc.data();
@@ -56,7 +58,7 @@ export default function EditClassFormLoader({ classId, onFinished }: { classId: 
         };
 
         fetchClassAndStudents();
-    }, [classId]);
+    }, [classId, environment]);
 
     return (
         <Card>

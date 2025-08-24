@@ -18,20 +18,9 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const getEnvironment = (): Environment => {
-    if (typeof window !== 'undefined') {
-        const storedEnv = localStorage.getItem('tutoraid-env');
-        if (storedEnv && ['development', 'pre-prod', 'production'].includes(storedEnv)) {
-            return storedEnv as Environment;
-        }
-    }
-    return 'development';
-}
-
-const getCollectionName = (baseName: string): string => {
-    const env = getEnvironment();
+export const getCollectionName = (baseName: string, env: Environment): string => {
     const prefix = env === 'development' ? 'dev' : env;
     return `${prefix}_${baseName}`;
 }
 
-export { db, auth, getEnvironment, getCollectionName };
+export { db, auth };

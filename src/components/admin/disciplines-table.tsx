@@ -27,13 +27,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
+import { useContext } from "react";
+import { AppContext } from "@/app/(app)/layout";
 
 export default function DisciplinesTable({ disciplines }: { disciplines: Discipline[] }) {
   const { toast } = useToast();
+  const { environment } = useContext(AppContext);
 
   const handleDelete = async (id: string) => {
     try {
-      const docRef = doc(db, getCollectionName("disciplines"), id);
+      const docRef = doc(db, getCollectionName("disciplines", environment), id);
       await updateDoc(docRef, {
         deleted: true,
         updatedAt: serverTimestamp(),

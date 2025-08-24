@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext } from "react";
 import { Class, Student } from "@/lib/definitions";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,11 +24,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { doc, writeBatch } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
+import { AppContext } from "@/app/(app)/layout";
 
 export default function ClassesDataTab({ classes, students }: { classes: Class[], students: Student[] }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
     const { toast } = useToast();
+    const { environment } = useContext(AppContext);
 
     const getStudentName = (studentId: string) => students.find(s => s.id === studentId)?.name || 'Unknown';
 
@@ -62,7 +64,7 @@ export default function ClassesDataTab({ classes, students }: { classes: Class[]
         if (selectedClassIds.length === 0) return;
         const batch = writeBatch(db);
         selectedClassIds.forEach(id => {
-            const docRef = doc(db, getCollectionName("classes"), id);
+            const docRef = doc(db, getCollectionName("classes", environment), id);
             batch.delete(docRef);
         });
         try {

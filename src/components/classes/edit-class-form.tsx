@@ -26,7 +26,7 @@ import { db, getCollectionName } from "@/lib/firebase";
 import { Class, Student, Fee, Discipline } from "@/lib/definitions";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -34,6 +34,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { DatePicker } from "../ui/date-picker";
+import { AppContext } from "@/app/(app)/layout";
 
 const classSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -67,6 +68,7 @@ export default function EditClassForm({
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(classItem.students || []);
   const [studentFeeDetails, setStudentFeeDetails] = useState<StudentFeeInfo[]>([]);
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
+  const { environment } = useContext(AppContext);
 
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classSchema),
@@ -82,13 +84,13 @@ export default function EditClassForm({
   const watchedScheduledDate = watch("scheduledDate");
 
   useEffect(() => {
-    const q = query(collection(db, getCollectionName("disciplines")), where("deleted", "==", false));
+    const q = query(collection(db, getCollectionName("disciplines", environment)), where("deleted", "==", false));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const disciplineData: Discipline[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline));
         setDisciplines(disciplineData);
     });
     return () => unsubscribe();
-  }, []);
+  }, [environment]);
 
   const fetchFeesForSelectedStudents = useCallback(async () => {
     const scheduledDate = getValues("scheduledDate");
@@ -102,7 +104,7 @@ export default function EditClassForm({
       if (!student) return null;
   
       const feeQuery = query(
-        collection(db, getCollectionName("fees")),
+        collection(db, getCollectionName("fees", environment)),
         where("studentId", "==", studentId),
         where("sessionType", "==", watchedSessionType),
         where("feeType", "==", "hourly"),
@@ -130,7 +132,7 @@ export default function EditClassForm({
     
     const newDetails = (await Promise.all(detailPromises)).filter((detail): detail is StudentFeeInfo => detail !== null);
     setStudentFeeDetails(newDetails);
-  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, allStudents, getValues]);
+  }, [selectedStudentIds, watchedDiscipline, watchedSessionType, allStudents, getValues, environment]);
 
   useEffect(() => {
     fetchFeesForSelectedStudents();
@@ -139,7 +141,7 @@ export default function EditClassForm({
 
   const onSubmit = async (data: ClassFormValues) => {
     try {
-      const classDocRef = doc(db, getCollectionName("classes"), classItem.id);
+      const classDocRef = doc(db, getCollectionName("classes", environment), classItem.id);
       await updateDoc(classDocRef, {
         ...data,
         updatedAt: serverTimestamp(),

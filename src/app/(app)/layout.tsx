@@ -4,8 +4,18 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState, createContext, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Environment } from "@/lib/firebase";
+
+export const AppContext = createContext<{
+  environment: Environment;
+  setEnvironment: (env: Environment) => void;
+}>({
+  environment: 'development',
+  setEnvironment: () => {},
+});
+
 
 export default function AppLayout({
   children,
@@ -14,6 +24,19 @@ export default function AppLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [environment, setEnvironment] = useState<Environment>('development');
+
+  useEffect(() => {
+    const storedEnv = localStorage.getItem('tutoraid-env');
+    if (storedEnv && ['development', 'pre-prod', 'production'].includes(storedEnv)) {
+      setEnvironment(storedEnv as Environment);
+    }
+  }, []);
+
+  const appContextValue = useMemo(() => ({
+    environment,
+    setEnvironment,
+  }), [environment]);
 
   useEffect(() => {
     if (loading) return;
@@ -43,5 +66,9 @@ export default function AppLayout({
     );
   }
 
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppContext.Provider value={appContextValue}>
+      <AppShell>{children}</AppShell>
+    </AppContext.Provider>
+  );
 }

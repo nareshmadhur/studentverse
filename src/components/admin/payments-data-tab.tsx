@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext } from "react";
 import { Payment, Student } from "@/lib/definitions";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -25,11 +25,13 @@ import { useToast } from "@/hooks/use-toast";
 import { doc, writeBatch } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { getCurrencySymbol } from "@/lib/utils";
+import { AppContext } from "@/app/(app)/layout";
 
 export default function PaymentsDataTab({ payments, students }: { payments: Payment[], students: Student[] }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedPaymentIds, setSelectedPaymentIds] = useState<string[]>([]);
     const { toast } = useToast();
+    const { environment } = useContext(AppContext);
 
     const getStudentName = (studentId: string) => students.find(s => s.id === studentId)?.name || 'Unknown';
 
@@ -63,7 +65,7 @@ export default function PaymentsDataTab({ payments, students }: { payments: Paym
         if (selectedPaymentIds.length === 0) return;
         const batch = writeBatch(db);
         selectedPaymentIds.forEach(id => {
-            const docRef = doc(db, getCollectionName("payments"), id);
+            const docRef = doc(db, getCollectionName("payments", environment), id);
             batch.delete(docRef);
         });
         try {

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useContext } from "react";
 import type { Student, Class, Fee, Payment } from "@/lib/definitions";
 import { getStatementData, Statement, StatementItem } from "@/lib/actions/billing";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +12,13 @@ import { DateRange } from "react-day-picker";
 import { Badge } from "../ui/badge";
 import { getCurrencySymbol } from "@/lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
+import { AppContext } from "@/app/(app)/layout";
 
 export default function StudentStatement({ studentId, dateRange }: { studentId: string; dateRange: DateRange }) {
   const [statement, setStatement] = useState<Statement | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { environment } = useContext(AppContext);
 
   useEffect(() => {
     const generateStatement = async () => {
@@ -26,7 +28,7 @@ export default function StudentStatement({ studentId, dateRange }: { studentId: 
       setError(null);
 
       try {
-        const data = await getStatementData(studentId, dateRange);
+        const data = await getStatementData(studentId, dateRange, environment);
         setStatement(data);
       } catch (err) {
         console.error("Error generating statement:", err);
@@ -37,7 +39,7 @@ export default function StudentStatement({ studentId, dateRange }: { studentId: 
     };
 
     generateStatement();
-  }, [studentId, dateRange]);
+  }, [studentId, dateRange, environment]);
   
   const studentCurrencySymbol = useMemo(() => {
     if (!statement) return '';

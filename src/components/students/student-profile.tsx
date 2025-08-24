@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useMemo, Suspense } from "react";
+import { useEffect, useState, useMemo, Suspense, useContext } from "react";
 import { doc, onSnapshot, Timestamp, updateDoc, serverTimestamp, getDocs, collection, query, where } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
 import { Student, Class, Fee, Payment, Discipline } from "@/lib/definitions";
@@ -22,12 +22,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import AddFeeTableRow from "../fees/add-fee-table-row";
 import EditFeeTableRow from "../fees/edit-fee-form";
+import { AppContext } from "@/app/(app)/layout";
 
 
 function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { id: string; isAddingFeeForNewStudent: boolean, onFeeAdded: () => void; }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { environment } = useContext(AppContext);
   const [student, setStudent] = useState<Student | null>(null);
   const [classes, setClasses] = useState<Class[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
@@ -49,7 +51,7 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
     if (!id) return;
     
     setLoading(true);
-    const docRef = doc(db, getCollectionName("students"), id);
+    const docRef = doc(db, getCollectionName("students", environment), id);
     const unsubscribeStudent = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -68,22 +70,22 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
         setLoading(false);
     });
 
-    const classesQuery = query(collection(db, getCollectionName("classes")), where("students", "array-contains", id), where("deleted", "==", false));
+    const classesQuery = query(collection(db, getCollectionName("classes", environment)), where("students", "array-contains", id), where("deleted", "==", false));
     const unsubscribeClasses = onSnapshot(classesQuery, snapshot => {
         setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), scheduledDate: (doc.data().scheduledDate as Timestamp).toDate().toISOString() } as Class)));
     });
 
-    const feesQuery = query(collection(db, getCollectionName("fees")), where("studentId", "==", id), where("deleted", "==", false), where("feeType", "==", "hourly"));
+    const feesQuery = query(collection(db, getCollectionName("fees", environment)), where("studentId", "==", id), where("deleted", "==", false), where("feeType", "==", "hourly"));
     const unsubscribeFees = onSnapshot(feesQuery, snapshot => {
         setFees(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), effectiveDate: (doc.data().effectiveDate as Timestamp).toDate().toISOString() } as Fee)));
     });
 
-    const paymentsQuery = query(collection(db, getCollectionName("payments")), where("studentId", "==", id), where("deleted", "==", false));
+    const paymentsQuery = query(collection(db, getCollectionName("payments", environment)), where("studentId", "==", id), where("deleted", "==", false));
     const unsubscribePayments = onSnapshot(paymentsQuery, snapshot => {
         setPayments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), transactionDate: (doc.data().transactionDate as Timestamp).toDate().toISOString() } as Payment)));
     });
 
-    const disciplinesQuery = query(collection(db, getCollectionName("disciplines")), where("deleted", "==", false));
+    const disciplinesQuery = query(collection(db, getCollectionName("disciplines", environment)), where("deleted", "==", false));
     const unsubscribeDisciplines = onSnapshot(disciplinesQuery, snapshot => {
         setDisciplines(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline)));
     });
@@ -95,7 +97,7 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
       unsubscribePayments();
       unsubscribeDisciplines();
     }
-  }, [id]);
+  }, [id, environment]);
 
   const handleTabChange = (value: string) => {
     router.push(`/students?id=${id}&tab=${value}`, { scroll: false });
@@ -111,7 +113,7 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
 
   const handleDelete = async (collectionName: string, docId: string) => {
     try {
-      await updateDoc(doc(db, getCollectionName(collectionName), docId), { deleted: true, updatedAt: serverTimestamp() });
+      await updateDoc(doc(db, getCollectionName(collectionName, environment), docId), { deleted: true, updatedAt: serverTimestamp() });
       toast({ title: `${collectionName.slice(0, -1)} deleted`, description: `The item has been successfully marked as deleted.` });
     } catch (error) {
       toast({ title: 'Error', description: 'Could not delete item.', variant: 'destructive' });
@@ -121,7 +123,7 @@ function StudentProfileContent({ id, isAddingFeeForNewStudent, onFeeAdded }: { i
   const handleDeleteStudent = async () => {
     if (!student) return;
     try {
-        await updateDoc(doc(db, getCollectionName('students'), student.id), { deleted: true, updatedAt: serverTimestamp() });
+        await updateDoc(doc(db, getCollectionName('students', environment), student.id), { deleted: true, updatedAt: serverTimestamp() });
         toast({ title: 'Student Deleted', description: `${student.name} has been deleted.` });
         router.push('/students');
     } catch (error) {

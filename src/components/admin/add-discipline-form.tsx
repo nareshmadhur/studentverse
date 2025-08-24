@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, getCollectionName } from "@/lib/firebase";
+import { useContext } from "react";
+import { AppContext } from "@/app/(app)/layout";
 
 const disciplineSchema = z.object({
   name: z.string().min(1, "Discipline name is required"),
@@ -26,6 +28,8 @@ type DisciplineFormValues = z.infer<typeof disciplineSchema>;
 
 export default function AddDisciplineForm() {
   const { toast } = useToast();
+  const { environment } = useContext(AppContext);
+
   const form = useForm<DisciplineFormValues>({
     resolver: zodResolver(disciplineSchema),
     defaultValues: {
@@ -35,7 +39,7 @@ export default function AddDisciplineForm() {
 
   const onSubmit = async (data: DisciplineFormValues) => {
     try {
-      await addDoc(collection(db, getCollectionName("disciplines")), {
+      await addDoc(collection(db, getCollectionName("disciplines", environment)), {
         name: data.name,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

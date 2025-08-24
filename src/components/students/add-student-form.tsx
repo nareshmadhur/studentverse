@@ -21,8 +21,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { countries, currencies } from "@/lib/data/form-data";
+import { AppContext } from "@/app/(app)/layout";
 
 const studentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -39,6 +40,7 @@ export default function AddStudentForm({ onFinish }: { onFinish: (studentId?: st
   const [countrySearchOpen, setCountrySearchOpen] = useState(false);
   const [currencySearchOpen, setCurrencySearchOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { environment } = useContext(AppContext);
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
@@ -55,7 +57,7 @@ export default function AddStudentForm({ onFinish }: { onFinish: (studentId?: st
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const docRef = await addDoc(collection(db, getCollectionName("students")), {
+      const docRef = await addDoc(collection(db, getCollectionName("students", environment)), {
         ...data,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

@@ -26,6 +26,8 @@ import { Input } from "../ui/input";
 import { DatePicker } from "../ui/date-picker";
 import { TableCell, TableRow } from "../ui/table";
 import { Save, X } from "lucide-react";
+import { useContext } from "react";
+import { AppContext } from "@/app/(app)/layout";
 
 const feeSchema = z.object({
   discipline: z.string().optional(),
@@ -47,6 +49,7 @@ export default function EditFeeTableRow({
   onFinish: () => void;
 }) {
   const { toast } = useToast();
+  const { environment } = useContext(AppContext);
 
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeSchema),
@@ -61,7 +64,7 @@ export default function EditFeeTableRow({
 
   const onSubmit = async (data: FeeFormValues) => {
     try {
-      const feeDocRef = doc(db, getCollectionName("fees"), fee.id);
+      const feeDocRef = doc(db, getCollectionName("fees", environment), fee.id);
       await updateDoc(feeDocRef, {
         ...data,
         discipline: data.discipline === "__any__" ? "" : data.discipline,
